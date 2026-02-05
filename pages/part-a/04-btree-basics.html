@@ -518,7 +518,486 @@
                 "κατεβαίνει" από τον γονέα (Pull Down) και γίνεται κανονικό κλειδί στον νέο κόμβο.</p>
         </div>
 
-        <h2 class="section-title" style="margin-top: 3rem;">5. Τυπολόγιο & Formulas</h2>
+        <!-- NEW: Memorization Rules Section -->
+        <h2 class="section-title" style="margin-top: 3rem;">5. Κανόνες για Απομνημόνευση 🧠</h2>
+
+        <div class="card"
+            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 2rem;">
+            <h3 style="color: white;"><i class="fas fa-brain"></i> Οι 3 Χρυσοί Κανόνες (Μνημονικό: CoPuPu)</h3>
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+                <div
+                    style="background: rgba(255,255,255,0.15); padding: 1.5rem; border-radius: 10px; border-left: 4px solid #a7f3d0;">
+                    <h4 style="color: #a7f3d0; margin-bottom: 0.5rem;">📋 COPY UP</h4>
+                    <p style="font-size: 0.95rem;"><strong>Πότε:</strong> Split σε <em>Φύλλο</em></p>
+                    <p style="font-size: 0.95rem;"><strong>Γιατί:</strong> Το κλειδί ΜΕΝΕΙ στο φύλλο (είναι data!) και
+                        ΑΝΤΙΓΡΑΦΕΤΑΙ στον γονέα.</p>
+                    <p style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.5rem;"><em>💡 Φύλλα = Data → πρέπει να
+                            κρατήσουν τα κλειδιά τους</em></p>
+                </div>
+                <div
+                    style="background: rgba(255,255,255,0.15); padding: 1.5rem; border-radius: 10px; border-left: 4px solid #fbbf24;">
+                    <h4 style="color: #fbbf24; margin-bottom: 0.5rem;">⬆️ PUSH UP</h4>
+                    <p style="font-size: 0.95rem;"><strong>Πότε:</strong> Split σε <em>Εσωτερικό Κόμβο</em></p>
+                    <p style="font-size: 0.95rem;"><strong>Γιατί:</strong> Το κλειδί ΦΕΥΓΕΙ και πάει στον γονέα. Δεν
+                        μένει αντίγραφο κάτω.</p>
+                    <p style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.5rem;"><em>💡 Εσωτερικοί = Οδηγοί → δεν
+                            χρειάζονται διπλότυπα</em></p>
+                </div>
+                <div
+                    style="background: rgba(255,255,255,0.15); padding: 1.5rem; border-radius: 10px; border-left: 4px solid #f87171;">
+                    <h4 style="color: #f87171; margin-bottom: 0.5rem;">⬇️ PULL DOWN</h4>
+                    <p style="font-size: 0.95rem;"><strong>Πότε:</strong> Merge σε <em>Εσωτερικό Κόμβο</em></p>
+                    <p style="font-size: 0.95rem;"><strong>Γιατί:</strong> Ο separator ΚΑΤΕΒΑΙΝΕΙ από τον γονέα και
+                        γίνεται κλειδί στον merged κόμβο.</p>
+                    <p style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.5rem;"><em>💡 Merge φύλλων = ΟΧΙ Pull
+                            Down!</em></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3><i class="fas fa-route"></i> Flowchart Αποφάσεων</h3>
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;">
+                <!-- Insertion Flowchart -->
+                <div style="background: #e8f5e9; padding: 1.5rem; border-radius: 10px;">
+                    <h4 style="color: #27ae60;"><i class="fas fa-plus"></i> Εισαγωγή</h4>
+                    <ol style="font-size: 0.9rem; line-height: 2;">
+                        <li>Βρες το σωστό φύλλο (search)</li>
+                        <li><strong>Χωράει;</strong>
+                            <ul>
+                                <li>✅ ΝΑΙ → Εισήγαγε ταξινομημένα. <strong>ΤΕΛΟΣ</strong></li>
+                                <li>❌ ΟΧΙ → Split φύλλου</li>
+                            </ul>
+                        </li>
+                        <li><strong style="color: #27ae60;">COPY UP</strong> το μικρότερο του νέου φύλλου</li>
+                        <li>Γονέας γεμάτος; → <strong style="color: #f39c12;">PUSH UP</strong> αναδρομικά</li>
+                        <li>Αν η ρίζα γεμίσει → νέα ρίζα (ύψος +1)</li>
+                    </ol>
+                </div>
+                <!-- Deletion Flowchart -->
+                <div style="background: #ffebee; padding: 1.5rem; border-radius: 10px;">
+                    <h4 style="color: #e74c3c;"><i class="fas fa-trash"></i> Διαγραφή</h4>
+                    <ol style="font-size: 0.9rem; line-height: 2;">
+                        <li>Βρες και διέγραψε το κλειδί από το φύλλο</li>
+                        <li><strong>Underflow;</strong> (κλειδιά < \(d\)) <ul>
+                        <li>❌ ΟΧΙ → <strong>ΤΕΛΟΣ</strong></li>
+                        <li>✅ ΝΑΙ → Πήγαινε στο 3</li>
+                        </ul>
+                        </li>
+                        <li><strong>Αδελφός έχει περίσσεια;</strong>
+                            <ul>
+                                <li>✅ ΝΑΙ → <strong style="color: #27ae60;">BORROW</strong></li>
+                                <li>❌ ΟΧΙ → <strong style="color: #e74c3c;">MERGE</strong></li>
+                            </ul>
+                        </li>
+                        <li>Merge εσωτερικού; → <strong style="color: #e74c3c;">PULL DOWN</strong></li>
+                        <li>Έλεγξε γονέα αναδρομικά!</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Difficult Deletion Cases Section -->
+        <h2 class="section-title" style="margin-top: 3rem;">6. Δύσκολες Περιπτώσεις Διαγραφής 🔥</h2>
+
+        <div class="exam-warning" style="margin-bottom: 1.5rem;">
+            <div class="box-title"><i class="fas fa-exclamation-triangle"></i> ΠΡΟΣΟΧΗ: Αυτό εξετάζεται!</div>
+            <p>Οι εξετάσεις συχνά ζητούν διαγραφή που προκαλεί <strong>αλυσιδωτά underflows</strong> (cascading). Πρέπει
+                να ξέρεις ακριβώς τι συμβαίνει σε κάθε βήμα.</p>
+        </div>
+
+        <!-- Case A: Simple Borrow -->
+        <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid #27ae60;">
+            <h3 style="color: #27ae60;"><i class="fas fa-hand-holding"></i> Περίπτωση Α: Απλός Δανεισμός (Redistribute)
+            </h3>
+            <p><strong>Συνθήκη:</strong> Ο αδελφός έχει <strong>περισσότερα από \(d\)</strong> κλειδιά.</p>
+
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                <p><strong>Αρχικό (d=2, min=2):</strong></p>
+                <!-- SVG Tree: Before Borrow -->
+                <svg width="380" height="130" viewBox="0 0 380 130" style="display: block; margin: 1rem auto;">
+                    <!-- Root node -->
+                    <rect x="160" y="10" width="60" height="30" rx="5" fill="#f39c12" stroke="#e67e22"
+                        stroke-width="2" />
+                    <text x="190" y="30" text-anchor="middle" fill="white" font-weight="bold" font-size="14">30</text>
+                    <!-- Left leaf -->
+                    <rect x="40" y="80" width="90" height="30" rx="5" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="85" y="100" text-anchor="middle" fill="white" font-weight="bold" font-size="12">10,
+                        20</text>
+                    <!-- Right leaf (has extra keys) -->
+                    <rect x="210" y="80" width="130" height="30" rx="5" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="275" y="100" text-anchor="middle" fill="white" font-weight="bold" font-size="12">40, 50,
+                        60</text>
+                    <text x="275" y="125" text-anchor="middle" fill="#27ae60" font-size="11">← 3 κλειδιά (>d)</text>
+                    <!-- Edges -->
+                    <line x1="175" y1="40" x2="85" y2="80" stroke="#555" stroke-width="2" />
+                    <line x1="205" y1="40" x2="275" y2="80" stroke="#555" stroke-width="2" />
+                </svg>
+
+                <p style="margin-top: 1rem;"><strong>Διαγραφή 20:</strong></p>
+                <ol style="font-size: 0.95rem;">
+                    <li>Φύλλο [10, 20] → [10] → Underflow! (1 < 2)</li>
+                    <li>Δεξιός αδελφός [40, 50, 60] έχει 3 > 2 → <strong style="color: #27ae60;">BORROW!</strong></li>
+                    <li>Παίρνουμε το 40 από τον αδελφό</li>
+                    <li>Ενημερώνουμε τον separator: 30 → 50</li>
+                </ol>
+
+                <p style="margin-top: 1rem;"><strong>Τελικό:</strong></p>
+                <!-- SVG Tree: After Borrow -->
+                <svg width="380" height="130" viewBox="0 0 380 130" style="display: block; margin: 1rem auto;">
+                    <!-- Root node (updated key) -->
+                    <rect x="160" y="10" width="60" height="30" rx="5" fill="#f39c12" stroke="#e67e22"
+                        stroke-width="2" />
+                    <text x="190" y="30" text-anchor="middle" fill="white" font-weight="bold" font-size="14">50</text>
+                    <!-- Left leaf (borrowed 40) -->
+                    <rect x="50" y="80" width="90" height="30" rx="5" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="95" y="100" text-anchor="middle" fill="white" font-weight="bold" font-size="12">10,
+                        40</text>
+                    <!-- Right leaf -->
+                    <rect x="230" y="80" width="90" height="30" rx="5" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="275" y="100" text-anchor="middle" fill="white" font-weight="bold" font-size="12">50,
+                        60</text>
+                    <text x="190" y="125" text-anchor="middle" fill="#27ae60" font-size="11">✓ Ισορροπημένο!</text>
+                    <!-- Edges -->
+                    <line x1="175" y1="40" x2="95" y2="80" stroke="#555" stroke-width="2" />
+                    <line x1="205" y1="40" x2="275" y2="80" stroke="#555" stroke-width="2" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Case B: Simple Merge -->
+        <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid #f39c12;">
+            <h3 style="color: #f39c12;"><i class="fas fa-compress-arrows-alt"></i> Περίπτωση Β: Απλό Merge Φύλλων</h3>
+            <p><strong>Συνθήκη:</strong> Ο αδελφός έχει <strong>ακριβώς \(d\)</strong> κλειδιά (δεν μπορεί να δανείσει).
+            </p>
+
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                <p><strong>Αρχικό (d=2, min=2):</strong></p>
+                <!-- SVG Tree: Before Merge -->
+                <svg width="380" height="130" viewBox="0 0 380 130" style="display: block; margin: 1rem auto;">
+                    <!-- Root node -->
+                    <rect x="160" y="10" width="60" height="30" rx="5" fill="#f39c12" stroke="#e67e22"
+                        stroke-width="2" />
+                    <text x="190" y="30" text-anchor="middle" fill="white" font-weight="bold" font-size="14">30</text>
+                    <!-- Left leaf -->
+                    <rect x="50" y="80" width="90" height="30" rx="5" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="95" y="100" text-anchor="middle" fill="white" font-weight="bold" font-size="12">10,
+                        20</text>
+                    <!-- Right leaf -->
+                    <rect x="230" y="80" width="90" height="30" rx="5" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="275" y="100" text-anchor="middle" fill="white" font-weight="bold" font-size="12">40,
+                        50</text>
+                    <text x="275" y="125" text-anchor="middle" fill="#f39c12" font-size="11">← 2 κλειδιά (=d)</text>
+                    <!-- Edges -->
+                    <line x1="175" y1="40" x2="95" y2="80" stroke="#555" stroke-width="2" />
+                    <line x1="205" y1="40" x2="275" y2="80" stroke="#555" stroke-width="2" />
+                </svg>
+
+                <p style="margin-top: 1rem;"><strong>Διαγραφή 20:</strong></p>
+                <ol style="font-size: 0.95rem;">
+                    <li>Φύλλο [10, 20] → [10] → Underflow!</li>
+                    <li>Δεξιός αδελφός [40, 50] έχει 2 = d → <strong>Δεν μπορεί να δανείσει</strong></li>
+                    <li><strong style="color: #f39c12;">MERGE:</strong> Ενώνουμε [10] + [40, 50] = [10, 40, 50]</li>
+                    <li>Αφαιρούμε τον separator 30 από τον γονέα</li>
+                    <li>Ο γονέας (ρίζα) μένει κενός → Το merged φύλλο γίνεται νέα ρίζα!</li>
+                </ol>
+
+                <p style="margin-top: 1rem;"><strong>Τελικό:</strong></p>
+                <!-- SVG Tree: After Merge (single root) -->
+                <svg width="380" height="80" viewBox="0 0 380 80" style="display: block; margin: 1rem auto;">
+                    <!-- Merged root/leaf -->
+                    <rect x="115" y="20" width="150" height="35" rx="5" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="3" />
+                    <text x="190" y="43" text-anchor="middle" fill="white" font-weight="bold" font-size="14">10, 40,
+                        50</text>
+                    <text x="190" y="70" text-anchor="middle" fill="#27ae60" font-size="11">← Νέα ρίζα! (ύψος
+                        μειώθηκε)</text>
+                </svg>
+            </div>
+
+            <div class="prof-tip" style="margin-top: 1rem; background: #fff3e0;">
+                <strong>💡 Σημείωση:</strong> Στο merge <em>φύλλων</em>, ΔΕΝ κάνουμε PULL DOWN! Ο separator απλά
+                αφαιρείται από τον γονέα.
+            </div>
+        </div>
+
+        <!-- Case C: Cascading (CRITICAL) -->
+        <div class="card" style="margin-bottom: 1.5rem; border: 3px solid #e74c3c; background: #fff5f5;">
+            <h3 style="color: #e74c3c;"><i class="fas fa-fire-alt"></i> Περίπτωση Γ: Αλυσιδωτό Underflow (ΚΡΙΣΙΜΟ!) 🔥
+            </h3>
+            <p><strong>Συνθήκη:</strong> Το merge στο φύλλο <strong>προκαλεί underflow στον γονέα</strong>, που με τη
+                σειρά του χρειάζεται redistribute ή merge.</p>
+
+            <div
+                style="background: white; padding: 1.5rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #e74c3c;">
+                <h4 style="margin-bottom: 1rem;">Πλήρες Παράδειγμα (d=2, Min Keys=2)</h4>
+
+                <p><strong>Αρχικό Δέντρο:</strong></p>
+                <!-- SVG Tree: Initial State -->
+                <svg width="600" height="180" viewBox="0 0 600 180" style="display: block; margin: 1rem auto;">
+                    <!-- Root -->
+                    <rect x="270" y="10" width="60" height="30" rx="5" fill="#f39c12" stroke="#e67e22"
+                        stroke-width="2" />
+                    <text x="300" y="30" text-anchor="middle" fill="white" font-weight="bold" font-size="12">50</text>
+                    <text x="360" y="28" fill="#666" font-size="10">← Ρίζα</text>
+                    <!-- Internal nodes -->
+                    <rect x="120" y="65" width="80" height="30" rx="5" fill="#3498db" stroke="#2980b9"
+                        stroke-width="2" />
+                    <text x="160" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="11">20,
+                        30</text>
+                    <rect x="400" y="65" width="60" height="30" rx="5" fill="#3498db" stroke="#2980b9"
+                        stroke-width="2" />
+                    <text x="430" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="11">70</text>
+                    <text x="490" y="83" fill="#666" font-size="10">← Εσωτερικοί</text>
+                    <!-- Leaves -->
+                    <rect x="20" y="130" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="55" y="148" text-anchor="middle" fill="white" font-weight="bold" font-size="10">10,
+                        15</text>
+                    <rect x="110" y="130" width="50" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="135" y="148" text-anchor="middle" fill="white" font-weight="bold" font-size="10">25</text>
+                    <rect x="180" y="130" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="215" y="148" text-anchor="middle" fill="white" font-weight="bold" font-size="10">35,
+                        40</text>
+                    <rect x="350" y="130" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="385" y="148" text-anchor="middle" fill="white" font-weight="bold" font-size="10">60,
+                        65</text>
+                    <rect x="440" y="130" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="475" y="148" text-anchor="middle" fill="white" font-weight="bold" font-size="10">80,
+                        90</text>
+                    <text x="540" y="148" fill="#666" font-size="10">← Φύλλα</text>
+                    <!-- Edges from root -->
+                    <line x1="285" y1="40" x2="160" y2="65" stroke="#555" stroke-width="1.5" />
+                    <line x1="315" y1="40" x2="430" y2="65" stroke="#555" stroke-width="1.5" />
+                    <!-- Edges from internal nodes -->
+                    <line x1="135" y1="95" x2="55" y2="130" stroke="#555" stroke-width="1.5" />
+                    <line x1="160" y1="95" x2="135" y2="130" stroke="#555" stroke-width="1.5" />
+                    <line x1="185" y1="95" x2="215" y2="130" stroke="#555" stroke-width="1.5" />
+                    <line x1="415" y1="95" x2="385" y2="130" stroke="#555" stroke-width="1.5" />
+                    <line x1="445" y1="95" x2="475" y2="130" stroke="#555" stroke-width="1.5" />
+                </svg>
+
+                <hr style="margin: 1.5rem 0; border-color: #e74c3c;">
+
+                <h5 style="color: #e74c3c;">📍 ΒΗΜΑ 1: Διαγραφή του 25</h5>
+                <p>Βρίσκουμε το φύλλο [25] και διαγράφουμε το 25:</p>
+                <ul>
+                    <li>Φύλλο [25] → [] → <strong style="color: #e74c3c;">UNDERFLOW!</strong> (0 κλειδιά < 2)</li>
+                    <li>Αριστερός αδελφός [10, 15] έχει 2 κλειδιά (= d) → δεν μπορεί να δανείσει</li>
+                    <li>Δεξιός αδελφός [35, 40] έχει 2 κλειδιά (= d) → δεν μπορεί να δανείσει</li>
+                    <li><strong style="color: #f39c12;">→ MERGE με αριστερό:</strong> [] + [10, 15] = [10, 15]</li>
+                </ul>
+
+                <p style="margin-top: 1rem;"><strong>Μετά το merge:</strong></p>
+                <!-- SVG Tree: After Step 1 -->
+                <svg width="550" height="180" viewBox="0 0 550 180" style="display: block; margin: 1rem auto;">
+                    <!-- Root -->
+                    <rect x="240" y="10" width="60" height="30" rx="5" fill="#f39c12" stroke="#e67e22"
+                        stroke-width="2" />
+                    <text x="270" y="30" text-anchor="middle" fill="white" font-weight="bold" font-size="12">50</text>
+                    <!-- Internal nodes (left now has underflow!) -->
+                    <rect x="100" y="65" width="50" height="30" rx="5" fill="#e74c3c" stroke="#c0392b"
+                        stroke-width="2" />
+                    <text x="125" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="11">30</text>
+                    <text x="160" y="83" fill="#e74c3c" font-weight="bold" font-size="10">← UNDERFLOW!</text>
+                    <rect x="370" y="65" width="50" height="30" rx="5" fill="#3498db" stroke="#2980b9"
+                        stroke-width="2" />
+                    <text x="395" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="11">70</text>
+                    <!-- Leaves -->
+                    <rect x="30" y="130" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="65" y="148" text-anchor="middle" fill="white" font-weight="bold" font-size="10">10,
+                        15</text>
+                    <rect x="130" y="130" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="165" y="148" text-anchor="middle" fill="white" font-weight="bold" font-size="10">35,
+                        40</text>
+                    <rect x="310" y="130" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="345" y="148" text-anchor="middle" fill="white" font-weight="bold" font-size="10">60,
+                        65</text>
+                    <rect x="410" y="130" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="445" y="148" text-anchor="middle" fill="white" font-weight="bold" font-size="10">80,
+                        90</text>
+                    <!-- Edges -->
+                    <line x1="255" y1="40" x2="125" y2="65" stroke="#555" stroke-width="1.5" />
+                    <line x1="285" y1="40" x2="395" y2="65" stroke="#555" stroke-width="1.5" />
+                    <line x1="110" y1="95" x2="65" y2="130" stroke="#555" stroke-width="1.5" />
+                    <line x1="140" y1="95" x2="165" y2="130" stroke="#555" stroke-width="1.5" />
+                    <line x1="380" y1="95" x2="345" y2="130" stroke="#555" stroke-width="1.5" />
+                    <line x1="410" y1="95" x2="445" y2="130" stroke="#555" stroke-width="1.5" />
+                </svg>
+
+                <hr style="margin: 1.5rem 0; border-color: #e74c3c;">
+
+                <h5 style="color: #e74c3c;">📍 ΒΗΜΑ 2: Underflow στον Εσωτερικό [30]</h5>
+                <p>Ο εσωτερικός κόμβος [30] έχει τώρα 1 κλειδί < 2 → <strong style="color: #e74c3c;">UNDERFLOW!</strong>
+                </p>
+                <ul>
+                    <li>Δεξιός αδελφός [70] έχει 1 κλειδί (= d) → δεν μπορεί να δανείσει</li>
+                    <li><strong style="color: #e74c3c;">→ MERGE εσωτερικών κόμβων</strong></li>
+                    <li><strong style="color: #e74c3c;">PULL DOWN:</strong> Ο separator 50 κατεβαίνει από τη ρίζα!</li>
+                    <li>Merged: [30] + 50 + [70] = [30, 50, 70]</li>
+                </ul>
+
+                <p style="margin-top: 1rem;"><strong>Μετά το PULL DOWN:</strong></p>
+                <!-- SVG Tree: After Step 2 -->
+                <svg width="500" height="140" viewBox="0 0 500 140" style="display: block; margin: 1rem auto;">
+                    <!-- New merged internal (now root) -->
+                    <rect x="150" y="15" width="200" height="35" rx="5" fill="#3498db" stroke="#2980b9"
+                        stroke-width="3" />
+                    <text x="250" y="38" text-anchor="middle" fill="white" font-weight="bold" font-size="13">30, 50,
+                        70</text>
+                    <text x="370" y="38" fill="#27ae60" font-weight="bold" font-size="10">← Merged!</text>
+                    <!-- Leaves -->
+                    <rect x="30" y="95" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="65" y="113" text-anchor="middle" fill="white" font-weight="bold" font-size="10">10,
+                        15</text>
+                    <rect x="130" y="95" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="165" y="113" text-anchor="middle" fill="white" font-weight="bold" font-size="10">35,
+                        40</text>
+                    <rect x="260" y="95" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="295" y="113" text-anchor="middle" fill="white" font-weight="bold" font-size="10">60,
+                        65</text>
+                    <rect x="390" y="95" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="425" y="113" text-anchor="middle" fill="white" font-weight="bold" font-size="10">80,
+                        90</text>
+                    <!-- Edges -->
+                    <line x1="190" y1="50" x2="65" y2="95" stroke="#555" stroke-width="1.5" />
+                    <line x1="220" y1="50" x2="165" y2="95" stroke="#555" stroke-width="1.5" />
+                    <line x1="280" y1="50" x2="295" y2="95" stroke="#555" stroke-width="1.5" />
+                    <line x1="310" y1="50" x2="425" y2="95" stroke="#555" stroke-width="1.5" />
+                </svg>
+
+                <hr style="margin: 1.5rem 0; border-color: #27ae60;">
+
+                <h5 style="color: #27ae60;">📍 ΒΗΜΑ 3: Ρίζα κενή → Συρρίκνωση</h5>
+                <p>Η παλιά ρίζα [50] είναι πλέον κενή (το 50 κατέβηκε).</p>
+                <ul>
+                    <li>Ρίζα με 1 παιδί μόνο → <strong>Το παιδί γίνεται νέα ρίζα</strong></li>
+                    <li>Το ύψος του δέντρου μειώνεται κατά 1!</li>
+                </ul>
+
+                <p style="margin-top: 1rem;"><strong>🎯 ΤΕΛΙΚΟ ΔΕΝΤΡΟ:</strong></p>
+                <!-- SVG Tree: Final State -->
+                <svg width="500" height="140" viewBox="0 0 500 140" style="display: block; margin: 1rem auto;">
+                    <!-- New root -->
+                    <rect x="115" y="15" width="270" height="38" rx="6" fill="#f39c12" stroke="#e67e22"
+                        stroke-width="3" />
+                    <text x="250" y="40" text-anchor="middle" fill="white" font-weight="bold" font-size="14">30, 50,
+                        70</text>
+                    <text x="400" y="40" fill="#27ae60" font-weight="bold" font-size="11">← Νέα Ρίζα!</text>
+                    <!-- Leaves -->
+                    <rect x="30" y="95" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="65" y="113" text-anchor="middle" fill="white" font-weight="bold" font-size="10">10,
+                        15</text>
+                    <rect x="130" y="95" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="165" y="113" text-anchor="middle" fill="white" font-weight="bold" font-size="10">35,
+                        40</text>
+                    <rect x="275" y="95" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="310" y="113" text-anchor="middle" fill="white" font-weight="bold" font-size="10">60,
+                        65</text>
+                    <rect x="390" y="95" width="70" height="28" rx="4" fill="#27ae60" stroke="#1e8449"
+                        stroke-width="2" />
+                    <text x="425" y="113" text-anchor="middle" fill="white" font-weight="bold" font-size="10">80,
+                        90</text>
+                    <!-- Edges -->
+                    <line x1="175" y1="53" x2="65" y2="95" stroke="#555" stroke-width="1.5" />
+                    <line x1="220" y1="53" x2="165" y2="95" stroke="#555" stroke-width="1.5" />
+                    <line x1="290" y1="53" x2="310" y2="95" stroke="#555" stroke-width="1.5" />
+                    <line x1="335" y1="53" x2="425" y2="95" stroke="#555" stroke-width="1.5" />
+                    <!-- Success indicator -->
+                    <text x="250" y="135" text-anchor="middle" fill="#27ae60" font-weight="bold" font-size="12">✓ Ύψος:
+                        2 → 1 (μειώθηκε!)</text>
+                </svg>
+            </div>
+
+            <div class="exam-warning" style="margin-top: 1.5rem; background: #fee;">
+                <div class="box-title"><i class="fas fa-lightbulb"></i> Κλειδί για τις Εξετάσεις</div>
+                <ol>
+                    <li><strong>Merge φύλλων:</strong> Αφαιρείς separator, ΟΧΙ Pull Down</li>
+                    <li><strong>Merge εσωτερικών:</strong> ΠΡΕΠΕΙ να κάνεις Pull Down τον separator!</li>
+                    <li><strong>Μετά από κάθε merge:</strong> Έλεγξε τον γονέα για underflow!</li>
+                    <li><strong>Κενή ρίζα:</strong> Το μοναδικό παιδί γίνεται νέα ρίζα</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Exam Quick Guide -->
+        <h2 class="section-title" style="margin-top: 3rem;">7. Συνοπτικός Οδηγός Εξετάσεων 📚</h2>
+
+        <div class="card" style="background: linear-gradient(to right, #f8f9fa, #e9ecef); border: 2px solid #dee2e6;">
+            <h3><i class="fas fa-clipboard-check"></i> Checklist Πριν Παραδώσεις</h3>
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div>
+                    <h4 style="color: #e74c3c;">❌ Έλεγχοι Λαθών</h4>
+                    <ul style="font-size: 0.95rem; line-height: 1.8;">
+                        <li>☐ Όλα τα φύλλα στο ίδιο επίπεδο;</li>
+                        <li>☐ Κάθε κόμβος (εκτός ρίζας) έχει ≥ \(d\) κλειδιά;</li>
+                        <li>☐ Κάθε κόμβος έχει ≤ \(2d\) κλειδιά;</li>
+                        <li>☐ Ρίζα έχει ≥ 1 κλειδί (ή είναι φύλλο);</li>
+                        <li>☐ Κλειδιά ταξινομημένα;</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: #27ae60;">✅ Σωστές Πράξεις</h4>
+                    <ul style="font-size: 0.95rem; line-height: 1.8;">
+                        <li>☐ Split φύλλου → <strong>COPY UP</strong></li>
+                        <li>☐ Split εσωτερικού → <strong>PUSH UP</strong></li>
+                        <li>☐ Merge εσωτερικού → <strong>PULL DOWN</strong></li>
+                        <li>☐ Merge φύλλου → Απλή αφαίρεση separator</li>
+                        <li>☐ Έδειξα βήμα-βήμα τη διαδικασία;</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid"
+            style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+            <div class="card" style="border-top: 4px solid #3498db;">
+                <h4><i class="fas fa-quote-left"></i> Μνημονικά Τρικάκια</h4>
+                <ul style="font-size: 0.95rem; line-height: 2;">
+                    <li><strong>"CoPuPu":</strong> Copy-Push-Pull</li>
+                    <li><strong>"Φύλλα = Data, Εσωτερικοί = Οδηγοί"</strong></li>
+                    <li><strong>"Borrow πρώτα, Merge αν δεν γίνεται"</strong></li>
+                    <li><strong>"Separator κατεβαίνει ΜΟΝΟ σε εσωτερικούς"</strong></li>
+                    <li><strong>"\(n\) κλειδιά = \(n+1\) pointers"</strong></li>
+                </ul>
+            </div>
+
+            <div class="card" style="border-top: 4px solid #e74c3c;">
+                <h4><i class="fas fa-skull-crossbones"></i> Κλασικές Παγίδες</h4>
+                <ul style="font-size: 0.95rem; line-height: 2;">
+                    <li>❌ Push Up σε φύλλα (είναι COPY!)</li>
+                    <li>❌ Pull Down σε merge φύλλων</li>
+                    <li>❌ Ξεχνάς τον έλεγχο γονέα μετά το merge</li>
+                    <li>❌ Λάθος υπολογισμός του \(d\)</li>
+                    <li>❌ Διαγραφή separator από γονέα σε απλή delete</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 3rem;">8. Τυπολόγιο &amp; Formulas</h2>
 
         <div class="formula-box">
             <div class="box-title"><i class="fas fa-calculator"></i> Βασικοί Τύποι</div>
@@ -548,7 +1027,7 @@
             </table>
         </div>
 
-        <h2 class="section-title" style="margin-top: 3rem;">6. Exam Tips & Common Mistakes</h2>
+        <h2 class="section-title" style="margin-top: 3rem;">9. Exam Tips & Common Mistakes</h2>
 
         <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
             <div class="exam-warning">
