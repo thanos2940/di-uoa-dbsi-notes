@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conflict Serializability | ΥΣΒΔ</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/simulator.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="../../index.html" class="logo">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul class="nav-links">
+                <li><a href="../../index.html#part-a">Φυσική Οργάνωση</a></li>
+                <li><a href="../../index.html#part-b">Επεξεργασία</a></li>
+                <li><a href="../../index.html#part-c" style="color: var(--primary-blue);">Συνδρομικότητα</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumbs" style="margin: 2rem 0;">
+            <a href="../../index.html">Αρχική</a> &gt;
+            <a href="../../index.html#part-c">Συνδρομικότητα</a> &gt;
+            Serializability
+        </div>
+
+        <h1>Conflict Serializability Graph</h1>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3><i class="fas fa-keyboard"></i> Input Schedule</h3>
+            <textarea id="graph-schedule-input" rows="2"
+                style="width:100%; font-family:monospace; font-size:1.1rem; padding:10px; border:1px solid #ddd; border-radius:4px;">R1[X] W2[X] R2[Y] W1[Y]</textarea>
+            <div style="margin-top: 10px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size: 0.9rem; color: #666;">Format: R1[X] W2[X]...</span>
+                <div style="display: flex; gap: 10px;">
+                    <button id="graph-random-btn" class="btn btn-secondary"><i class="fas fa-dice"></i>
+                        Random</button>
+                    <button id="graph-build-btn" class="btn btn-primary"><i class="fas fa-project-diagram"></i> Build
+                        Graph</button>
+                    <button id="graph-clear" class="btn btn-danger" style="background: #e74c3c; color: white;"
+                        title="Clear All"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="simulator-container">
+            <div class="simulator-header">
+                <span class="simulator-title">Precedence Graph Visualization</span>
+            </div>
+
+            <div class="simulator-canvas-container">
+                <canvas id="graph-canvas" style="width: 100%; height: 400px;"></canvas>
+            </div>
+            <div class="simulator-info">
+                <p><i class="fas fa-arrow-right"></i> Οι ακμές δείχνουν conflict (RW, WR, WW). Κύκλος = ΜΗ
+                    Σειριοποιήσιμο.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="formula-box">
+                    <div class="box-title"><i class="fas fa-gavel"></i> Rules</div>
+                    <p>Conflicts create edges \(T_i \to T_j\):</p>
+                    <ul>
+                        <li>RW: \(R_i(X) \dots W_j(X)\)</li>
+                        <li>WR: \(W_i(X) \dots R_j(X)\)</li>
+                        <li>WW: \(W_i(X) \dots W_j(X)\)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/simulators/base.js"></script>
+    <script src="../../assets/js/simulators/serialization-graph.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sim = new SerializationGraphBuilder('graph-canvas');
+
+            const build = () => {
+                const input = document.getElementById('graph-schedule-input').value;
+                sim.parseSchedule(input);
+            };
+
+            document.getElementById('graph-build-btn').onclick = build;
+
+            document.getElementById('graph-random-btn').onclick = () => {
+                const randomSched = sim.generateRandomSchedule();
+                document.getElementById('graph-schedule-input').value = randomSched;
+                build();
+            };
+
+            document.getElementById('graph-clear').onclick = () => sim.clear();
+
+            build(); // init
+            renderMathInElement(document.body);
+        });
+    </script>
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/nav-config.js"></script>
+    <script src="../../assets/js/nav-system.js"></script>
+</body>
+
+</html>

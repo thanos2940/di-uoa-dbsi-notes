@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2PL Lock Manager | ΥΣΒΔ</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/simulator.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="../../index.html" class="logo">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul class="nav-links">
+                <li><a href="../../index.html#part-a">Φυσική Οργάνωση</a></li>
+                <li><a href="../../index.html#part-b">Επεξεργασία</a></li>
+                <li><a href="../../index.html#part-c" style="color: var(--primary-blue);">Συνδρομικότητα</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumbs" style="margin: 2rem 0;">
+            <a href="../../index.html">Αρχική</a> &gt;
+            <a href="../../index.html#part-c">Συνδρομικότητα</a> &gt;
+            Lock Manager
+        </div>
+
+        <h1>Two-Phase Locking (2PL) Manager</h1>
+
+        <div class="simulator-container">
+            <div class="simulator-header">
+                <span class="simulator-title"><i class="fas fa-lock"></i> Lock Table Simulator</span>
+            </div>
+
+            <div class="simulator-controls" style="justify-content: flex-start;">
+                <div class="control-group">
+                    <label>Txn:</label>
+                    <input type="number" id="txn-id" value="1" class="sim-input" style="width:50px">
+                </div>
+                <div class="control-group">
+                    <label>Action:</label>
+                    <select id="lock-action" class="sim-input">
+                        <option value="S">Lock-S (Read)</option>
+                        <option value="X">Lock-X (Write)</option>
+                        <option value="C">Commit</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Item:</label>
+                    <input type="text" id="lock-item" value="A" class="sim-input" style="width:50px">
+                </div>
+                <button id="random-btn" class="sim-btn secondary" title="Random Action"
+                    style="width: auto; padding: 0 1rem; margin-right: 5px;"><i class="fas fa-dice"></i></button>
+                <button id="exec-btn" class="sim-btn primary" title="Execute"
+                    style="width: auto; padding: 0 1rem; margin-right: 5px;">Execute <i class="fas fa-check"
+                        style="margin-left:5px"></i></button>
+                <button id="clear-btn" class="sim-btn" title="Clear All"
+                    style="color: #e74c3c; width: auto; padding: 0 1rem;"><i class="fas fa-trash-alt"></i></button>
+            </div>
+
+            <div class="simulator-canvas-container">
+                <canvas id="lock-canvas" style="width: 100%; height: 400px;"></canvas>
+            </div>
+
+            <div class="simulator-info">
+                <p><i class="fas fa-info-circle"></i> S-Locks are compatible. X-Locks are exclusive. Wait Queue
+                    implements FIFO.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="prof-tip">
+                    <div class="box-title"><i class="fas fa-hand-paper"></i> 2PL Protocol</div>
+                    <p>Growing Phase: Acquires locks. Shrinking Phase: Releases locks.</p>
+                    <p><strong>Strict 2PL:</strong> Releases all locks at Commit (simulated here).</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/simulators/base.js"></script>
+    <script src="../../assets/js/simulators/lock-manager.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sim = new LockManagerSimulator('lock-canvas');
+            sim.drawState();
+
+            document.getElementById('exec-btn').onclick = () => {
+                const tid = document.getElementById('txn-id').value;
+                const act = document.getElementById('lock-action').value;
+                const item = document.getElementById('lock-item').value;
+                sim.startRequest(tid, act, item);
+            };
+
+            document.getElementById('random-btn').onclick = () => {
+                const req = sim.generateRandomRequest();
+                document.getElementById('txn-id').value = req.tid;
+                document.getElementById('lock-action').value = req.op;
+                document.getElementById('lock-item').value = req.item;
+                sim.startRequest(req.tid, req.op, req.item);
+            };
+
+            document.getElementById('clear-btn').onclick = () => sim.clear();
+        });
+    </script>
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/nav-config.js"></script>
+    <script src="../../assets/js/nav-system.js"></script>
+</body>
+
+</html>

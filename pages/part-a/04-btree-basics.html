@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B+ Trees: Βασικά | ΥΣΒΔ</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/simulator.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="../../index.html" class="logo">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul class="nav-links">
+                <li><a href="../../index.html#part-a" style="color: var(--primary-blue);">Φυσική Οργάνωση</a></li>
+                <li><a href="../../index.html#part-b">Επεξεργασία</a></li>
+                <li><a href="../../index.html#part-c">Συνδρομικότητα</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumbs" style="margin: 2rem 0;">
+            <a href="../../index.html">Αρχική</a> &gt;
+            <a href="../../index.html#part-a">Φυσική Οργάνωση</a> &gt;
+            B+ Trees
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-card">
+                    <h4><i class="fas fa-list"></i> Κεφάλαιο Α</h4>
+                    <nav class="sidebar-links">
+                        <a href="04-btree-basics.html" class="active"><i class="fas fa-tree"></i> B+ Trees</a>
+                        <a href="07-hash-theory.html"><i class="fas fa-hashtag"></i> Extendible Hashing</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <h1 style="color: var(--primary-blue-dark); margin-bottom: 2rem;">B+ Trees: Πλήρης Θεωρία & Αλγόριθμοι
+                </h1>
+
+                <!-- Intro -->
+                <div class="card" style="margin-bottom: 2rem; border-left: 5px solid var(--primary-blue);">
+                    <h3><i class="fas fa-bullseye"></i> Γιατί B+ Trees;</h3>
+                    <p>
+                        Τα <strong>B+ Trees</strong> είναι η κυρίαρχη δομή ευρετηρίου σε σχεσιακές βάσεις δεδομένων
+                        (MySQL
+                        InnoDB, PostgreSQL, SQL Server).
+                        Λύνουν το πρόβλημα της γρήγορης αναζήτησης σε <strong>δευτερεύουσα μνήμη</strong> (δίσκο), όπου
+                        κάθε I/O
+                        κοστίζει.
+                    </p>
+                    <p><strong>Βασικό Πλεονέκτημα:</strong> Με 3-4 I/Os μπορείς να βρεις οποιοδήποτε record ανάμεσα σε
+                        εκατομμύρια!</p>
+                </div>
+
+                <!-- Intuition -->
+                <div class="prof-tip">
+                    <div class="box-title"><i class="fas fa-lightbulb"></i> Intuition: Ο Πολυ-Επίπεδος Κατάλογος</div>
+                    <p>Φαντάσου ένα δέντρο αποφάσεων όπου:</p>
+                    <ul>
+                        <li><strong>Ρίζα:</strong> "Ψάχνεις κλειδί &lt; 50 ή ≥ 50;" → Πάτα αριστερά ή δεξιά</li>
+                        <li><strong>Εσωτερικοί Κόμβοι:</strong> Συνεχίζουν να σε καθοδηγούν με παρόμοιες ερωτήσεις</li>
+                        <li><strong>Φύλλα:</strong> Εκεί βρίσκονται τα πραγματικά δεδομένα (ή pointers σε records)</li>
+                    </ul>
+                    <p>Επειδή είναι <strong>ισορροπημένο</strong>, όλα τα μονοπάτια έχουν το ίδιο μήκος → σταθερό χρόνο
+                        αναζήτησης.</p>
+                </div>
+
+                <h2 class="section-title" style="margin-top: 3rem;">1. Βασικά Χαρακτηριστικά & Δομή</h2>
+
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem;">
+                    <!-- Order Definition -->
+                    <div class="card">
+                        <h3><i class="fas fa-ruler"></i> Τάξη (Order) \(d\)</h3>
+                        <p>Ο παράμετρος \(d\) καθορίζει τη χωρητικότητα των κόμβων:</p>
+                        <ul style="line-height: 1.8;">
+                            <li><strong>Min Keys:</strong> \(d\) (εκτός ρίζας)</li>
+                            <li><strong>Max Keys:</strong> \(2d\)</li>
+                            <li><strong>Pointers:</strong> \(k+1\) pointers για \(k\) κλειδιά</li>
+                        </ul>
+                        <div class="exam-warning" style="margin-top: 1rem; padding: 0.5rem;">
+                            <strong>Κριτήριο Εξετάσεων:</strong> Συχνά δίνουν "Max=N". Τότε το Min είναι \(\lceil N/2
+                            \rceil\).
+                            Αν δίνουν \(d\), τότε Max=\(2d\), Min=\(d\). <strong>Πάντα έλεγχε τον ορισμό στην
+                                εκφώνηση!</strong>
+                        </div>
+                    </div>
+
+                    <!-- Search Story -->
+                    <div class="card" style="border-top: 4px solid var(--primary-blue);">
+                        <h3><i class="fas fa-search"></i> Πώς Ψάχνουμε; (Path to Leaf)</h3>
+                        <p>Έστω ότι ψάχνουμε το κλειδί \(K\):</p>
+                        <ol style="font-size: 0.9rem;">
+                            <li>Ξεκινάμε από τη <strong>Ρίζα</strong>.</li>
+                            <li>Στον τρέχοντα κόμβο, βρες το πρώτο \(K_i > K\).</li>
+                            <li>Ακολούθησε τον pointer \(P_{i-1}\). Αν όλα τα \(K_i \le K\), ακολούθησε τον τελευταίο
+                                pointer.</li>
+                            <li>Επανέλαβε μέχρι να φτάσεις σε <strong>Φύλλο</strong>.</li>
+                        </ol>
+                        <div class="prof-tip" style="margin-top: 0.5rem; padding: 0.5rem; font-style: italic;">
+                            "The tree is a road map. The internal nodes tell you where to go, the leaves are the
+                            destination."
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Node Types -->
+                <h3 style="margin-top: 2rem;"><i class="fas fa-project-diagram"></i> Τύποι Κόμβων</h3>
+
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem;">
+                    <!-- Internal Nodes -->
+                    <div class="card" style="border-left: 3px solid #2c8dcf;">
+                        <h4 style="color: #2c8dcf;"><i class="fas fa-sitemap"></i> Εσωτερικοί Κόμβοι</h4>
+                        <p><strong>Ρόλος:</strong> Οδηγοί (Separators) που κατευθύνουν την αναζήτηση.</p>
+                        <p><strong>Δομή:</strong> \(\langle P_0, K_1, P_1, K_2, P_2, \dots, K_n, P_n \rangle\)</p>
+                        <ul style="font-size: 0.95rem;">
+                            <li>\(P_i\): Pointer σε παιδί (υποδέντρο)</li>
+                            <li>\(K_i\): Κλειδί διαχωρισμού</li>
+                            <li>Ιδιότητα: Όλα τα κλειδιά στο \(P_{i-1}\) είναι \(&lt; K_i\)</li>
+                            <li>Όλα τα κλειδιά στο \(P_i\) είναι \(\geq K_i\)</li>
+                        </ul>
+                        <p style="margin-top: 0.5rem;"><strong>Με \(n\) κλειδιά έχουμε \(n+1\) pointers.</strong></p>
+                    </div>
+
+                    <!-- Leaf Nodes -->
+                    <div class="card" style="border-left: 3px solid #27ae60;">
+                        <h4 style="color: #27ae60;"><i class="fas fa-file-alt"></i> Κόμβοι Φύλλα</h4>
+                        <p><strong>Ρόλος:</strong> Περιέχουν τα δεδομένα (ή pointers σε records).</p>
+                        <p><strong>Δομή:</strong> \(\langle (K_1, R_1), (K_2, R_2), \dots, (K_n, R_n), P_{next}
+                            \rangle\)</p>
+                        <ul style="font-size: 0.95rem;">
+                            <li>\(K_i\): Κλειδί αναζήτησης</li>
+                            <li>\(R_i\): Pointer σε data record (ή ολόκληρο το record)</li>
+                            <li>\(P_{next}\): Pointer στο επόμενο φύλλο (Linked List)</li>
+                        </ul>
+                        <div class="prof-tip" style="margin-top: 1rem; padding: 0.5rem; background: #e8f5e9;">
+                            <strong>Range Queries:</strong> Χάρη στην αλυσίδα, ένα "SELECT * WHERE key BETWEEN 10 AND
+                            50" απλά
+                            διατρέχει τα φύλλα!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- B+ vs B Tree -->
+                <div class="card" style="margin-top: 2rem;">
+                    <h3><i class="fas fa-exchange-alt"></i> B+ Tree vs B-Tree</h3>
+                    <p>Στα <strong>B-Trees</strong>, τα δεδομένα μπορεί να είναι σε οποιονδήποτε κόμβο. Στα <strong>B+
+                            Trees</strong>, υπάρχουν <strong>ΜΟΝΟ</strong> στα φύλλα.</p>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 10px; border: 1px solid #ddd;">Χαρακτηριστικό</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">B-Tree</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">B+ Tree</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Δεδομένα</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Σε όλους τους κόμβους</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Μόνο στα φύλλα</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Fan-out</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Μικρότερο (data = χώρος)</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Μεγαλύτερο → Κοντό δέντρο</strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Range Scan</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">In-order traversal</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Γραμμική σάρωση φύλλων</strong>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Visual Example -->
+                <h2 class="section-title" style="margin-top: 3rem;">2. Οπτικοποίηση Δομής</h2>
+
+                <div class="card" style="text-align: center; overflow-x: auto;">
+                    <h4><i class="fas fa-eye"></i> Παράδειγμα B+ Tree (Order d=2)</h4>
+                    <p style="margin-bottom: 1rem; color: #666;">Max Keys = 2d = 4, Min Keys = d = 2</p>
+
+                    <svg width="600" height="220" viewBox="0 0 600 220" style="margin: 0 auto; display: block;">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#888" />
+                            </marker>
+                        </defs>
+
+                        <!-- Root -->
+                        <g transform="translate(260, 20)">
+                            <rect x="0" y="0" width="80" height="30" rx="5" fill="#fff3e0" stroke="#f39c12"
+                                stroke-width="2" />
+                            <text x="40" y="20" text-anchor="middle" font-weight="bold" fill="#f39c12">30</text>
+                        </g>
+
+                        <!-- Level 1 -->
+                        <g transform="translate(130, 80)">
+                            <rect x="0" y="0" width="80" height="30" rx="5" fill="#e3f2fd" stroke="#2c8dcf"
+                                stroke-width="2" />
+                            <text x="40" y="20" text-anchor="middle" fill="#2c8dcf">10 | 20</text>
+                        </g>
+                        <g transform="translate(390, 80)">
+                            <rect x="0" y="0" width="80" height="30" rx="5" fill="#e3f2fd" stroke="#2c8dcf"
+                                stroke-width="2" />
+                            <text x="40" y="20" text-anchor="middle" fill="#2c8dcf">40 | 50</text>
+                        </g>
+
+                        <!-- Leaves -->
+                        <g transform="translate(20, 160)">
+                            <rect x="0" y="0" width="60" height="30" fill="#e8f5e9" stroke="#27ae60" stroke-width="2" />
+                            <text x="30" y="20" text-anchor="middle" fill="#274e13" font-size="12">5, 8</text>
+                        </g>
+                        <g transform="translate(100, 160)">
+                            <rect x="0" y="0" width="60" height="30" fill="#e8f5e9" stroke="#27ae60" stroke-width="2" />
+                            <text x="30" y="20" text-anchor="middle" fill="#274e13" font-size="12">15</text>
+                        </g>
+                        <g transform="translate(180, 160)">
+                            <rect x="0" y="0" width="60" height="30" fill="#e8f5e9" stroke="#27ae60" stroke-width="2" />
+                            <text x="30" y="20" text-anchor="middle" fill="#274e13" font-size="12">25</text>
+                        </g>
+                        <g transform="translate(350, 160)">
+                            <rect x="0" y="0" width="60" height="30" fill="#e8f5e9" stroke="#27ae60" stroke-width="2" />
+                            <text x="30" y="20" text-anchor="middle" fill="#274e13" font-size="12">35</text>
+                        </g>
+                        <g transform="translate(440, 160)">
+                            <rect x="0" y="0" width="60" height="30" fill="#e8f5e9" stroke="#27ae60" stroke-width="2" />
+                            <text x="30" y="20" text-anchor="middle" fill="#274e13" font-size="12">45, 48</text>
+                        </g>
+                        <g transform="translate(520, 160)">
+                            <rect x="0" y="0" width="60" height="30" fill="#e8f5e9" stroke="#27ae60" stroke-width="2" />
+                            <text x="30" y="20" text-anchor="middle" fill="#274e13" font-size="12">55</text>
+                        </g>
+
+                        <!-- Edges -->
+                        <line x1="300" y1="50" x2="170" y2="80" stroke="#999" stroke-width="2" />
+                        <line x1="300" y1="50" x2="430" y2="80" stroke="#999" stroke-width="2" />
+                        <line x1="150" y1="110" x2="50" y2="160" stroke="#999" stroke-width="1" />
+                        <line x1="170" y1="110" x2="130" y2="160" stroke="#999" stroke-width="1" />
+                        <line x1="190" y1="110" x2="210" y2="160" stroke="#999" stroke-width="1" />
+                        <line x1="410" y1="110" x2="380" y2="160" stroke="#999" stroke-width="1" />
+                        <line x1="430" y1="110" x2="470" y2="160" stroke="#999" stroke-width="1" />
+                        <line x1="450" y1="110" x2="550" y2="160" stroke="#999" stroke-width="1" />
+
+                        <!-- Links between leaves -->
+                        <line x1="80" y1="175" x2="100" y2="175" stroke="#27ae60" stroke-width="2"
+                            stroke-dasharray="4" />
+                        <line x1="160" y1="175" x2="180" y2="175" stroke="#27ae60" stroke-width="2"
+                            stroke-dasharray="4" />
+                        <line x1="240" y1="175" x2="350" y2="175" stroke="#27ae60" stroke-width="2"
+                            stroke-dasharray="4" />
+                        <line x1="410" y1="175" x2="440" y2="175" stroke="#27ae60" stroke-width="2"
+                            stroke-dasharray="4" />
+                        <line x1="500" y1="175" x2="520" y2="175" stroke="#27ae60" stroke-width="2"
+                            stroke-dasharray="4" />
+                    </svg>
+                    <div style="font-size: 0.9rem; color: #555; margin-top: 10px;">
+                        <span style="color: #f39c12">■ Root</span> |
+                        <span style="color: #2c8dcf">■ Internal</span> |
+                        <span style="color: #27ae60">■ Leaf</span>
+                    </div>
+                </div>
+
+                <h2 class="section-title" style="margin-top: 3rem;">3. Αλγόριθμος Εισαγωγής (Insertion)</h2>
+
+                <div class="card">
+                    <h3><i class="fas fa-plus-circle"></i> Βήματα Εισαγωγής</h3>
+                    <ol style="line-height: 2;">
+                        <li><strong>Βρες το σωστό φύλλο \(L\):</strong> Κατέβα από τη ρίζα συγκρίνοντας το κλειδί με
+                            τους
+                            separators.</li>
+                        <li><strong>Έλεγχος χώρου:</strong>
+                            <ul>
+                                <li>Αν \(|L| &lt; 2d\) → Εισάγε στη σωστή θέση (ταξινομημένα). <strong>Τέλος.</strong>
+                                </li>
+                                <li>Αν \(|L| = 2d\) → <strong>Overflow!</strong> Προχώρα στο βήμα 3.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Split του φύλλου:</strong>
+                            <ul>
+                                <li>Εισάγε το κλειδί (τώρα έχεις \(2d+1\) κλειδιά)</li>
+                                <li>Δημιούργησε νέο φύλλο \(L'\)</li>
+                                <li>Μοίρασε: Πρώτα \(\lceil (2d+1)/2 \rceil\) στο \(L\), υπόλοιπα στο \(L'\)</li>
+                                <li><strong style="color: #e74c3c;">COPY UP:</strong> Αντίγραψε το πρώτο κλειδί του
+                                    \(L'\) στον
+                                    γονέα (το κλειδί μένει ΚΑΙ στο \(L'\))</li>
+                                <li>Σύνδεσε \(L.next = L'\)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Αν ο γονέας γεμίσει → Split εσωτερικού κόμβου:</strong>
+                            <ul>
+                                <li>Εισάγε το κλειδί που ανέβηκε</li>
+                                <li>Αν overflow (> \(2d\) κλειδιά), δημιούργησε νέο εσωτερικό κόμβο</li>
+                                <li><strong style="color: #e74c3c;">PUSH UP:</strong> Το μεσαίο κλειδί φεύγει και πάει
+                                    στον
+                                    παππού (ΔΕΝ μένει στους δύο νέους κόμβους)</li>
+                                <li>Μοίρασε τα υπόλοιπα κλειδιά και τα παιδιά</li>
+                            </ul>
+                        </li>
+                        <li><strong>Επανέλαβε:</strong> Αν ο παππούς γεμίσει, συνέχισε προς τα πάνω. Αν φτάσεις στη ρίζα
+                            και
+                            γεμίσει, δημιούργησε νέα ρίζα (το δέντρο μεγαλώνει κατά 1 επίπεδο).</li>
+                    </ol>
+                    <!-- Direct Insert Simulator -->
+                    <div class="simulator-container" id="btree-insert-container" style="margin-top: 2rem;">
+                        <div class="simulator-header">
+                            <span class="simulator-title"><i class="fas fa-play-circle"></i> B+ Tree Insertion
+                                Visualization</span>
+                        </div>
+                        <div class="simulator-controls" style="flex-wrap: wrap;">
+                            <div class="control-group">
+                                <input type="number" id="btree-insert-input" placeholder="Value" class="sim-input"
+                                    style="width: 70px;">
+                                <button id="btree-insert-btn" class="sim-btn primary" title="Insert"><i
+                                        class="fas fa-plus"></i></button>
+                                <button id="btree-insert-random" class="sim-btn" title="Random Single Insert"><i
+                                        class="fas fa-dice"></i></button>
+                            </div>
+
+                            <div class="control-group"
+                                style="background: rgba(0,0,0,0.05); padding: 5px 10px; border-radius: 4px; display: flex; align-items: center; gap: 5px;">
+                                <span style="font-size: 0.8rem; font-weight: bold;">Random Fill:</span>
+                                <input type="number" id="btree-depth" class="sim-input" value="2" min="1" max="4"
+                                    style="width: 40px;" title="Depth">
+                                <input type="number" id="btree-int-keys" class="sim-input" value="1" min="1" max="3"
+                                    style="width: 40px;" title="Keys/Internal">
+                                <input type="number" id="btree-leaf-keys" class="sim-input" value="2" min="1" max="3"
+                                    style="width: 40px;" title="Keys/Leaf">
+                                <button id="btree-random-fill-btn" class="sim-btn secondary" style="padding: 5px 10px;"
+                                    title="Generate Structural Random Tree">Fill</button>
+                            </div>
+
+                            <div class="control-group">
+                                <button id="btree-insert-prev" class="sim-btn" title="Previous Step"><i
+                                        class="fas fa-step-backward"></i></button>
+                                <button id="btree-insert-play" class="sim-btn" title="Play/Pause"><i
+                                        class="fas fa-play"></i></button>
+                                <button id="btree-insert-next" class="sim-btn" title="Next Step"><i
+                                        class="fas fa-step-forward"></i></button>
+                                <button id="btree-insert-reset" class="sim-btn" title="Reset Step"><i
+                                        class="fas fa-undo"></i></button>
+                                <button id="btree-insert-clear" class="sim-btn" title="Clear All"
+                                    style="color: #e74c3c;"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="btree-insert-speed" style="font-size: 0.85rem; color: #666;">Speed:</label>
+                            <input type="range" id="btree-insert-speed" class="sim-slider" min="1" max="100" value="50">
+                        </div>
+                    </div>
+                    <div class="simulator-canvas-container">
+                        <canvas id="btree-insert-canvas" style="width: 100%; height: 400px;"></canvas>
+                    </div>
+                    <div class="simulator-info" id="btree-insert-info">
+                        <p><i class="fas fa-info-circle"></i> Εισάγετε μια τιμή για να ξεκινήσει η προσομοίωση.</p>
+                    </div>
+                </div>
+        </div>
+
+        <!-- Copy Up vs Push Up -->
+        <div class="exam-warning" style="margin-top: 1.5rem;">
+            <div class="box-title"><i class="fas fa-exclamation-triangle"></i> ΚΡΙΣΙΜΟ: Copy Up vs Push Up</div>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 0.5rem;">
+                <tr style="background: #fff3cd;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Σενάριο</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Κανόνας</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Αιτιολογία</th>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong>Leaf Split</strong></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong>COPY UP</strong></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">Το κλειδί πρέπει να υπάρχει στο φύλλο για
+                        data
+                        lookup</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong>Internal Split</strong></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong>PUSH UP</strong></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">Το κλειδί είναι απλά separator, δεν
+                        χρειάζεται
+                        αντίγραφο</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Worked Example -->
+        <div class="card" style="margin-top: 2rem; background: #f8f9fa;">
+            <h3><i class="fas fa-pencil-alt"></i> Worked Example: Εισαγωγή του 17</h3>
+            <p><strong>Αρχική κατάσταση (d=2, Max=4):</strong> Φύλλο με [10, 15, 20, 25]</p>
+            <div style="background: white; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                <p><strong>Βήμα 1:</strong> Εισαγωγή 17 → [10, 15, 17, 20, 25] (5 κλειδιά, Overflow!)</p>
+                <p><strong>Βήμα 2:</strong> Split σε:</p>
+                <ul>
+                    <li>Αριστερό φύλλο \(L\): [10, 15, 17]</li>
+                    <li>Δεξί φύλλο \(L'\): [20, 25]</li>
+                </ul>
+                <p><strong>Βήμα 3:</strong> <strong style="color: #e74c3c;">COPY UP</strong> το 20 στον γονέα
+                    (το 20
+                    μένει και στο \(L'\))</p>
+                <p><strong>Αποτέλεσμα:</strong> Ο γονέας τώρα έχει το κλειδί 20, που σημαίνει "αριστερά < 20, δεξιά ≥
+                        20"</p>
+            </div>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 3rem;">4. Αλγόριθμος Διαγραφής (Deletion)</h2>
+
+        <div class="card">
+            <h3><i class="fas fa-trash-alt"></i> Βήματα Διαγραφής</h3>
+            <ol style="line-height: 2;">
+                <li><strong>Βρες το φύλλο \(L\)</strong> που περιέχει το κλειδί.</li>
+                <li><strong>Διέγραψε</strong> το κλειδί από το \(L\).</li>
+                <li><strong>Έλεγχος Underflow:</strong>
+                    <ul>
+                        <li>Αν \(|L| \geq d\) → <strong>OK, Τέλος.</strong></li>
+                        <li>Αν \(|L| &lt; d\) → <strong>Underflow!</strong> Προχώρα στο βήμα 4.</li>
+                    </ul>
+                </li>
+                <li><strong>Χειρισμός Underflow - Δύο Περιπτώσεις:</strong>
+                    <ul>
+                        <li><strong>Α. Δανεισμός (Redistribution):</strong> Αν ο αδελφός έχει > \(d\) κλειδιά
+                            <ul>
+                                <li>Πάρε ένα κλειδί από τον αδελφό</li>
+                                <li>Ενημέρωσε τον separator στον γονέα</li>
+                                <li><strong>Τέλος</strong> (το underflow λύθηκε)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Β. Συγχώνευση (Merge):</strong> Αν ο αδελφός έχει ακριβώς \(d\) κλειδιά
+                            <ul>
+                                <li>Ένωσε τα δύο φύλλα σε ένα</li>
+                                <li><strong style="color: #e74c3c;">PULL DOWN:</strong> (Μόνο για εσωτερικούς)
+                                    Κατέβασε
+                                    τον separator από τον γονέα και βάλε τον στο νέο ενωμένο κόμβο</li>
+                                <li>Διέγραψε τον separator από τον γονέα</li>
+                                <li>Έλεγξε αναδρομικά τον γονέα για underflow</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li><strong>Ειδική Περίπτωση - Ρίζα:</strong> Αν η ρίζα μείνει με 0 κλειδιά και 1 παιδί, το
+                    παιδί
+                    γίνεται νέα ρίζα (το δέντρο συρρικνώνεται κατά 1 επίπεδο).</li>
+            </ol>
+            <!-- Direct Delete Simulator -->
+            <div class="simulator-container" id="btree-delete-container" style="margin-top: 2rem;">
+                <div class="simulator-header">
+                    <span class="simulator-title"><i class="fas fa-trash-alt"></i> B+ Tree Deletion
+                        Visualization</span>
+                </div>
+                <div class="simulator-controls" style="background: #fdf2f2;">
+                    <div class="control-group">
+                        <input type="number" id="btree-delete-input" placeholder="Val" class="sim-input"
+                            style="width: 70px;">
+                        <button id="btree-delete-add-btn" class="sim-btn" title="Insert Helper"><i
+                                class="fas fa-plus"></i></button>
+                        <button id="btree-delete-btn" class="sim-btn primary" title="Delete"
+                            style="background: #e74c3c;"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div class="control-group">
+                        <button id="btree-delete-prev" class="sim-btn" title="Previous Step"><i
+                                class="fas fa-step-backward"></i></button>
+                        <button id="btree-delete-play" class="sim-btn" title="Play/Pause"><i
+                                class="fas fa-play"></i></button>
+                        <button id="btree-delete-next" class="sim-btn" title="Next Step"><i
+                                class="fas fa-step-forward"></i></button>
+                        <button id="btree-delete-reset" class="sim-btn" title="Reset"><i
+                                class="fas fa-redo"></i></button>
+                        <button id="btree-delete-clear" class="sim-btn" title="Clear All" style="color: #e74c3c;"><i
+                                class="fas fa-trash-alt"></i></button>
+                    </div>
+                    <div class="control-group">
+                        <label for="btree-delete-speed" style="font-size: 0.85rem; color: #666;">Speed:</label>
+                        <input type="range" id="btree-delete-speed" class="sim-slider" min="1" max="100" value="50">
+                    </div>
+                </div>
+                <div class="simulator-canvas-container">
+                    <canvas id="btree-delete-canvas" style="width: 100%; height: 400px;"></canvas>
+                </div>
+                <div class="simulator-info" id="btree-delete-info">
+                    <p><i class="fas fa-info-circle"></i> Εισάγετε τιμή για διαγραφή.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Borrow vs Merge Decision -->
+        <div class="prof-tip" style="margin-top: 1.5rem;">
+            <div class="box-title"><i class="fas fa-question-circle"></i> Πώς Επιλέγω: Borrow ή Merge;</div>
+            <p><strong>Κανόνας:</strong> Πρώτα προσπαθούμε Borrow. Αν δεν γίνεται, κάνουμε Merge.</p>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <tr>
+                    <th style="padding: 8px; background: #e3f2fd; border: 1px solid #ddd;">Κατάσταση Αδελφού
+                    </th>
+                    <th style="padding: 8px; background: #e3f2fd; border: 1px solid #ddd;">Ενέργεια</th>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">Έχει > \(d\) κλειδιά</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong style="color: #27ae60;">Borrow</strong>
+                        (Δάνεισέ ένα)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">Έχει ακριβώς \(d\) κλειδιά</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong style="color: #e74c3c;">Merge</strong>
+                        (Ένωση)</td>
+                </tr>
+            </table>
+            <p style="margin-top: 0.5rem;"><strong>Προσοχή:</strong> Στην Merge εσωτερικών κόμβων, ο separator
+                "κατεβαίνει" από τον γονέα (Pull Down) και γίνεται κανονικό κλειδί στον νέο κόμβο.</p>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 3rem;">5. Τυπολόγιο & Formulas</h2>
+
+        <div class="formula-box">
+            <div class="box-title"><i class="fas fa-calculator"></i> Βασικοί Τύποι</div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Ύψος δέντρου:</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">\(h \leq \lceil \log_d(N) \rceil\)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Max keys ανά κόμβο:</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">\(2d\)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Min keys (όχι ρίζα):</strong>
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">\(d\)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Pointers σε εσωτερικό με \(k\)
+                            keys:</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">\(k + 1\)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Κόστος Search:</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">\(O(h) = O(\log_d N)\) I/Os</td>
+                </tr>
+            </table>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 3rem;">6. Exam Tips & Common Mistakes</h2>
+
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+            <div class="exam-warning">
+                <div class="box-title"><i class="fas fa-bomb"></i> Συχνά Λάθη</div>
+                <ul>
+                    <li><strong>Push Up σε φύλλα:</strong> ΌΧΙ! Τα φύλλα κάνουν COPY UP.</li>
+                    <li><strong>Ξεχνάς το \(P_{next}\):</strong> Τα φύλλα είναι linked list!</li>
+                    <li><strong>Μην αγνοείς τη ρίζα:</strong> Μπορεί να έχει 1-\(2d\) κλειδιά (εξαίρεση)</li>
+                    <li><strong>Μην υποθέτεις το \(d\):</strong> Διάβασε προσεκτικά την εκφώνηση</li>
+                </ul>
+            </div>
+
+            <div class="prof-tip">
+                <div class="box-title"><i class="fas fa-graduation-cap"></i> Στρατηγική Εξετάσεων</div>
+                <ul>
+                    <li><strong>Σχεδίασε κάθε βήμα:</strong> Μην πας απευθείας στο τελικό αποτέλεσμα</li>
+                    <li><strong>Δείξε Copy Up / Push Up:</strong> Γράψε ρητά τι κάνεις</li>
+                    <li><strong>Ψηφία ΑΜ:</strong> Συχνά ζητάει να φτιάξεις δέντρο με τα ψηφία σου</li>
+                    <li><strong>Underflow:</strong> Πρώτα Borrow, μετά Merge</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+    </div>
+    </main>
+    </div>
+
+    </div>
+
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/nav-config.js"></script>
+    <script src="../../assets/js/nav-system.js"></script>
+    <script src="../../assets/js/simulators/base.js"></script>
+    <script src="../../assets/js/simulators/btree.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Render Math
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "\\(", right: "\\)", display: false },
+                    { left: "\\[", right: "\\]", display: true }
+                ]
+            });
+
+            // Initialize Insert Simulator
+            const insertSim = new BTreeSimulator('btree-insert-canvas');
+            insertSim.config.maxKeys = 3;
+            document.getElementById('btree-insert-btn').onclick = () => {
+                const val = document.getElementById('btree-insert-input').value;
+                if (val) insertSim.startInsert(val);
+            };
+            document.getElementById('btree-insert-random').onclick = () => {
+                const val = Math.floor(Math.random() * 100);
+                document.getElementById('btree-insert-input').value = val;
+                insertSim.startInsert(val);
+            };
+
+            document.getElementById('btree-random-fill-btn').onclick = () => {
+                const d = parseInt(document.getElementById('btree-depth').value);
+                const ik = parseInt(document.getElementById('btree-int-keys').value);
+                const lk = parseInt(document.getElementById('btree-leaf-keys').value);
+                insertSim.randomFill(d, ik, lk);
+            };
+
+            // Initial data for insert sim
+            [10].forEach(k => insertSim.executeInsert(k));
+            insertSim.currentStepIndex = insertSim.steps.length - 1;
+            insertSim.updateUI();
+
+            // Initialize Delete Simulator
+            const deleteSim = new BTreeSimulator('btree-delete-canvas');
+            deleteSim.config.maxKeys = 3;
+            // Pre-fill delete simulator
+            [10, 20, 5, 6, 12, 30, 7].forEach(k => deleteSim.executeInsert(k));
+            deleteSim.steps = []; // Clear insert steps
+            deleteSim.addStep("Initial Tree", deleteSim.cloneTree(deleteSim.root));
+            deleteSim.currentStepIndex = 0;
+            deleteSim.updateUI();
+
+            document.getElementById('btree-delete-add-btn').onclick = () => {
+                const val = document.getElementById('btree-delete-input').value;
+                if (val) deleteSim.startInsert(val);
+            };
+            document.getElementById('btree-delete-btn').onclick = () => {
+                const val = document.getElementById('btree-delete-input').value;
+                if (val) deleteSim.startDelete(val);
+            };
+        });
+    </script>
+</body>
+
+</html>

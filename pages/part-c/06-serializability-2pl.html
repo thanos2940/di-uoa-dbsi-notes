@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Σειριοποιησιμότητα & 2PL | ΥΣΒΔ</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/simulator.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="../../index.html" class="logo">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul class="nav-links">
+                <li><a href="../../index.html#part-a">Φυσική Οργάνωση</a></li>
+                <li><a href="../../index.html#part-b">Επεξεργασία</a></li>
+                <li><a href="../../index.html#part-c" style="color: var(--primary-blue);">Συνδρομικότητα</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumbs" style="margin: 2rem 0;">
+            <a href="../../index.html">Αρχική</a> &gt;
+            <a href="../../index.html#part-c">Συνδρομικότητα</a> &gt;
+            Σειριοποιησιμότητα & 2PL
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-card">
+                    <h4><i class="fas fa-list"></i> Κεφάλαιο Γ</h4>
+                    <nav class="sidebar-links">
+                        <a href="06-serializability-2pl.html" class="active"><i class="fas fa-shield-alt"></i>
+                            Σειριοποιησιμότητα & 2PL</a>
+                        <a href="03-serializability.html"><i class="fas fa-project-diagram"></i> Conflict Graph</a>
+                        <a href="05-two-phase-locking.html"><i class="fas fa-lock"></i> Lock Manager</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <h1 style="color: var(--primary-blue-dark); margin-bottom: 2rem;">Σειριοποιησιμότητα & Two-Phase Locking
+                </h1>
+
+                <!-- Intro -->
+                <div class="card" style="margin-bottom: 2rem; border-left: 5px solid var(--primary-blue);">
+                    <h3><i class="fas fa-bullseye"></i> Το Πρόβλημα της Συνδρομικότητας</h3>
+                    <p>
+                        Όταν πολλές <strong>δοσοληψίες (transactions)</strong> εκτελούνται ταυτόχρονα, μπορεί να
+                        προκύψουν
+                        <strong>ασυνέπειες</strong> (lost updates, dirty reads, inconsistent states).
+                    </p>
+                    <p>
+                        <strong>Στόχος:</strong> Να εγγυηθούμε ότι το αποτέλεσμα της ταυτόχρονης εκτέλεσης είναι
+                        ισοδύναμο
+                        με <strong>κάποια σειριακή εκτέλεση</strong> των transactions.
+                    </p>
+                </div>
+
+                <!-- Definitions -->
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem;">
+                    <div class="card">
+                        <h3><i class="fas fa-book"></i> Βασικές Έννοιες</h3>
+                        <ul style="line-height: 2;">
+                            <li><strong>Schedule (Χρονοπρόγραμμα):</strong> Η χρονική διάταξη των πράξεων πολλών
+                                transactions
+                            </li>
+                            <li><strong>Serial Schedule:</strong> Οι transactions εκτελούνται η μία μετά την άλλη (χωρίς
+                                παράλληλη)</li>
+                            <li><strong>Serializable:</strong> Ένα schedule που δίνει το ίδιο αποτέλεσμα με κάποιο
+                                serial
+                                schedule</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Τύποι Συγκρούσεων</h3>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 0.5rem;">
+                            <tr style="background: #fff3cd;">
+                                <th style="padding: 8px; border: 1px solid #ddd;">Πράξεις</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Σύγκρουση;</th>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">Read-Read (RR)</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">❌ ΟΧΙ</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">Read-Write (RW)</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">✅ ΝΑΙ</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">Write-Read (WR)</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">✅ ΝΑΙ</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">Write-Write (WW)</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">✅ ΝΑΙ</td>
+                            </tr>
+                        </table>
+                        <p style="margin-top: 0.5rem; font-size: 0.95rem;">
+                            <strong>Κανόνας:</strong> Σύγκρουση υπάρχει αν τουλάχιστον μία πράξη είναι Write.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Locks Theory Section (Replaces/Enhances the definition part) -->
+                <h2 class="section-title" style="margin-top: 3rem;">1. Θεωρία Κλειδωμάτων (Locks Theory)</h2>
+
+                <div class="card">
+                    <h3><i class="fas fa-key"></i> Τι είναι τα Locks; (Διαισθητική Προσέγγιση)</h3>
+                    <p>
+                        Φανταστείτε μια βάση δεδομένων σαν ένα <strong>κτίριο με πολλά δωμάτια</strong>. Κάθε δωμάτιο
+                        περιέχει ένα δεδομένο (π.χ. το υπόλοιπο ενός λογαριασμού).
+                    </p>
+                    <div style="display: flex; gap: 2rem; margin-top: 1.5rem; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 300px;">
+                            <h4 style="color: var(--primary-color);">Το Πρόβλημα χωρίς Locks</h4>
+                            <p>Αν δύο άτομα (transactions) μπουν στο ίδιο δωμάτιο ταυτόχρονα και αρχίσουν να γράφουν
+                                στον πίνακα, θα <strong>μουντζουρώσουν</strong> ο ένας τα γράμματα του άλλου. Αυτό είναι
+                                το <em>Lost Update</em> ή <em>Inconsistent Read</em>.</p>
+                        </div>
+                        <div style="flex: 1; min-width: 300px;">
+                            <h4 style="color: #27ae60;">Η Λύση: Locks = Κλειδιά</h4>
+                            <p>Πριν μπεις σε δωμάτιο, πρέπει να ζητήσεις το <strong>κλειδί</strong>. Αν το έχει άλλος,
+                                <strong>περιμένεις (Wait)</strong> έξω από την πόρτα μέχρι να βγει.</p>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">Είδη Κλειδιών (Lock
+                        Modes)</h4>
+                    <p>Δεν είναι όλα τα κλειδιά ίδια. Εξαρτάται τι θες να κάνεις στο δωμάτιο:</p>
+
+                    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                        <div
+                            style="background: #eeffee; padding: 1rem; border-radius: 8px; border-left: 4px solid #27ae60;">
+                            <strong style="color: #27ae60; font-size: 1.1rem;">Shared Lock (S) - "Το Κλειδί
+                                Επισκέπτη"</strong>
+                            <p style="margin-top: 0.5rem;">
+                                <em>"Θέλω απλά να διαβάσω/δω τι γράφει ο πίνακας."</em>
+                            </p>
+                            <ul style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                <li><strong>Πολλαπλά αντίγραφα:</strong> Πολλοί επισκέπτες μπορούν να έχουν S-lock
+                                    ταυτόχρονα.</li>
+                                <li><strong>Απαγόρευση:</strong> Κανείς δεν μπορεί να αλλάξει τίποτα όσο υπάρχουν
+                                    επισκέπτες.</li>
+                            </ul>
+                        </div>
+                        <div
+                            style="background: #ffebee; padding: 1rem; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                            <strong style="color: #e74c3c; font-size: 1.1rem;">Exclusive Lock (X) - "Το Κλειδί
+                                Ιδιοκτήτη"</strong>
+                            <p style="margin-top: 0.5rem;">
+                                <em>"Θέλω να σβήσω και να γράψω νέα τιμή."</em>
+                            </p>
+                            <ul style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                <li><strong>Μοναδικό:</strong> Μόνο ΕΝΑΣ μπορεί να έχει X-lock.</li>
+                                <li><strong>Απαγόρευση:</strong> Κανείς άλλος δεν μπαίνει (ούτε για ανάγνωση, ούτε για
+                                    εγγραφή).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h3><i class="fas fa-traffic-light"></i> Ο Lock Manager</h3>
+                    <p>Είναι ο "θυρωρός" του κτιρίου. Κάθε transaction πρέπει να ακολουθεί τον κανόνα:</p>
+                    <ol style="margin-top: 0.5rem; line-height: 1.8;">
+                        <li><strong>Request:</strong> Ζητάω το κλειδί για το αντικείμενο A.</li>
+                        <li><strong>Wait/Grant:</strong> Ο Lock Manager ελέγχει το τετράδιο (Lock Table).
+                            <ul>
+                                <li>Αν το δωμάτιο είναι ελεύθερο (ή συμβατό), δίνει το κλειδί (Grant).</li>
+                                <li>Αν όχι, με βάζει στην ουρά αναμονής (Queue).</li>
+                            </ul>
+                        </li>
+                        <li><strong>Operation:</strong> Κάνω τη δουλειά μου (Read/Write).</li>
+                        <li><strong>Release (Unlock):</strong> Επιστρέφω το κλειδί στον θυρωρό.</li>
+                    </ol>
+                </div>
+
+                <h2 class="section-title" style="margin-top: 3rem;">2. Precedence Graph (Conflict Serializability)</h2>
+
+                <div class="card">
+                    <h3><i class="fas fa-project diagram"></i> Τι είναι ο Precedence Graph;</h3>
+                    <p>
+                        Ένας <strong>κατευθυνόμενος γράφος</strong> που δείχνει τις εξαρτήσεις μεταξύ των transactions
+                        λόγω
+                        συγκρούσεων.
+                    </p>
+
+                    <h4 style="margin-top: 1.5rem;">Αλγόριθμος Κατασκευής</h4>
+                    <ol style="line-height: 2;">
+                        <li><strong>Κόμβοι:</strong> Ένας κόμβος για κάθε transaction \(T_i\)</li>
+                        <li><strong>Ακμές:</strong> Για κάθε ζεύγος συγκρουόμενων πράξεων στο ίδιο αντικείμενο \(X\):
+                            <ul>
+                                <li>Αν η πράξη του \(T_i\) εκτελείται <strong>πριν</strong> από την πράξη του \(T_j\)
+                                </li>
+                                <li>Προσθέτουμε ακμή \(T_i \to T_j\)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Έλεγχος Κύκλου:</strong>
+                            <ul>
+                                <li><strong>Ακυκλικός:</strong> Το schedule είναι <strong
+                                        style="color: #27ae60;">Conflict
+                                        Serializable</strong> ✓</li>
+                                <li><strong>Κυκλικός:</strong> Το schedule <strong style="color: #e78f3c;">Είναι ΑΓΝΩΣΤΟ
+                                        αν ειναι Serializable</strong> ?</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+
+                <!-- Example -->
+                <div class="card" style="margin-top: 2rem; background: #f8f9fa;">
+                    <h3><i class="fas fa-pencil-alt"></i> Παράδειγμα</h3>
+                    <p><strong>Schedule:</strong></p>
+                    <pre
+                        style="background: white; padding: 1rem; font-family: monospace; border-left: 3px solid #3498db;">
+R₁[X]  W₂[X]  W₁[X]  R₂[Y]  W₂[Y]
+            </pre>
+
+                    <p style="margin-top: 1rem;"><strong>Βήμα 1: Εντοπισμός Συγκρούσεων</strong></p>
+                    <ul>
+                        <li>Αντικείμενο X:
+                            <ul>
+                                <li>\(R_1[X]\) vs \(W_2[X]\) (RW): \(T_1 \to T_2\)</li>
+                                <li>\(W_2[X]\) vs \(W_1[X]\) (WW): \(T_2 \to T_1\)</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <p style="margin-top: 1rem;"><strong>Βήμα 2: Γράφος</strong></p>
+                    <pre style="background: white; padding: 1rem;">
+T₁ ⟷ T₂  (κύκλος!)
+            </pre>
+
+                    <div style="background: #fee; padding: 1rem; border-left: 3px solid #e74c3c; margin-top: 1rem;">
+                        <strong style="color: #e74c3c;">Αποτέλεσμα:</strong> Υπάρχει κύκλος → Το schedule <strong>δεν
+                            ξέρουμε αν
+                            είναι
+                            Serializable</strong>
+                    </div>
+                </div>
+
+                <!-- Direct Conflict Graph Simulator -->
+                <div class="card" style="margin-top: 2rem; margin-bottom: 1rem;">
+                    <h3><i class="fas fa-keyboard"></i> Input Schedule</h3>
+                    <textarea id="graph-schedule-input" rows="2"
+                        style="width:100%; font-family:monospace; font-size:1.1rem; padding:10px; border:1px solid #ddd; border-radius:4px;">R1[X] W2[X] R2[Y] W1[Y]</textarea>
+                    <div style="margin-top: 10px; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size: 0.9rem; color: #666;">Format: R1[X] W2[X]...</span>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="graph-random-btn" class="btn btn-secondary"><i class="fas fa-dice"></i>
+                                Random</button>
+                            <button id="graph-build-btn" class="btn btn-primary"><i class="fas fa-project-diagram"></i>
+                                Build Graph</button>
+                            <button id="graph-clear" class="btn btn-danger" style="background: #e74c3c; color: white;"
+                                title="Clear All"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="simulator-container" id="graph-container">
+                    <div class="simulator-header">
+                        <span class="simulator-title">Precedence Graph Visualization</span>
+                    </div>
+                    <div class="simulator-canvas-container">
+                        <canvas id="graph-canvas" style="width: 100%; height: 400px;"></canvas>
+                    </div>
+                    <div class="simulator-info" id="graph-info">
+                        <p><i class="fas fa-arrow-right"></i> Οι ακμές δείχνουν conflict (RW, WR, WW). Κύκλος = ΜΗ
+                            Σειριοποιήσιμο.</p>
+                    </div>
+                </div>
+        </div>
+
+        <div class="exam-warning" style="margin-top: 1.5rem;">
+            <div class="box-title"><i class="fas fa-exclamation-circle"></i> ΚΡΙΤΙΚΗ Διάκριση</div>
+            <p><strong>Precedence Graph Cycle ≠ Deadlock!</strong></p>
+            <ul>
+                <li><strong>Precedence Graph:</strong> Δείχνει <strong>ασυνέπεια δεδομένων</strong> (όχι σειριοποιήσιμο)
+                </li>
+                <li><strong>Wait-For Graph:</strong> Δείχνει <strong>deadlock</strong> (transactions περιμένουν η μία
+                    την άλλη)</li>
+            </ul>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 3rem;">3. Two-Phase Locking (2PL)</h2>
+
+        <div class="card">
+            <h3><i class="fas fa-mountain"></i> Η Διαισθητική Ιδέα του 2PL</h3>
+            <p>
+                Το να χρησιμοποιείς locks δεν αρκεί. Το <strong>πότε</strong> τα παίρνεις και <strong>πότε</strong> τα
+                αφήνεις έχει σημασία.
+            </p>
+            <p>
+                Το 2PL μας αναγκάζει να συμπεριφερόμαστε σαν να <strong>ανεβαίνουμε και να κατεβαίνουμε ένα
+                    βουνό</strong>.
+            </p>
+
+            <div
+                style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #e9ecef;">
+                <h4 style="margin-bottom: 0.5rem; color: #4a5568;">Ο Χρυσός Κανόνας:</h4>
+                <p style="font-size: 1.1rem; font-weight: 500; color: #2d3748;">
+                    "Δεν επιτρέπεται να ζητήσεις ΚΑΝΕΝΑ νέο κλειδί, από τη στιγμή που θα επιστρέψεις ΕΣΤΩ ΚΑΙ ΕΝΑ."
+                </p>
+            </div>
+
+            <p style="margin-top: 1rem;">
+                Αυτό χωρίζει τη ζωή της transaction σε δύο φάσεις:
+            </p>
+            <ol>
+                <li><strong>Φάση Ανάπτυξης (Growing Phase):</strong> Μαζεύω όσα κλειδιά χρειάζομαι. Μόνο παίρνω, δεν
+                    δίνω πίσω τίποτα. Φτάνω στην κορυφή (Lock Point).</li>
+                <li><strong>Φάση Συρρίκνωσης (Shrinking Phase):</strong> Αφού τελειώσω τις κρίσιμες δουλειές, αρχίζω να
+                    επιστρέφω κλειδιά. Μόνο δίνω, δεν παίρνω τίποτα πια.</li>
+            </ol>
+        </div>
+
+        <!-- Phases -->
+        <div class="grid"
+            style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+            <div class="card" style="border-left: 4px solid #27ae60;">
+                <h4 style="color: #27ae60;"><i class="fas fa-arrow-up"></i> Growing Phase (Φάση Ανάπτυξης)</h4>
+                <p><strong>Επιτρέπεται:</strong></p>
+                <ul>
+                    <li>Ζητάει <strong>S-locks</strong> (Shared) για Read</li>
+                    <li>Ζητάει <strong>X-locks</strong> (Exclusive) για Write</li>
+                    <li>Upgrade: S-lock → X-lock (αν χρειαστεί)</li>
+                </ul>
+                <p style="margin-top: 0.5rem;"><strong>ΑΠΑΓΟΡΕΥΕΤΑΙ:</strong></p>
+                <ul>
+                    <li style="color: #e74c3c;">❌ Απελευθέρωση οποιουδήποτε lock</li>
+                </ul>
+            </div>
+
+            <div class="card" style="border-left: 4px solid #e74c3c;">
+                <h4 style="color: #e74c3c;"><i class="fas fa-arrow-down"></i> Shrinking Phase (Φάση Συρρίκνωσης)</h4>
+                <p><strong>Επιτρέπεται:</strong></p>
+                <ul>
+                    <li>Απελευθέρωση locks (Unlock)</li>
+                    <li>Downgrade: X-lock → S-lock (αν χρειαστεί)</li>
+                </ul>
+                <p style="margin-top: 0.5rem;"><strong>ΑΠΑΓΟΡΕΥΕΤΑΙ:</strong></p>
+                <ul>
+                    <li style="color: #e74c3c;">❌ Ζήτηση νέων locks</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 2PL Visual Curve -->
+        <div class="card" style="margin-top: 1.5rem; text-align: center;">
+            <h4><i class="fas fa-chart-line"></i> Ο Κύκλος Ζωής του 2PL</h4>
+            <p>Η βασική αρχή του 2PL είναι ότι <strong>δεν μπορείς να πάρεις νέα locks αφού απελευθερώσεις έστω και
+                    ένα</strong>.</p>
+
+            <!-- SVG Visualization -->
+            <svg viewBox="0 0 600 220"
+                style="width: 100%; max-width: 600px; margin-top: 1rem; background: #fafafa; border-radius: 8px;">
+                <!-- Axes -->
+                <line x1="50" y1="180" x2="550" y2="180" stroke="#333" stroke-width="2" />
+                <line x1="50" y1="180" x2="50" y2="20" stroke="#333" stroke-width="2" />
+                <text x="540" y="195" font-family="Arial" font-size="12">Time</text>
+                <text x="15" y="30" font-family="Arial" font-size="12" transform="rotate(-90 20,30)"
+                    style="font-weight: bold;">Locks Held</text>
+
+                <!-- Triangle -->
+                <path d="M 50 180 L 300 50 L 550 180" fill="rgba(102, 126, 234, 0.1)" stroke="#667eea"
+                    stroke-width="3" />
+
+                <!-- Phases Labels -->
+                <text x="130" y="140" font-family="Arial" font-size="16" fill="#27ae60" font-weight="bold">Growing
+                    Phase</text>
+                <text x="380" y="140" font-family="Arial" font-size="16" fill="#e74c3c" font-weight="bold">Shrinking
+                    Phase</text>
+
+                <!-- Lock Point -->
+                <circle cx="300" cy="50" r="6" fill="#f39c12" />
+                <text x="300" y="35" font-family="Arial" font-size="14" fill="#f39c12" font-weight="bold"
+                    text-anchor="middle">Lock Point</text>
+                <text x="300" y="195" font-family="Arial" font-size="12" fill="#666" text-anchor="middle">First Unlock
+                    Action</text>
+                <line x1="300" y1="50" x2="300" y2="180" stroke="#f39c12" stroke-width="2" stroke-dasharray="5,5" />
+
+                <!-- Icons -->
+                <text x="150" y="160" font-family="FontAwesome" font-size="20" fill="#27ae60"></text>
+                <!-- Lock Open -->
+                <text x="400" y="160" font-family="FontAwesome" font-size="20" fill="#e74c3c"></text>
+                <!-- Lock Open/Close metaphor -->
+            </svg>
+        </div>
+
+        <!-- Lock Compatibility -->
+        <div class="card" style="margin-top: 2rem;">
+            <h3><i class="fas fa-table"></i> Πίνακας Συμβατότητας Locks</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <tr style="background: #e3f2fd;">
+                    <th style="padding: 10px; border: 1px solid #ddd;">Έχουμε \ Ζητάμε</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">Shared (S)</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">Exclusive (X)</th>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Τίποτα (-)</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ddd; background: #d4edda;">✓ Grant</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; background: #d4edda;">✓ Grant</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Shared (S)</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ddd; background: #d4edda;">✓ Grant (Multiple readers
+                        OK)</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; background: #f8d7da;">✗ Wait</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Exclusive (X)</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ddd; background: #f8d7da;">✗ Wait</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; background: #f8d7da;">✗ Wait</td>
+                </tr>
+            </table>
+        </div>
+
+        <h3 style="margin-top: 2.5rem;"><i class="fas fa-layer-group"></i> Παραλλαγές του 2PL</h3>
+
+        <div class="grid"
+            style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+            <!-- Basic 2PL -->
+            <div class="card" style="background: #fff3cd;">
+                <h4><i class="fas fa-unlock"></i> Basic 2PL</h4>
+                <p><strong>Κανόνας:</strong> Growing phase → Shrinking phase</p>
+                <p><strong>Πρόβλημα:</strong> Επιτρέπει <strong>Cascading Aborts</strong></p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                    <em>Παράδειγμα:</em> Αν \(T_1\) απελευθερώσει lock και κάνει abort, όλες οι transactions
+                    που διάβασαν dirty data πρέπει επίσης να γίνουν abort.
+                </p>
+            </div>
+
+            <!-- Strict 2PL -->
+            <div class="card" style="background: #d4edda; border-left: 4px solid #27ae60;">
+                <h4 style="color: #27ae60;"><i class="fas fa-lock"></i> Strict 2PL ⭐ (Πιο Συνηθισμένο)</h4>
+                <p><strong>Κανόνας:</strong> Όλα τα <strong>X-locks</strong> κρατιούνται μέχρι Commit/Abort</p>
+                <p><strong>Πλεονέκτημα:</strong> Αποτρέπει Cascading Aborts</p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                    Κανένας δεν μπορεί να διαβάσει "dirty" data γιατί τα X-locks δεν απελευθερώνονται νωρίς.
+                </p>
+            </div>
+
+            <!-- Rigorous 2PL -->
+            <div class="card" style="background: #e8f5e9;">
+                <h4><i class="fas fa-shield-alt"></i> Rigorous 2PL</h4>
+                <p><strong>Κανόνας:</strong> <strong>ΟΛΑ</strong> τα locks (S και X) κρατιούνται μέχρι το τέλος</p>
+                <p><strong>Πλεονέκτημα:</strong> Πιο απλό, πιο ασφαλές</p>
+                <p><strong>Μειονέκτημα:</strong> Λιγότερη παραλληλία (κρατάει και S-locks μέχρι το τέλος)</p>
+            </div>
+        </div>
+
+        <!-- Direct Lock Manager Simulator -->
+        <h3 style="margin-top: 2rem;"><i class="fas fa-lock"></i> Lock Manager Visualizer</h3>
+        <div class="simulator-container" id="lock-container">
+            <div class="simulator-header">
+                <span class="simulator-title"><i class="fas fa-lock"></i> Lock Table Simulator</span>
+            </div>
+
+            <div class="simulator-controls" style="justify-content: flex-start;">
+                <div class="control-group">
+                    <label>Txn:</label>
+                    <input type="number" id="lock-txn-id" value="1" class="sim-input" style="width:50px">
+                </div>
+                <div class="control-group">
+                    <label>Action:</label>
+                    <select id="lock-action" class="sim-input">
+                        <option value="S">Lock-S (Read)</option>
+                        <option value="X">Lock-X (Write)</option>
+                        <option value="U">Unlock (Release)</option>
+                        <option value="C">Commit</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Item:</label>
+                    <input type="text" id="lock-item" value="A" class="sim-input" style="width:50px">
+                </div>
+                <button id="lock-random-btn" class="sim-btn secondary" title="Random Action"
+                    style="width: auto; padding: 0 1rem; margin-right: 5px;"><i class="fas fa-dice"></i></button>
+                <button id="lock-exec-btn" class="sim-btn primary" title="Execute"
+                    style="width: auto; padding: 0 1rem; margin-right: 5px;">Execute <i class="fas fa-check"
+                        style="margin-left:5px"></i></button>
+                <button id="lock-clear" class="sim-btn" title="Clear All"
+                    style="color: #e74c3c; width: auto; padding: 0 1rem;"><i class="fas fa-trash-alt"></i></button>
+            </div>
+
+            <!-- 2PL Monitor Status -->
+            <div id="lock-2pl-status"
+                style="margin: 10px 0; padding: 12px; border-radius: 6px; background: #eef2f7; border-left: 5px solid #667eea; font-family: 'Segoe UI', sans-serif; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <div style="font-weight: bold; margin-bottom: 5px; color: #4a5568;"><i class="fas fa-microchip"></i> 2PL
+                    Protocol
+                    Monitor:</div>
+                <div id="lock-2pl-content" style="font-family: monospace; color: #666;">Waiting for transactions...
+                </div>
+            </div>
+
+            <div class="simulator-canvas-container">
+                <canvas id="lock-canvas" style="width: 100%; height: 400px;"></canvas>
+            </div>
+
+            <div class="simulator-info" id="lock-info">
+                <p><i class="fas fa-info-circle"></i> S-Locks are compatible. X-Locks are exclusive. Wait Queue
+                    implements FIFO.</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 2.5rem;"><i class="fas fa-exclamation-triangle"></i> Deadlocks στο 2PL</h3>
+
+        <div class="card">
+            <p><strong>Πρόβλημα:</strong> Το 2PL <strong style="color: #e74c3c;">ΔΕΝ</strong> αποτρέπει deadlocks!</p>
+
+            <div class="prof-tip" style="margin-top: 1rem; background: #fff3cd; padding: 1rem;">
+                <strong>Παράδειγμα Deadlock:</strong>
+                <pre style="background: white; padding: 0.75rem; margin-top: 0.5rem;">
+T₁: Lock-X(A)  ...  Lock-X(B)  [WAIT for B]
+T₂: Lock-X(B)  ...  Lock-X(A)  [WAIT for A]
+                </pre>
+                <p>Και οι δύο περιμένουν η μία την άλλη → <strong>Deadlock!</strong></p>
+            </div>
+
+            <h4 style="margin-top: 1.5rem;">Ανίχνευση Deadlock: Wait-For Graph</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>Κόμβοι:</strong> Transactions</li>
+                <li><strong>Ακμή \(T_i \to T_j\):</strong> Ο \(T_i\) περιμένει lock που κρατάει ο \(T_j\)</li>
+                <li><strong>Κύκλος στον WFG:</strong> Deadlock! (Ματαίωση μιας transaction)</li>
+            </ul>
+
+            <div class="exam-warning" style="margin-top: 1rem;">
+                <strong>Διάκριση:</strong>
+                <ul style="margin-top: 0.5rem;">
+                    <li><strong>Precedence Graph Cycle:</strong> Μη σειριοποιήσιμο schedule (λογικό πρόβλημα)</li>
+                    <li><strong>Wait-For Graph Cycle:</strong> Deadlock (αδιέξοδο εκτέλεσης)</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 3rem;">3. Exam Tips</h2>
+
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+            <div class="exam-warning">
+                <div class="box-title"><i class="fas fa-bomb"></i> Συχνά Λάθη</div>
+                <ul>
+                    <li><strong>Precedence Graph = Wait-For Graph:</strong> ΟΧΙ! Διαφορετικοί γράφοι!</li>
+                    <li><strong>2PL αποτρέπει deadlock:</strong> ΛΑΘΟΣ! Το 2PL δεν αποτρέπει deadlocks.</li>
+                    <li><strong>Κύκλος = Deadlock:</strong> Μόνο στον Wait-For Graph!</li>
+                    <li><strong>Ξεχνάς Strict 2PL:</strong> Είναι η πιο συνηθισμένη παραλλαγή στην πράξη.</li>
+                </ul>
+            </div>
+
+            <div class="prof-tip">
+                <div class="box-title"><i class="fas fa-graduation-cap"></i> Στρατηγική Εξετάσεων</div>
+                <ul>
+                    <li><strong>Precedence Graph:</strong> Διάβασε το schedule αριστερά-προς-δεξιά, βρες συγκρούσεις
+                    </li>
+                    <li><strong>Σχεδίασε τον γράφο:</strong> Μην κάνεις κύκλους στο μυαλό σου</li>
+                    <li><strong>2PL Check:</strong> Βρες το πρώτο Unlock. Μετά από αυτό, καμία νέα Lock;</li>
+                    <li><strong>Σωστό/Λάθος:</strong> Προσοχή στη διατύπωση (π.χ. "εγγυάται" vs "μπορεί")</li>
+                </ul>
+            </div>
+        </div>
+
+        <div
+            style="margin-top: 3rem; text-align: center; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;">
+            <h3 style="margin-bottom: 1rem; color: white;"><i class="fas fa-key"></i> Βασικές Αλήθειες</h3>
+            <div
+                style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem; text-align: left;">
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                    <strong style="color: #a7f3d0;">✓ Ακυκλικός Precedence Graph</strong>
+                    <p style="font-size: 0.9rem; margin-top: 0.25rem;">→ Conflict Serializable</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                    <strong style="color: #fca5a5;">? Κύκλος στον Precedence Graph</strong>
+                    <p style="font-size: 0.9rem; margin-top: 0.25rem;">→ ΔΕΝ ΞΕΡΟΥΜΕ αν είναι Serializable</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                    <strong style="color: #a7f3d0;">✓ 2PL Schedule</strong>
+                    <p style="font-size: 0.9rem; margin-top: 0.25rem;">→ Πάντα Conflict Serializable</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                    <strong style="color: #fca5a5;">✗ 2PL ΔΕΝ αποτρέπει</strong>
+                    <p style="font-size: 0.9rem; margin-top: 0.25rem;">→ Deadlocks</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </main>
+    </div>
+
+    </div>
+
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/simulators/base.js"></script>
+    <script src="../../assets/js/simulators/serialization-graph.js"></script>
+    <script src="../../assets/js/simulators/lock-manager.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Render Math
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "\\(", right: "\\)", display: false },
+                    { left: "\\[", right: "\\]", display: true }
+                ]
+            });
+
+            // Initialize Serialization Graph
+            const graphSim = new SerializationGraphBuilder('graph-canvas');
+            const buildGraph = () => {
+                const input = document.getElementById('graph-schedule-input').value;
+                graphSim.parseSchedule(input);
+            };
+            document.getElementById('graph-build-btn').onclick = buildGraph;
+
+            document.getElementById('graph-random-btn').onclick = () => {
+                const randomSched = graphSim.generateRandomSchedule();
+                document.getElementById('graph-schedule-input').value = randomSched;
+                buildGraph();
+            };
+
+            buildGraph();
+
+            document.getElementById('graph-clear').onclick = () => graphSim.clear();
+
+            // Initialize Lock Manager
+            const lockSim = new LockManagerSimulator('lock-canvas');
+            lockSim.drawState();
+
+            // 2PL State Tracking
+            const txnState = {}; // { tid: { phase: 'GROWING', locksHeld: 0, violated: false, committed: false } }
+
+            const update2PLMonitor = (tid, act) => {
+                if (!txnState[tid]) {
+                    txnState[tid] = { phase: 'GROWING', violated: false, committed: false };
+                }
+                const st = txnState[tid];
+
+                if (st.committed) return; // Ignore if committed
+
+                if (act === 'C') {
+                    st.committed = true;
+                    // Committing effectively finishes the shrinking phase
+                    if (!st.violated) st.phase = 'FINISHED';
+                } else if (act === 'U') {
+                    // Unlocking triggers shrinking phase if not already violated or shrinking
+                    if (st.phase === 'GROWING') {
+                        st.phase = 'SHRINKING';
+                    }
+                } else if (act === 'S' || act === 'X') {
+                    // Requesting lock
+                    if (st.phase === 'SHRINKING') {
+                        st.violated = true; // VIOLATION!
+                    }
+                }
+
+                renderMonitor();
+            };
+
+            const renderMonitor = () => {
+                const container = document.getElementById('lock-2pl-content');
+                let html = '';
+                const sortedTids = Object.keys(txnState).sort((a, b) => a - b);
+
+                if (sortedTids.length === 0) {
+                    container.innerHTML = "Waiting for transactions...";
+                    return;
+                }
+
+                sortedTids.forEach(tid => {
+                    const st = txnState[tid];
+                    let badgeClass = 'badge-growing';
+                    let text = 'GROWING';
+                    let icon = '<i class="fas fa-arrow-up"></i>';
+                    let color = '#27ae60';
+                    let bg = '#d4edda';
+
+                    if (st.violated) {
+                        text = 'VIOLATED (Request after Unlock)';
+                        icon = '<i class="fas fa-exclamation-triangle"></i>';
+                        color = '#721c24';
+                        bg = '#f8d7da';
+                    } else if (st.committed) {
+                        text = 'COMMITTED';
+                        icon = '<i class="fas fa-check-circle"></i>';
+                        color = '#666';
+                        bg = '#e2e3e5';
+                    } else if (st.phase === 'SHRINKING') {
+                        text = 'SHRINKING';
+                        icon = '<i class="fas fa-arrow-down"></i>';
+                        color = '#856404';
+                        bg = '#fff3cd';
+                    }
+
+                    html += `<span style="display:inline-block; margin-right:10px; padding: 4px 8px; border-radius: 4px; background: ${bg}; color: ${color}; border: 1px solid ${color}; font-size: 0.9rem;">
+                        <strong>T${tid}</strong>: ${icon} ${text}
+                    </span>`;
+                });
+                container.innerHTML = html;
+            };
+
+            document.getElementById('lock-exec-btn').onclick = () => {
+                const tid = document.getElementById('lock-txn-id').value;
+                const act = document.getElementById('lock-action').value;
+                const item = document.getElementById('lock-item').value;
+
+                update2PLMonitor(tid, act);
+                lockSim.startRequest(tid, act, item);
+            };
+
+            document.getElementById('lock-random-btn').onclick = () => {
+                const req = lockSim.generateRandomRequest();
+                document.getElementById('lock-txn-id').value = req.tid;
+                document.getElementById('lock-action').value = req.op;
+                document.getElementById('lock-item').value = req.item;
+
+                update2PLMonitor(req.tid, req.op);
+                lockSim.startRequest(req.tid, req.op, req.item);
+            };
+
+            document.getElementById('lock-clear').onclick = () => {
+                lockSim.clear();
+                // Clear monitor
+                for (let key in txnState) delete txnState[key];
+                renderMonitor();
+            };
+        });
+    </script>
+</body>
+
+</html>

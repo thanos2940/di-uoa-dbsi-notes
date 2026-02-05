@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B+ Tree Delete Simulator | ΥΣΒΔ</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/simulator.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="../../index.html" class="logo">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul class="nav-links">
+                <li><a href="../../index.html#part-a" style="color: var(--primary-blue);">Φυσική Οργάνωση</a></li>
+                <li><a href="../../index.html#part-b">Επεξεργασία</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumbs" style="margin: 2rem 0;">
+            <a href="../../index.html">Αρχική</a> &gt;
+            <a href="../../index.html#part-a">Φυσική Οργάνωση</a> &gt;
+            <a href="04-btree-basics.html">B+ Trees: Βασικά</a> &gt;
+            Διαγραφή
+        </div>
+
+        <h1>B+ Tree Simulator: Διαγραφή</h1>
+
+        <div class="simulator-container">
+            <div class="simulator-header">
+                <span class="simulator-title"><i class="fas fa-trash-alt"></i> B-Tree Deletion Visualization</span>
+            </div>
+
+            <div class="simulator-controls">
+                <div class="control-group">
+                    <input type="number" id="btree-input" placeholder="Val" class="sim-input" style="width: 60px;">
+                    <button id="btree-insert-btn" class="sim-btn" title="Insert Helper"><i
+                            class="fas fa-plus"></i></button>
+                    <button id="btree-delete-btn" class="sim-btn primary" title="Delete"><i
+                            class="fas fa-trash"></i></button>
+                </div>
+
+                <div class="control-group">
+                    <button id="btree-prev" class="sim-btn" title="Previous"><i
+                            class="fas fa-step-backward"></i></button>
+                    <button id="btree-play" class="sim-btn" title="Play/Pause"><i class="fas fa-play"></i></button>
+                    <button id="btree-next" class="sim-btn" title="Next"><i class="fas fa-step-forward"></i></button>
+                    <button id="btree-reset" class="sim-btn" title="Reset"><i class="fas fa-redo"></i></button>
+                </div>
+
+                <div class="control-group">
+                    <label style="font-size: 0.85rem; color: #666;">Speed:</label>
+                    <input type="range" id="btree-speed" class="sim-slider" min="1" max="100" value="50">
+                </div>
+
+                <div class="control-group" style="border-left: 1px solid #ddd; padding-left: 10px;">
+                    <label style="font-size: 0.8rem;">Order(N): <input type="number" id="btree-order-internal" value="4"
+                            min="3" style="width:35px;"></label>
+                    <label style="font-size: 0.8rem; margin-left:5px;">Leaf(M): <input type="number"
+                            id="btree-order-leaf" value="3" min="2" style="width:35px;"></label>
+                    <button id="btree-apply-config" class="sim-btn" title="Apply Config (Resets Tree)"
+                        style="font-size: 0.8rem;"><i class="fas fa-sync-alt"></i></button>
+                    <button id="btree-ex-underflow" class="sim-btn" title="Example: Parent Underflow"
+                        style="font-size: 0.8rem; margin-left: 5px;">Ex: Parent Underflow</button>
+                </div>
+            </div>
+
+            <div class="simulator-canvas-container">
+                <canvas id="btree-canvas" style="width: 100%; height: 500px;"></canvas>
+            </div>
+
+            <div class="simulator-info">
+                <p><i class="fas fa-info-circle"></i> Εισάγετε τιμή για διαγραφή. Αν δεν υπάρχει στο δέντρο, προσθέστε
+                    την πρώτα!</p>
+            </div>
+        </div>
+
+        <div class="row" style="display:flex; gap:2rem; flex-wrap:wrap;">
+            <div class="col" style="flex:1;">
+                <div class="exam-warning">
+                    <div class="box-title"><i class="fas fa-exclamation-circle"></i> Borrow vs Merge</div>
+                    Αν ένα φύλλο αδειάσει (keys &lt; d):
+                    <ul>
+                        <li>Πρώτα προσπαθούμε να "δανειστούμε" από αδελφό (Borrow).</li>
+                        <li>Αν δεν γίνεται, κάνουμε συγχώνευση (Merge).</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col" style="flex:1;">
+                <div class="prof-tip">
+                    <div class="box-title"><i class="fas fa-lightbulb"></i> Separator Key</div>
+                    Σε Merge εσωτερικών κόμβων, το κλειδί "διαχωριστής" κατεβαίνει από τον πατέρα (Pull-down).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/simulators/base.js"></script>
+    <script src="../../assets/js/simulators/btree.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sim = new BTreeSimulator('btree-canvas');
+            window.sim = sim;
+
+            // Sync initial state
+            sim.config.orderInternal = 4;
+            sim.config.orderLeaf = 3;
+
+            document.getElementById('btree-apply-config').onclick = () => {
+                const n = parseInt(document.getElementById('btree-order-internal').value);
+                const m = parseInt(document.getElementById('btree-order-leaf').value);
+                if (n < 3 || m < 2) return;
+
+                sim.config.orderInternal = n;
+                sim.config.orderLeaf = m;
+                sim.resetState();
+                sim.steps = [];
+                sim.currentStepIndex = -1;
+                sim.ctx.clearRect(0, 0, sim.canvas.width, sim.canvas.height);
+            };
+
+            document.getElementById('btree-ex-underflow').onclick = () => {
+                // Update config UI to match example
+                document.getElementById('btree-order-internal').value = 4;
+                document.getElementById('btree-order-leaf').value = 3;
+
+                sim.loadExample('parent-underflow');
+                document.getElementById('btree-input').value = 70; // Suggest next move
+                alert("Παράδειγμα φορτώθηκε!\n\nΔομή: Root[70], Left[30, 50], Right[90].\nΔιαγραφή του 70 (από φύλλο [70,80]) -> Underflow Φύλλου -> Merge -> Pull Down 90 -> Underflow Right Node (ήταν [90] έγινε []).");
+            };
+
+            // Pre-fill
+            [10, 20, 5, 6, 12, 30, 7, 17].forEach(k => sim.executeInsert(k));
+            sim.computeSteps();
+            sim.draw(sim.steps[sim.steps.length - 1]); // Show final state
+
+            document.getElementById('btree-insert-btn').onclick = () => {
+                const val = document.getElementById('btree-input').value;
+                if (val) sim.startInsert(val);
+            };
+
+            document.getElementById('btree-delete-btn').onclick = () => {
+                const val = document.getElementById('btree-input').value;
+                if (val) sim.startDelete(val);
+            };
+        });
+    </script>
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/nav-config.js"></script>
+    <script src="../../assets/js/nav-system.js"></script>
+</body>
+
+</html>

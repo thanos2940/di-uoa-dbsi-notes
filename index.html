@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΥΣΒΔ | Εκπαιδευτική Πλατφόρμα</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="index.html" class="logo">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul class="nav-links">
+                <li><a href="#part-a">Φυσική Οργάνωση</a></li>
+                <li><a href="#part-b">Επεξεργασία</a></li>
+                <li><a href="#part-c">Συνδρομικότητα</a></li>
+                <!-- Theme Toggle injected by utils -->
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-card">
+            <h1 class="hero-title">Διαδραστικές Σημειώσεις & Προσομοιωτές</h1>
+            <p class="hero-subtitle">
+                Μια πλήρης εκπαιδευτική πλατφόρμα για την κατανόηση της Υλοποίησης Συστημάτων Βάσεων Δεδομένων.
+                Εξερευνήστε τις έννοιες μέσα από διαδραστικούς προσομοιωτές και βήμα-προς-βήμα παραδείγματα.
+            </p>
+            <div class="hero-buttons">
+                <a href="#part-a" class="btn btn-primary">Ξεκινήστε Εδώ</a>
+                <a href="pages/reference/formulas.html" class="btn btn-secondary"><i class="fas fa-calculator"></i>
+                    Τυπολόγιο</a>
+            </div>
+        </div>
+
+        <h2 class="section-title">Δομή Μαθήματος</h2>
+
+        <!-- Part A -->
+        <div class="grid" id="part-a">
+            <div class="card">
+                <h3><i class="fas fa-hdd" style="color: var(--primary-blue);"></i> Μέρος Α: Φυσική Οργάνωση</h3>
+                <p>Δομές ευρετηρίων, οργάνωση αρχείων και κατακερματισμός.</p>
+                <div class="card-links">
+                    <a href="pages/part-a/04-btree-basics.html"><i class="fas fa-tree"></i> B+ Trees: Θεωρία &
+                        Simulators</a>
+                    <a href="pages/part-a/07-hash-theory.html"><i class="fas fa-hashtag"></i> Extendible Hashing: Θεωρία
+                        & Simulator</a>
+                </div>
+            </div>
+
+            <!-- Part B -->
+            <div class="card" id="part-b">
+                <h3><i class="fas fa-filter" style="color: var(--primary-green);"></i> Μέρος Β: Επεξεργασία</h3>
+                <p>Αλγόριθμοι σύνδεσης (Joins) και βελτιστοποίηση ερωτημάτων.</p>
+                <div class="card-links">
+                    <a href="pages/part-b/00-query-theory.html"><i class="fas fa-book"></i> Θεωρία Ερωτημάτων
+                        (Basics)</a>
+                    <a href="pages/part-b/01-join-algorithms.html"><i class="fas fa-link"></i> Αλγόριθμοι Ζεύξης
+                        (Joins): Θεωρία</a>
+                    <a href="pages/part-b/03-nested-loop.html"><i class="fas fa-layer-group"></i> Visualizer: Nested
+                        Loop</a>
+                    <a href="pages/part-b/06-cost-model.html"><i class="fas fa-calculator"></i> Cost Calculator</a>
+                </div>
+            </div>
+
+            <!-- Part C -->
+            <div class="card" id="part-c">
+                <h3><i class="fas fa-exchange-alt" style="color: var(--primary-purple);"></i> Μέρος Γ: Συνδρομικότητα
+                </h3>
+                <p>Δοσοληψίες, Σειριοποιησιμότητα και έλεγχος Κλειδωμάτων.</p>
+                <div class="card-links">
+                    <a href="pages/part-c/06-serializability-2pl.html"><i class="fas fa-shield-alt"></i>
+                        Σειριοποιησιμότητα & 2PL: Θεωρία</a>
+                    <a href="pages/part-c/03-serializability.html"><i class="fas fa-project-diagram"></i> Simulator:
+                        Conflict Graph</a>
+                    <a href="pages/part-c/05-two-phase-locking.html"><i class="fas fa-lock"></i> Simulator: Lock
+                        Manager</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/nav-config.js"></script>
+    <script src="assets/js/nav-system.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B+ Tree Insert Simulator | ΥΣΒΔ</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/simulator.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="../../index.html" class="logo">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul class="nav-links">
+                <li><a href="../../index.html#part-a" style="color: var(--primary-blue);">Φυσική Οργάνωση</a></li>
+                <li><a href="../../index.html#part-b">Επεξεργασία</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumbs" style="margin: 2rem 0;">
+            <a href="../../index.html">Αρχική</a> &gt;
+            <a href="../../index.html#part-a">Φυσική Οργάνωση</a> &gt;
+            <a href="04-btree-basics.html">B+ Trees: Βασικά</a> &gt;
+            Εισαγωγή
+        </div>
+
+        <h1>B+ Tree Simulator: Εισαγωγή</h1>
+
+        <div class="simulator-container">
+            <!-- Header -->
+            <div class="simulator-header">
+                <span class="simulator-title"><i class="fas fa-play-circle"></i> B-Tree Insert Visualization</span>
+            </div>
+
+            <!-- Controls -->
+            <div class="simulator-controls">
+                <div class="control-group">
+                    <input type="number" id="btree-input" placeholder="Value" class="sim-input" style="width: 70px;">
+                    <button id="btree-insert-btn" class="sim-btn primary" title="Insert"><i
+                            class="fas fa-plus"></i></button>
+                    <button id="btree-random-btn" class="sim-btn" title="Random"><i class="fas fa-dice"></i></button>
+                </div>
+
+                <div class="control-group">
+                    <button id="btree-prev" class="sim-btn" title="Previous Step"><i
+                            class="fas fa-step-backward"></i></button>
+                    <button id="btree-play" class="sim-btn" title="Play/Pause"><i class="fas fa-play"></i></button>
+                    <button id="btree-next" class="sim-btn" title="Next Step"><i
+                            class="fas fa-step-forward"></i></button>
+                    <button id="btree-reset" class="sim-btn" title="Reset"><i class="fas fa-redo"></i></button>
+                </div>
+
+                <div class="control-group">
+                    <label for="btree-speed" style="font-size: 0.85rem; color: #666;">Speed:</label>
+                    <input type="range" id="btree-speed" class="sim-slider" min="1" max="100" value="50">
+                </div>
+
+                <div class="control-group" style="border-left: 1px solid #ddd; padding-left: 10px;">
+                    <label style="font-size: 0.8rem;">Order(N): <input type="number" id="btree-order-internal" value="4"
+                            min="3" style="width:35px;"></label>
+                    <label style="font-size: 0.8rem; margin-left:5px;">Leaf(M): <input type="number"
+                            id="btree-order-leaf" value="3" min="2" style="width:35px;"></label>
+                    <button id="btree-apply-config" class="sim-btn" title="Apply Config (Resets Tree)"
+                        style="font-size: 0.8rem;"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            </div>
+
+            <!-- Canvas -->
+            <div class="simulator-canvas-container">
+                <canvas id="btree-canvas" style="width: 100%; height: 500px;"></canvas>
+            </div>
+
+            <!-- Info -->
+            <div class="simulator-info">
+                <p><i class="fas fa-info-circle"></i> Εισάγετε μια τιμή για να ξεκινήσει η προσομοίωση.</p>
+            </div>
+        </div>
+
+        <div class="row" style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <div class="col" style="flex: 1;">
+                <div class="formula-box">
+                    <div class="box-title"><i class="fas fa-cog"></i> Παράμετροι</div>
+                    <p><strong>Order (d):</strong> 2 (σημαίνει Max keys = 4, Min keys = 2)</p>
+                    <p><strong>Leaf Capacity:</strong> 3 κλειδιά (για να βλέπουμε split συχνά)</p>
+                </div>
+            </div>
+            <div class="col" style="flex: 1;">
+                <div class="exam-warning">
+                    <div class="box-title"><i class="fas fa-exclamation-triangle"></i> Copy-up vs Push-up</div>
+                    Θυμήσου: Στα φύλλα το μεσαίο στοιχείο γίνεται <strong>Copy-up</strong> (μένει και κάτω).
+                    Στους εσωτερικούς κόμβους γίνεται <strong>Push-up</strong> (ανεβαίνει και φεύγει από κάτω).
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/simulators/base.js"></script>
+    <script src="../../assets/js/simulators/btree.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sim = new BTreeSimulator('btree-canvas');
+            window.sim = sim;
+
+            // Sync initial state
+            sim.config.orderInternal = 4;
+            sim.config.orderLeaf = 3;
+
+            document.getElementById('btree-apply-config').onclick = () => {
+                const n = parseInt(document.getElementById('btree-order-internal').value);
+                const m = parseInt(document.getElementById('btree-order-leaf').value);
+                if (n < 3 || m < 2) return;
+
+                sim.config.orderInternal = n;
+                sim.config.orderLeaf = m;
+                sim.resetState();
+                sim.steps = [];
+                sim.currentStepIndex = -1;
+                sim.ctx.clearRect(0, 0, sim.canvas.width, sim.canvas.height);
+            };
+
+            document.getElementById('btree-insert-btn').onclick = () => {
+                const val = document.getElementById('btree-input').value;
+                if (val) sim.startInsert(val);
+            };
+
+            document.getElementById('btree-random-btn').onclick = () => {
+                const val = Math.floor(Math.random() * 100);
+                document.getElementById('btree-input').value = val;
+                sim.startInsert(val);
+            };
+
+            sim.startInsert(10);
+        });
+    </script>
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/nav-config.js"></script>
+    <script src="../../assets/js/nav-system.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Τυπολόγιο | ΥΣΒΔ</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="../../index.html" class="logo">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul class="nav-links">
+                <li><a href="../../index.html#part-a">Φυσική Οργάνωση</a></li>
+                <li><a href="../../index.html#part-b">Επεξεργασία</a></li>
+                <li><a href="../../index.html#part-c">Συνδρομικότητα</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumbs" style="margin: 2rem 0;">
+            <a href="../../index.html">Αρχική</a> &gt; Reference &gt; Τυπολόγιο
+        </div>
+
+        <h1 style="margin-bottom: 2rem;">📚 Τυπολόγιο ΥΣΒΔ</h1>
+
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+
+            <!-- Indexing Costs -->
+            <div class="card">
+                <h3><i class="fas fa-database"></i> Κόστος Ευρετηρίων</h3>
+                <p style="font-size:0.9rem; color:#666;">Estimate I/Os for search.</p>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse: collapse; margin-top:1rem;">
+                        <tr style="background:#f8f9fa; border-bottom:2px solid #eee;">
+                            <th style="padding:8px;">Δομή</th>
+                            <th style="padding:8px;">Κόστος</th>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">ISAM</td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">\( O(\log_2 p(R) + \text{ovf}) \)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">B+ Tree</td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">\( O(\log_d n) \)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">Ext. Hash</td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">\( \approx 1.2 \) I/Os</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Join Costs -->
+            <div class="card">
+                <h3><i class="fas fa-exchange-alt"></i> Join Algorithms</h3>
+                <ul class="fa-ul" style="margin-left: 1.5rem;">
+                    <li><span class="fa-li"><i class="fas fa-circle" style="font-size:0.5rem;"></i></span><strong>Simple
+                            NL:</strong> \( p_R + t_R \cdot p_S \)</li>
+                    <li><span class="fa-li"><i class="fas fa-circle" style="font-size:0.5rem;"></i></span><strong>Block
+                            NL:</strong> \( p_R + \lceil \frac{p_R}{M-2} \rceil \cdot p_S \)</li>
+                    <li><span class="fa-li"><i class="fas fa-circle"
+                                style="font-size:0.5rem;"></i></span><strong>Sort-Merge:</strong> \( Cost_{sort} + p_R +
+                        p_S \)</li>
+                    <li><span class="fa-li"><i class="fas fa-circle" style="font-size:0.5rem;"></i></span><strong>Hash
+                            Join:</strong> \( 3(p_R + p_S) \)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="prof-tip" style="margin-top: 2rem;">
+            <div class="box-title"><i class="fas fa-sort-amount-down"></i> External Sorting</div>
+            <p><strong>Cost:</strong> \( 2 \cdot p(R) \cdot (1 + \lceil \log_{M-1} \lceil p(R)/M \rceil \rceil) \)</p>
+            <ul>
+                <li><strong>Phase 0:</strong> Produces \(\lceil p(R)/M \rceil\) sorted runs.</li>
+                <li><strong>Merge Phases:</strong> We merge \(M-1\) runs at a time.</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script src="../../assets/js/utils.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Θεωρία Επεξεργασίας Ερωτημάτων | ΥΣΒΔ</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="../../index.html" class="logo">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul class="nav-links">
+                <li><a href="../../index.html#part-a">Φυσική Οργάνωση</a></li>
+                <li><a href="../../index.html#part-b" style="color: var(--primary-blue);">Επεξεργασία</a></li>
+                <li><a href="../../index.html#part-c">Συνδρομικότητα</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumbs" style="margin: 2rem 0;">
+            <a href="../../index.html">Αρχική</a> &gt;
+            <a href="../../index.html#part-b">Επεξεργασία</a> &gt;
+            Θεωρία Επεξεργασίας
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-card">
+                    <h4><i class="fas fa-list"></i> Κεφάλαιο Β</h4>
+                    <nav class="sidebar-links">
+                        <a href="00-query-theory.html" class="active"><i class="fas fa-book"></i> Θεωρία Ερωτημάτων</a>
+                        <a href="01-join-algorithms.html"><i class="fas fa-link"></i> Αλγόριθμοι Ζεύξης</a>
+                        <a href="06-cost-model.html"><i class="fas fa-calculator"></i> Cost Calculator</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <h1 style="color: var(--primary-blue-dark); margin-bottom: 2rem;">Βασικοί Τελεστές & Σχεσιακή Άλγεβρα
+                </h1>
+
+                <!-- Intro -->
+                <div class="card" style="margin-bottom: 2rem; border-left: 5px solid var(--primary-blue);">
+                    <h3><i class="fas fa-info-circle"></i> Εισαγωγή: Από SQL σε Φυσικά Πλάνα</h3>
+                    <p>
+                        Όταν γράφουμε ένα ερώτημα SQL, όπως <code>SELECT name FROM Students WHERE gpa > 3.5;</code>,
+                        το DBMS δεν το εκτελεί απευθείας.
+                    </p>
+                    <ol style="margin-top: 1rem; line-height: 1.6;">
+                        <li>Το μεταφράζει σε <strong>Σχεσιακή Άλγεβρα</strong>:
+                            \(\pi_{name}(\sigma_{gpa>3.5}(Students))\)</li>
+                        <li>Ο <strong>Query Optimizer</strong> επιλέγει τους κατάλληλους <strong>Φυσικούς
+                                Αλγορίθμους</strong> (π.χ. Index Scan vs Table Scan).</li>
+                    </ol>
+                </div>
+
+                <h2 class="section-title">1. Σχεσιακή Άλγεβρα (Relational Algebra)</h2>
+
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                    <!-- Selection -->
+                    <div class="card">
+                        <h4><i class="fas fa-filter"></i> Επιλογή (Selection - \(\sigma\))</h4>
+                        <p>Φιλτράρισμα γραμμών με βάση συνθήκη.</p>
+                        <div class="formula-box" style="margin: 1rem 0;">
+                            $$\sigma_{condition}(R)$$
+                        </div>
+                        <p><strong>Παράδειγμα:</strong> <code>SELECT * FROM Students WHERE age > 20</code></p>
+                    </div>
+
+                    <!-- Projection -->
+                    <div class="card">
+                        <h4><i class="fas fa-columns"></i> Προβολή (Projection - \(\pi\))</h4>
+                        <p>Επιλογή στηλών (και αφαίρεση με distinct).</p>
+                        <div class="formula-box" style="margin: 1rem 0;">
+                            $$\pi_{A_1, A_2}(R)$$
+                        </div>
+                        <p><strong>Παράδειγμα:</strong> <code>SELECT DISTINCT name FROM Students</code></p>
+                    </div>
+
+                    <!-- Join -->
+                    <div class="card">
+                        <h4><i class="fas fa-link"></i> Ζεύξη (Join - \(\bowtie\))</h4>
+                        <p>Συνδυασμός πινάκων.</p>
+                        <div class="formula-box" style="margin: 1rem 0;">
+                            $$R \bowtie_{R.A=S.B} S$$
+                        </div>
+                        <p><strong>Παράδειγμα:</strong> <code>FROM R, S WHERE R.A = S.B</code></p>
+                    </div>
+                </div>
+
+                <!-- Algebraic Properties -->
+                <div class="card" style="margin-top: 2rem;">
+                    <h3><i class="fas fa-superscript"></i> Αλγεβρικές Ιδιότητες (SOS για Σωστό/Λάθος)</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                            <i class="fas fa-check text-success"></i> <strong>Αντιμεταθετικότητα:</strong> \(R \bowtie S
+                            = S \bowtie R\)
+                        </li>
+                        <li style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                            <i class="fas fa-check text-success"></i> <strong>Προσεταιριστικότητα:</strong> \((R \bowtie
+                            S) \bowtie T = R \bowtie (S \bowtie T)\)
+                        </li>
+                        <li style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                            <i class="fas fa-times text-danger"></i> <strong>Διαφορά:</strong> \(R - S \neq S - R\)
+                        </li>
+                    </ul>
+                    <div class="prof-tip" style="margin-top: 1rem;">
+                        <strong>Push-down Selections:</strong> Είναι καλύτερο να φιλτράρουμε τα δεδομένα <em>πριν</em>
+                        τη ζεύξη!
+                        <br>
+                        \(\sigma_{\theta}(R \bowtie S) \rightarrow \sigma_{\theta}(R) \bowtie S\) (αν το \(\theta\)
+                        αφορά μόνο το \(R\))
+                    </div>
+                </div>
+
+                <h2 class="section-title" style="margin-top: 3rem;">2. Φυσικοί Τελεστές & Κόστος</h2>
+
+                <div class="card">
+                    <h3><i class="fas fa-hdd"></i> Table Scan vs Index Scan</h3>
+
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                            <tr style="background: #e3f2fd;">
+                                <th style="padding: 10px; border: 1px solid #ddd;">Λειτουργία</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Clustered Index</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Non-Clustered Index</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Table Scan (No Index)</th>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid #ddd;"><strong>Equality</strong> (A=c)</td>
+                                <td style="padding: 10px; border: 1px solid #ddd;">\(d(I) + \lceil \frac{p(R)}{V(A,R)}
+                                    \rceil\)</td>
+                                <td style="padding: 10px; border: 1px solid #ddd;">\(d(I) + \lceil \frac{t(R)}{V(A,R)}
+                                    \rceil\)</td>
+                                <td style="padding: 10px; border: 1px solid #ddd;">\(p(R)\)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid #ddd;"><strong>Range</strong> (A>c)</td>
+                                <td style="padding: 10px; border: 1px solid #ddd;">\(d(I) + fraction \cdot p(R)\)</td>
+                                <td style="padding: 10px; border: 1px solid #ddd;">Συνήθως <strong>Χειρότερο</strong>
+                                    από Scan!</td>
+                                <td style="padding: 10px; border: 1px solid #ddd;">\(p(R)\)</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="exam-warning" style="margin-top: 1rem;">
+                        <strong>Σημείωση:</strong>
+                        <ul>
+                            <li><strong>\(p(R)\):</strong> Αριθμός σελίδων (blocks).</li>
+                            <li><strong>\(t(R)\):</strong> Αριθμός εγγραφών (tuples).</li>
+                            <li><strong>\(V(A,R)\):</strong> Πλήθος διακριτών τιμών (διαφορετικών) στο πεδίο A.</li>
+                            <li><strong>\(d(I)\):</strong> Βάθος δέντρου ευρετηρίου.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h2 class="section-title" style="margin-top: 3rem;">3. Solved Example: Υπολογισμός Κόστους</h2>
+
+                <div class="card" style="border-left: 4px solid #27ae60;">
+                    <h3><i class="fas fa-pencil-alt"></i> Άσκηση Κόστους</h3>
+                    <p><strong>Δεδομένα:</strong></p>
+                    <ul>
+                        <li>Πίνακας <code>Students</code> με \(p(R) = 500\) σελίδες, \(t(R) = 50,000\) εγγραφές.</li>
+                        <li>Πεδίο <code>department</code> με \(V = 10\) διαφορετικές τιμές.</li>
+                        <li>Query: <code>SELECT * FROM Students WHERE department = 'CS'</code></li>
+                    </ul>
+
+                    <p><strong>Ζητείται:</strong> Σύγκριση κόστους μεταξύ Table Scan και Ευρετηρίων.</p>
+
+                    <h4 style="margin-top: 1rem;">Λύση:</h4>
+
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                        <strong>1. Table Scan (χωρίς ευρετήριο):</strong>
+                        <p>Διαβάζουμε όλο το αρχείο.</p>
+                        <code>Cost = p(R) = 500 I/Os</code>
+                    </div>
+
+                    <div style="background: #e8f5e9; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                        <strong>2. Clustered Index (βάθος 3):</strong>
+                        <p>Οι εγγραφές είναι ταξινομημένες (συνεχόμενες σελίδες).</p>
+                        <p>Selectivity = \(1/10\). Άρα διαβάζουμε το 1/10 των σελίδων.</p>
+                        <code>Cost = 3 + (500 / 10) = 3 + 50 = 53 I/Os</code> <i class="fas fa-check text-success"></i>
+                    </div>
+
+                    <div style="background: #ffebee; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                        <strong>3. Non-Clustered Index (βάθος 3):</strong>
+                        <p>Οι εγγραφές είναι διάσπαρτες. Κάθε match μπορεί να είναι σε άλλη σελίδα!</p>
+                        <p>Matches = \(50,000 / 10 = 5,000\) εγγραφές.</p>
+                        <code>Cost = 3 + 5,000 = 5,003 I/Os</code> <i class="fas fa-times text-danger"></i>
+                        <p class="small text-danger">Πολύ χειρότερο από το Table Scan (500)!</p>
+                    </div>
+                </div>
+
+                <div class="prof-tip" style="margin-top: 2rem;">
+                    <div class="box-title"><i class="fas fa-graduation-cap"></i> Συνοψίζοντας</div>
+                    Όταν η "επιλεκτικότητα" (selectivity) είναι μικρή (λίγες εγγραφές), το Index συμφέρει.
+                    Αν ζητάμε μεγάλο μέρος του αρχείου (π.χ. > 10%), το Table Scan είναι συχνά καλύτερο από
+                    Non-Clustered Index!
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../../assets/js/utils.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "\\(", right: "\\)", display: false },
+                    { left: "\\[", right: "\\]", display: true }
+                ]
+            });
+        });
+    </script>
+</body>
+
+</html>

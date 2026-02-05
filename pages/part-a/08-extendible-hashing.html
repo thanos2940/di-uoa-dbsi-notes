@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extendible Hashing Simulator | ΥΣΒΔ</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/simulator.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="../../index.html" class="logo">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul class="nav-links">
+                <li><a href="../../index.html#part-a" style="color: var(--primary-blue);">Φυσική Οργάνωση</a></li>
+                <li><a href="../../index.html#part-b">Επεξεργασία</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumbs" style="margin: 2rem 0;">
+            <a href="../../index.html">Αρχική</a> &gt;
+            <a href="../../index.html#part-a">Φυσική Οργάνωση</a> &gt;
+            Extendible Hashing
+        </div>
+
+        <h1>Extendible Hashing Simulator</h1>
+
+        <div class="simulator-container">
+            <div class="simulator-header">
+                <span class="simulator-title"><i class="fas fa-hashtag"></i> Hashing & Directory Doubling</span>
+            </div>
+
+            <div class="simulator-controls" style="flex-wrap: wrap; gap: 10px;">
+                <div class="control-group">
+                    <input type="number" id="eh-input" placeholder="Value" class="sim-input" style="width: 70px;">
+                    <button id="eh-insert-btn" class="sim-btn primary" title="Insert"><i
+                            class="fas fa-plus"></i></button>
+                    <button id="eh-random-btn" class="sim-btn" title="Random Single Insert"><i
+                            class="fas fa-dice"></i></button>
+                </div>
+
+                <div class="control-group"
+                    style="background: rgba(0,0,0,0.05); padding: 5px 10px; border-radius: 4px; display: flex; align-items: center; gap: 5px;">
+                    <span style="font-size: 0.8rem; font-weight: bold;">Random Fill:</span>
+                    <label style="font-size: 0.7rem;">Depth:</label>
+                    <input type="number" id="eh-depth" class="sim-input" value="1" min="1" max="4" style="width: 40px;">
+                    <label style="font-size: 0.7rem;">Cap:</label>
+                    <input type="number" id="eh-cap" class="sim-input" value="2" min="1" max="4" style="width: 40px;">
+                    <label style="font-size: 0.7rem;">Items:</label>
+                    <input type="number" id="eh-items" class="sim-input" value="5" min="1" max="15"
+                        style="width: 40px;">
+                    <button id="eh-random-fill-btn" class="sim-btn secondary" style="padding: 5px 10px;">Fill</button>
+                </div>
+
+                <div class="control-group">
+                    <button id="eh-prev" class="sim-btn" title="Previous Step"><i
+                            class="fas fa-step-backward"></i></button>
+                    <button id="eh-play" class="sim-btn" title="Play/Pause"><i class="fas fa-play"></i></button>
+                    <button id="eh-next" class="sim-btn" title="Next Step"><i class="fas fa-step-forward"></i></button>
+                    <button id="eh-reset" class="sim-btn" title="Reset Step"><i class="fas fa-undo"></i></button>
+                    <button id="eh-clear" class="sim-btn" title="Clear All" style="color: #e74c3c;"><i
+                            class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>
+
+            <div class="simulator-canvas-container">
+                <canvas id="eh-canvas" style="width: 100%; height: 600px;"></canvas>
+            </div>
+
+            <div class="simulator-info">
+                <p><i class="fas fa-info-circle"></i> Εισάγετε τιμή. Χρήση <strong>MSB</strong> (Most Significant Bits)
+                    για τον κατάλογο.</p>
+            </div>
+        </div>
+
+        <div class="row" style="display:flex; gap:2rem; flex-wrap:wrap;">
+            <div class="col" style="flex:1;">
+                <div class="formula-box">
+                    <div class="box-title"><i class="fas fa-sliders-h"></i> Παράμετροι</div>
+                    <p><strong>Bucket Capacity:</strong> 2 εγγραφές (για συχνά splits)</p>
+                    <p><strong>Hash:</strong> Binary string του αριθμού</p>
+                </div>
+            </div>
+            <div class="col" style="flex:1;">
+                <div class="exam-warning">
+                    <div class="box-title"><i class="fas fa-compress-arrows-alt"></i> Split vs Doubling</div>
+                    <ul>
+                        <li>Αν <strong>local_depth &lt; global_depth</strong>: Απλό Split (Case A).</li>
+                        <li>Αν <strong>local_depth == global_depth</strong>: Directory Doubling (Case B) και μετά Split.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/simulators/base.js"></script>
+    <script src="../../assets/js/simulators/extendible-hash.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sim = new ExtendibleHashingSimulator('eh-canvas');
+
+            document.getElementById('eh-insert-btn').onclick = () => {
+                const val = document.getElementById('eh-input').value;
+                if (val) sim.startInsert(val);
+            };
+
+            document.getElementById('eh-random-fill-btn').onclick = () => {
+                const depth = parseInt(document.getElementById('eh-depth').value);
+                const cap = parseInt(document.getElementById('eh-cap').value);
+                const items = parseInt(document.getElementById('eh-items').value);
+                sim.randomFill(depth, cap, items);
+            };
+
+            // Init Examples
+            sim.startInsert(5);
+            sim.startInsert(12);
+        });
+    </script>
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/nav-config.js"></script>
+    <script src="../../assets/js/nav-system.js"></script>
+</body>
+
+</html>

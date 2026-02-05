@@ -1,0 +1,51 @@
+:root {
+    /* Core Palette - Matching 'Computational Geometry' style */
+    --primary-blue: #2c8dcf;
+    /* A bit softer blue */
+    --primary-blue-dark: #1a6fa0;
+    --secondary-gray: #7f8c8d;
+    --light-gray-bg: #f8f9fa;
+    /* Background for page */
+    --card-bg: #ffffff;
+
+    --primary-green: #27ae60;
+    --primary-red: #e74c3c;
+    --primary-purple: #9b59b6;
+
+    /* Text */
+    --text-main: #333333;
+    --text-sccondary: #666666;
+    --text-light: #ffffff;
+
+    /* B+ Tree specific */
+    --btree-node: #e3f2fd;
+    --btree-node-border: #2c8dcf;
+    --btree-leaf: #e8f5e9;
+    --btree-leaf-border: #27ae60;
+
+    /* Simulator Controls */
+    --sim-control-bg: #f1f3f4;
+    --sim-control-border: #dfe1e5;
+
+    /* Boxes */
+    --box-formula-bg: #f8f9fa;
+    --box-warning-bg: #fff3cd;
+    /* Yellow tint */
+    --box-example-bg: #e8f5e9;
+    /* Green tint */
+    --box-definition-bg: #e3f2fd;
+    /* Blue tint */
+}
+
+[data-theme="dark"] {
+    --light-gray-bg: #2c3e50;
+    --card-bg: #34495e;
+    --text-main: #ecf0f1;
+    --text-sccondary: #bdc3c7;
+    --sim-control-bg: #455a64;
+    --sim-control-border: #546e7a;
+    --box-formula-bg: #34495e;
+    --box-warning-bg: #5a4a08;
+    --box-example-bg: #1e4d2b;
+    --box-definition-bg: #1c3b57;
+}

@@ -1,0 +1,129 @@
+/* Simulator Styles - Media Player Look */
+
+.simulator-container {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin: 2rem 0;
+}
+
+/* Header Bar */
+.simulator-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.simulator-title {
+    font-weight: 600;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+/* Controls Bar */
+.simulator-controls {
+    background: white;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid #f1f1f1;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-right: 15px;
+    border-right: 1px solid #eee;
+}
+
+.control-group:last-child {
+    border-right: none;
+}
+
+/* Playback Buttons */
+.sim-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    border: 1px solid #dcdcdc;
+    background: #fff;
+    color: #555;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.sim-btn:hover {
+    background: #f5f5f5;
+    color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
+.sim-btn.primary {
+    background: var(--primary-blue);
+    color: white;
+    border-color: var(--primary-blue);
+}
+
+.sim-btn.primary:hover {
+    background: var(--primary-blue-dark);
+}
+
+/* Inputs */
+.sim-input {
+    padding: 6px 10px;
+    border: 1px solid #dcdcdc;
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+.sim-slider {
+    width: 100px;
+    height: 4px;
+    /* Slim slider */
+    border-radius: 2px;
+    background: #ddd;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.sim-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--primary-blue);
+    cursor: pointer;
+}
+
+/* Canvas Area */
+.simulator-canvas-container {
+    background: white;
+    min-height: 450px;
+    position: relative;
+    /* Optional grid pattern */
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Info Panel */
+.simulator-info {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #eee;
+    font-size: 0.95rem;
+    color: #444;
+}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cost Calculator | ΥΣΒΔ</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 0.8rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .table-success {
+            background-color: #d4edda;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="container" style="display:flex; align-items:center; height: 100%; padding:0;">
+            <a href="../../index.html" style="font-weight:bold; font-size:1.2rem; color:white; text-decoration:none;">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul style="margin-left: 2rem;">
+                <li><a href="../../index.html#part-a">Φυσική Οργάνωση</a></li>
+                <li><a href="../../index.html#part-b" style="text-decoration: underline;">Επεξεργασία</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Join Cost Calculator</h1>
+        <p>Υπολογισμός κόστους I/O για αλγορίθμους σύνδεσης.</p>
+
+        <div class="row" style="display:flex; gap: 2rem; flex-wrap:wrap;">
+            <div class="col" style="flex:1; min-width: 300px;">
+                <div class="card" style="padding: 1.5rem; border:1px solid #ddd;">
+                    <h3>📊 Statistics</h3>
+                    <div class="input-group">
+                        <label>Blocks of R (p(R))</label>
+                        <input type="number" id="pR">
+                    </div>
+                    <div class="input-group">
+                        <label>Tuples of R (t(R))</label>
+                        <input type="number" id="tR">
+                    </div>
+                    <div class="input-group">
+                        <label>Blocks of S (p(S))</label>
+                        <input type="number" id="pS">
+                    </div>
+                    <div class="input-group">
+                        <label>Tuples of S (t(S))</label>
+                        <input type="number" id="tS">
+                    </div>
+                    <div class="input-group">
+                        <label>Buffer Pages (M)</label>
+                        <input type="number" id="M">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col" style="flex:1; min-width: 300px;">
+                <h3>💸 Αποτελέσματα (I/Os)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Algorithm</th>
+                            <th>Cost Formula</th>
+                            <th>Total I/Os</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="row-snl">
+                            <td>Simple NL</td>
+                            <td>\( p_R + t_R \cdot p_S \)</td>
+                            <td id="res-snl">-</td>
+                        </tr>
+                        <tr id="row-bnl">
+                            <td>Block NL</td>
+                            <td>\( p_R + \lceil \frac{p_R}{M-2} \rceil \cdot p_S \)</td>
+                            <td id="res-bnl">-</td>
+                        </tr>
+                        <tr id="row-smj">
+                            <td>Sort-Merge</td>
+                            <td>\( Sort(R)+Sort(S)+p_R+p_S \)</td>
+                            <td id="res-smj">-</td>
+                        </tr>
+                        <tr id="row-hj">
+                            <td>Hash Join</td>
+                            <td>\( 3(p_R + p_S) \) (Optimal)</td>
+                            <td id="res-hj">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="prof-tip" style="margin-top: 2rem;">
+                    Ο <strong>Hash Join</strong> συνήθως κερδίζει αν έχουμε αρκετή μνήμη για το partition
+                    (~sqrt(Pages)).<br>
+                    Ο <strong>Sort-Merge</strong> είναι καλός αν οι πίνακες είναι ήδη ταξινομημένοι.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/simulators/cost-calculator.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            new CostCalculator();
+        });
+    </script>
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/nav-config.js"></script>
+    <script src="../../assets/js/nav-system.js"></script>
+</body>
+
+</html>

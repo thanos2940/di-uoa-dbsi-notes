@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="el" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Επεκτατός Κατακερματισμός | ΥΣΒΔ</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/simulator.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="../../index.html" class="logo">
+                <i class="fas fa-database"></i> ΥΣΒΔ Notes
+            </a>
+            <ul class="nav-links">
+                <li><a href="../../index.html#part-a" style="color: var(--primary-blue);">Φυσική Οργάνωση</a></li>
+                <li><a href="../../index.html#part-b">Επεξεργασία</a></li>
+                <li><a href="../../index.html#part-c">Συνδρομικότητα</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="breadcrumbs" style="margin: 2rem 0;">
+            <a href="../../index.html">Αρχική</a> &gt;
+            <a href="../../index.html#part-a">Φυσική Οργάνωση</a> &gt;
+            Extendible Hashing
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-card">
+                    <h4><i class="fas fa-list"></i> Κεφάλαιο Α</h4>
+                    <nav class="sidebar-links">
+                        <a href="04-btree-basics.html"><i class="fas fa-tree"></i> B+ Trees</a>
+                        <a href="07-hash-theory.html" class="active"><i class="fas fa-hashtag"></i> Extendible
+                            Hashing</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <h1 style="color: var(--primary-blue-dark); margin-bottom: 2rem;">Επεκτατός Κατακερματισμός (Extendible
+                    Hashing)</h1>
+
+                <!-- Intro -->
+                <div class="card" style="margin-bottom: 2rem; border-left: 5px solid var(--primary-blue);">
+                    <h3><i class="fas fa-bullseye"></i> Γιατί Δυναμικός Κατακερματισμός;</h3>
+                    <p>
+                        Ο <strong>στατικός κατακερματισμός</strong> έχει σοβαρό πρόβλημα: Αν γεμίσουν οι κάδοι
+                        (buckets),
+                        δημιουργούνται
+                        <strong>αλυσίδες υπερχείλισης</strong> (overflow chains) που επιβραδύνουν την αναζήτηση.
+                    </p>
+                    <p>
+                        Ο <strong>Επεκτατός Κατακερματισμός</strong> λύνει αυτό το πρόβλημα με έναν <strong>δυναμικό
+                            κατάλογο</strong>
+                        που μεγαλώνει/συρρικνώνεται όταν χρειάζεται, διατηρώντας σταθερό χρόνο αναζήτησης.
+                    </p>
+                </div>
+
+                <!-- Intuition -->
+                <div class="prof-tip">
+                    <div class="box-title"><i class="fas fa-lightbulb"></i> Intuition: Ο Δυναμικός Τηλεφωνικός Κατάλογος
+                    </div>
+                    <p>Φαντάσου έναν τηλεφωνικό κατάλογο που:</p>
+                    <ul>
+                        <li><strong>Αρχικά</strong> χρησιμοποιεί μόνο το 1ο γράμμα του ονόματος (Α, Β, Γ...)</li>
+                        <li><strong>Αν γεμίσει</strong> μια κατηγορία (π.χ. "Α"), την διασπά σε "ΑΑ, ΑΒ, ΑΓ..."
+                            (χρησιμοποιεί
+                            και 2ο γράμμα)</li>
+                        <li><strong>Ο κατάλογος</strong> (index) διπλασιάζεται μόνο όταν χρειάζεται περισσότερα bits
+                        </li>
+                    </ul>
+                    <p>Αυτό ακριβώς κάνει το Extendible Hashing με binary bits αντί για γράμματα!</p>
+                </div>
+
+                <h2 class="section-title" style="margin-top: 3rem;">1. Βασικές Έννοιες</h2>
+
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem;">
+                    <!-- Directory -->
+                    <div class="card" style="border-left: 3px solid #9b59b6;">
+                        <h3 style="color: #9b59b6;"><i class="fas fa-book"></i> Κατάλογος (Directory)</h3>
+                        <p><strong>Ρόλος:</strong> Πίνακας που δείχνει σε ποιον κάδο να πας.</p>
+                        <ul style="line-height: 1.8;">
+                            <li><strong>Μέγεθος:</strong> \(2^D\) εγγραφές (όπου \(D\) = Global Depth)</li>
+                            <li><strong>Κάθε εγγραφή:</strong> Pointer σε έναν κάδο</li>
+                            <li><strong>Πολλαπλά pointers</strong> μπορεί να δείχνουν στον ίδιο κάδο</li>
+                        </ul>
+                        <div class="prof-tip" style="margin-top: 1rem; padding: 0.5rem; background: #f4ecf7;">
+                            <strong>Κλειδί:</strong> Ο κατάλογος είναι μικρός και μένει στη μνήμη. Μόνο 1 I/O για τον
+                            κάδο!
+                        </div>
+                    </div>
+
+                    <!-- Buckets -->
+                    <div class="card" style="border-left: 3px solid #27ae60;">
+                        <h3 style="color: #27ae60;"><i class="fas fa-archive"></i> Κάδοι (Buckets)</h3>
+                        <p><strong>Ρόλος:</strong> Αποθηκεύουν τα πραγματικά δεδομένα (records).</p>
+                        <ul style="line-height: 1.8;">
+                            <li><strong>Χωρητικότητα:</strong> Κάθε κάδος χωράει \(B\) εγγραφές (π.χ. 4)</li>
+                            <li><strong>Local Depth \(d'\):</strong> Πόσα bits χρησιμοποιεί ο κάδος</li>
+                            <li><strong>Αν γεμίσει:</strong> Split (διάσπαση)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Global vs Local Depth -->
+                <h3 style="margin-top: 2rem;"><i class="fas fa-layer-group"></i> Global Depth vs Local Depth</h3>
+
+                <div class="card">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 10px; border: 1px solid #ddd; width: 30%;">Έννοια</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">Ορισμός</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">Τι καθορίζει</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;"><strong>Global Depth (\(D\))</strong>
+                            </td>
+                            <td style="padding: 10px; border: 1px solid #ddd;">Πόσα bits χρησιμοποιούμε από το hash για
+                                να
+                                διαβάσουμε τον κατάλογο</td>
+                            <td style="padding: 10px; border: 1px solid #ddd;">Μέγεθος καταλόγου = \(2^D\)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;"><strong>Local Depth (\(d'\))</strong>
+                            </td>
+                            <td style="padding: 10px; border: 1px solid #ddd;">Πόσα bits "κοιτάει" ένας συγκεκριμένος
+                                κάδος</td>
+                            <td style="padding: 10px; border: 1px solid #ddd;">Πόσες εγγραφές καταλόγου δείχνουν σε
+                                αυτόν:
+                                \(2^{D-d'}\)</td>
+                        </tr>
+                    </table>
+
+                    <div class="exam-warning" style="margin-top: 1rem; padding: 0.75rem;">
+                        <strong>Σχέση:</strong> Πάντα \(d' \leq D\) για κάθε κάδο.
+                        <br>
+                        <strong>Αν \(d' < D\):</strong> Πολλά directory entries δείχνουν στον ίδιο κάδο (sharing).
+                    </div>
+                </div>
+
+                <h2 class="section-title" style="margin-top: 3rem;">2. Hash Function & Bit Extraction</h2>
+
+                <div class="card">
+                    <h3><i class="fas fa-hashtag"></i> Πώς λειτουργεί το Hashing</h3>
+                    <ol style="line-height: 2;">
+                        <li><strong>Hash το κλειδί:</strong> \(h(K)\) → binary string (π.χ. "10110101")</li>
+                        <li><strong>Πάρε τα πρώτα \(D\) bits:</strong> Αυτά χρησιμοποιούνται για τον κατάλογο
+                            <ul>
+                                <li><strong>MSB (Most Significant Bits):</strong> Τα αριστερότερα bits (συνήθης επιλογή)
+                                </li>
+                                <li><strong>LSB (Least Significant Bits):</strong> Τα δεξιότερα bits</li>
+                            </ul>
+                        </li>
+                        <li><strong>Index:</strong> \(i = \text{binary to decimal}(\text{first } D \text{ bits})\)</li>
+                        <li><strong>Πήγαινε:</strong> \(\text{Directory}[i]\) → Bucket</li>
+                    </ol>
+
+                    <div class="prof-tip" style="margin-top: 1rem; padding: 0.75rem; background: #fff3e0;">
+                        <strong>Παράδειγμα:</strong>
+                        <br>\(h(K) = 10110101\), \(D = 3\)
+                        <br>Παίρνω MSB: <strong>101</strong>10101 → Index = 5
+                        <br>Πηγαίνω στο \(\text{Directory}[5]\)
+                    </div>
+                </div>
+
+                <h2 class="section-title" style="margin-top: 3rem;">3. Αλγόριθμος Εισαγωγής</h2>
+
+                <div class="card">
+                    <h3><i class="fas fa-plus-circle"></i> Βήματα Εισαγωγής</h3>
+                    </ol>
+
+                    <!-- Direct Hashing Simulator -->
+                    <div class="simulator-container" id="eh-container" style="margin-top: 2rem;">
+                        <div class="simulator-header">
+                            <span class="simulator-title"><i class="fas fa-hashtag"></i> Hashing & Directory Doubling
+                                Visualization</span>
+                        </div>
+                        <div class="simulator-controls">
+                            <div class="control-group">
+                                <input type="number" id="eh-input" placeholder="Value" class="sim-input"
+                                    style="width: 70px;">
+                                <button id="eh-insert-btn" class="sim-btn primary" title="Insert"><i
+                                        class="fas fa-plus"></i></button>
+                                <button id="eh-random-btn" class="sim-btn" title="Random"><i
+                                        class="fas fa-dice"></i></button>
+                            </div>
+                            <div class="control-group">
+                                <button id="eh-prev" class="sim-btn"><i class="fas fa-step-backward"></i></button>
+                                <button id="eh-play" class="sim-btn"><i class="fas fa-play"></i></button>
+                                <button id="eh-next" class="sim-btn"><i class="fas fa-step-forward"></i></button>
+                                <button id="eh-reset" class="sim-btn"><i class="fas fa-redo"></i></button>
+                                <button id="eh-clear" class="sim-btn" title="Clear All" style="color: #e74c3c;"><i
+                                        class="fas fa-trash-alt"></i></button>
+                            </div>
+                            <div class="control-group">
+                                <label style="font-size: 0.85rem; color: #666;">Speed:</label>
+                                <input type="range" id="eh-speed" class="sim-slider" min="1" max="100" value="50">
+                            </div>
+                        </div>
+                        <div class="simulator-canvas-container">
+                            <canvas id="eh-canvas" style="width: 100%; height: 500px;"></canvas>
+                        </div>
+                        <div class="simulator-info" id="eh-info">
+                            <p><i class="fas fa-info-circle"></i> Εισάγετε τιμή. Χρήση <strong>MSB</strong> για τον
+                                κατάλογο.</p>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+        <!-- Case A & B -->
+        <div class="grid"
+            style="grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+            <!-- Case A -->
+            <div class="card" style="border-left: 4px solid #27ae60;">
+                <h4 style="color: #27ae60;"><i class="fas fa-check-circle"></i> Περίπτωση A: \(d' < D\)</h4>
+                        <p><strong>Κατάσταση:</strong> Ο κάδος έχει "περιθώριο" να χρησιμοποιήσει περισσότερα bits.</p>
+                        <p><strong>Ενέργειες:</strong></p>
+                        <ol style="font-size: 0.95rem;">
+                            <li><strong>Split Bucket:</strong> Δημιούργησε νέο κάδο</li>
+                            <li><strong>Αύξησε Local Depth:</strong> \(d' \to d' + 1\) (και για τους δύο)</li>
+                            <li><strong>Ανακατανομή:</strong> Μοίρασε τις εγγραφές βάσει του νέου bit (το
+                                \((d'+1)\)-οστό)</li>
+                            <li><strong>Ενημέρωση Directory:</strong> Μισά pointers → παλιός κάδος, μισά → νέος κάδος
+                            </li>
+                        </ol>
+                        <div class="prof-tip"
+                            style="margin-top: 0.5rem; padding: 0.5rem; background: #e8f5e9; font-size: 0.9rem;">
+                            <strong>Όχι Directory Doubling!</strong> Ο κατάλογος δεν αλλάζει μέγεθος.
+                        </div>
+            </div>
+
+            <!-- Case B -->
+            <div class="card" style="border-left: 4px solid #e74c3c;">
+                <h4 style="color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> Περίπτωση B: \(d' = D\)</h4>
+                <p><strong>Κατάσταση:</strong> Ο κάδος χρησιμοποιεί ήδη όλα τα \(D\) bits. Χρειάζεται περισσότερα!</p>
+                <p><strong>Ενέργειες:</strong></p>
+                <ol style="font-size: 0.95rem;">
+                    <li><strong>Double Directory:</strong> Διπλασίασε τον κατάλογο
+                        <ul>
+                            <li>\(D \to D + 1\)</li>
+                            <li>Κάθε εγγραφή \(i\) γίνεται δύο: \(2i\) και \(2i+1\) (και οι δύο δείχνουν εκεί που
+                                έδειχνε το \(i\))</li>
+                        </ul>
+                    </li>
+                    <li><strong>Τώρα \(d' < D\)!</strong> Πήγαινε στην <strong>Περίπτωση A</strong></li>
+                </ol>
+                <div class="exam-warning" style="margin-top: 0.5rem; padding: 0.5rem; font-size: 0.9rem;">
+                    <strong>Προσοχή:</strong> Μετά το doubling, ο κατάλογος διπλασιάστηκε, αλλά οι κάδοι όχι (ακόμα)!
+                </div>
+            </div>
+        </div>
+
+        <!-- Worked Example -->
+        <h3 style="margin-top: 2.5rem;"><i class="fas fa-pencil-alt"></i> Worked Example: Διαδοχικές Εισαγωγές</h3>
+
+        <div class="card" style="background: #f8f9fa;">
+            <h4>Σενάριο</h4>
+            <p><strong>Αρχική Κατάσταση:</strong> \(D = 2\), Κάδος χωρητικότητας \(B = 2\)</p>
+            <p><strong>Κατάλογος:</strong></p>
+            <pre style="background: white; padding: 1rem; border-left: 3px solid #9b59b6;">
+00 → Bucket A (d'=2): [4, 8]    // hash: 00xxx
+01 → Bucket B (d'=2): [5, 9]    // hash: 01xxx
+10 → Bucket C (d'=2): [10]      // hash: 10xxx
+11 → Bucket D (d'=2): [15]      // hash: 11xxx
+            </pre>
+
+            <hr style="margin: 1.5rem 0;">
+
+            <h4><strong>Εισαγωγή: 21</strong> (hash = 10101)</h4>
+            <p><strong>Βήμα 1:</strong> Πάρε MSB (2 bits): <strong>10</strong>101 → Index = 2 → Bucket C</p>
+            <p><strong>Βήμα 2:</strong> Bucket C έχει [10]. Προσθήκη 21 → [10, 21]. <strong>OK, χωράει!</strong></p>
+            <div style="background: #e8f5e9; padding: 0.75rem; border-radius: 5px; margin-top: 0.5rem;">
+                <strong>Αποτέλεσμα:</strong> Bucket C = [10, 21]
+            </div>
+
+            <hr style="margin: 1.5rem 0;">
+
+            <h4><strong>Εισαγωγή: 26</strong> (hash = 11010)</h4>
+            <p><strong>Βήμα 1:</strong> MSB: <strong>11</strong>010 → Index = 3 → Bucket D</p>
+            <p><strong>Βήμα 2:</strong> Bucket D έχει [15]. Προσθήκη 26 → [15, 26]. <strong>OK!</strong></p>
+
+            <hr style="margin: 1.5rem 0;">
+
+            <h4><strong>Εισαγωγή: 30</strong> (hash = 11110)</h4>
+            <p><strong>Βήμα 1:</strong> MSB: <strong>11</strong>110 → Index = 3 → Bucket D</p>
+            <p><strong>Βήμα 2:</strong> Bucket D έχει [15, 26]. Προσθήκη 30 → <strong
+                    style="color: #e74c3c;">OVERFLOW!</strong> (D γεμάτο: 3 εγγραφές > 2)</p>
+            <p><strong>Βήμα 3:</strong> Έλεγχος: \(d' = 2\), \(D = 2\) → <strong style="color: #e74c3c;">Περίπτωση
+                    B!</strong> (\(d' = D\))</p>
+            <p><strong>Βήμα 4: Directory Doubling</strong></p>
+            <ul>
+                <li>\(D \to 3\)</li>
+                <li>Νέος κατάλογος (8 entries):
+                    <pre style="background: white; padding: 0.5rem; margin-top: 0.5rem;">
+000 → A    100 → C
+001 → B    101 → C
+010 → A    110 → D
+011 → B    111 → D  (όλα δείχνουν στα ίδια buckets)
+                    </pre>
+                </li>
+            </ul>
+            <p><strong>Βήμα 5:</strong> Τώρα \(d' = 2 < D=3\) για το Bucket D → <strong style="color: #27ae60;">
+                    Περίπτωση A!</strong></p>
+            <p><strong>Βήμα 6: Split Bucket D</strong></p>
+            <ul>
+                <li>Νέα Local Depth: \(d' \to 3\) (και για D και για το νέο D')</li>
+                <li>Ανακατανομή με 3 bits:
+                    <ul>
+                        <li>Bucket D (110): [26] // hash 11010: MSB=<strong>110</strong></li>
+                        <li>Bucket D' (111): [15, 30] // hash 11XXX όπου 3ο bit = 1</li>
+                    </ul>
+                </li>
+                <li>Ενημέρωση καταλόγου:
+                    <pre style="background: white; padding: 0.5rem; margin-top: 0.5rem;">
+110 → D (d'=3)
+111 → D' (d'=3)
+                    </pre>
+                </li>
+            </ul>
+            <div style="background: #e8f5e9; padding: 0.75rem; border-radius: 5px; margin-top: 1rem;">
+                <strong>Τελικό Αποτέλεσμα:</strong> \(D = 3\), Directory = 8 entries, Split έγινε μόνο το Bucket D!
+            </div>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 3rem;">4. Τυπολόγιο & Formulas</h2>
+
+        <div class="formula-box">
+            <div class="box-title"><i class="fas fa-calculator"></i> Βασικοί Τύποι</div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; width: 50%;"><strong>Μέγεθος Καταλόγου:</strong>
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">\(2^D\) entries</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Pointers προς κάδο με \(d'\):</strong>
+                    </td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">\(2^{D - d'}\) directory entries</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Κόστος Search:</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">1 I/O (κατάλογος στη μνήμη) + 1 I/O (bucket)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Worst-case Insertion:</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">2 I/Os (read + write bucket) + Directory update
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>Πότε Directory Doubling:</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">Μόνο όταν \(d' = D\) για κάδο που γεμίζει</td>
+                </tr>
+            </table>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 3rem;">5. Exam Tips & Common Mistakes</h2>
+
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+            <div class="exam-warning">
+                <div class="box-title"><i class="fas fa-bomb"></i> Συχνά Λάθη</div>
+                <ul>
+                    <li><strong>Μπερδεύεις \(D\) με \(d'\):</strong> Το \(D\) είναι global, το \(d'\) είναι per-bucket!
+                    </li>
+                    <li><strong>Directory doubling παντού:</strong> ΌΧΙ! Μόνο όταν \(d' = D\).</li>
+                    <li><strong>Ξεχνάς ποια pointers αλλάζουν:</strong> Μετά το split, ενημέρωσε μόνο τα σχετικά
+                        entries!</li>
+                    <li><strong>MSB vs LSB:</strong> Διάβασε την εκφώνηση! (Συνήθως MSB)</li>
+                </ul>
+            </div>
+
+            <div class="prof-tip">
+                <div class="box-title"><i class="fas fa-graduation-cap"></i> Στρατηγική Εξετάσεων</div>
+                <ul>
+                    <li><strong>Πάντα σχεδίασε:</strong> Directory + Buckets με \(d'\) values</li>
+                    <li><strong>Δείξε το hash:</strong> Γράψε το binary και ποια bits παίρνεις</li>
+                    <li><strong>Βήμα-βήμα:</strong> Μετά από κάθε εισαγωγή, δείξε την κατάσταση</li>
+                    <li><strong>Ονοματολογία:</strong> Διάκρινε "Directory Entry" από "Bucket"</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Visual Summary -->
+        <div class="card"
+            style="margin-top: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 2rem;">
+            <h3 style="color: white; margin-bottom: 1rem;"><i class="fas fa-key"></i> Βασική Διαφορά: Case A vs Case B
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1.5rem;">
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                    <h4 style="color: #a7f3d0; margin-bottom: 0.5rem;">Case A: \(d' < D\)</h4>
+                            <p style="font-size: 0.95rem;">Απλό Split<br>Δεν αγγίζουμε το Directory</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                    <h4 style="color: #fca5a5; margin-bottom: 0.5rem;">Case B: \(d' = D\)</h4>
+                    <p style="font-size: 0.95rem;">Double Directory πρώτα<br>Μετά κάνε Split (Case A)</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </main>
+    </div>
+
+    </div>
+
+    <script src="../../assets/js/utils.js"></script>
+    <script src="../../assets/js/nav-config.js"></script>
+    <script src="../../assets/js/nav-system.js"></script>
+    <script src="../../assets/js/simulators/base.js"></script>
+    <script src="../../assets/js/simulators/extendible-hash.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Render Math
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "\\(", right: "\\)", display: false },
+                    { left: "\\[", right: "\\]", display: true }
+                ]
+            });
+
+            // Initialize Hashing Simulator
+            const sim = new ExtendibleHashingSimulator('eh-canvas');
+            document.getElementById('eh-insert-btn').onclick = () => {
+                const val = document.getElementById('eh-input').value;
+                if (val) sim.startInsert(val);
+            };
+            document.getElementById('eh-random-btn').onclick = () => {
+                const val = Math.floor(Math.random() * 64);
+                document.getElementById('eh-input').value = val;
+                sim.startInsert(val);
+            };
+            // Initial data
+            sim.startInsert(5);
+            sim.startInsert(12);
+        });
+    </script>
+</body>
+
+</html>
