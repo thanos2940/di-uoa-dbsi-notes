@@ -52,6 +52,434 @@
                 <h1 style="color: var(--primary-blue-dark); margin-bottom: 2rem;">Επεκτατός Κατακερματισμός (Extendible
                     Hashing)</h1>
 
+                <!-- QUICK MASTERY SECTION -->
+                <div class="card"
+                    style="background: linear-gradient(135deg, #6a3093 0%, #a044ff 100%); color: white; margin-bottom: 2rem; padding: 2rem;">
+                    <h2 style="color: white; margin-bottom: 1rem;"><i class="fas fa-bolt"></i> 🚀 ΜΑΘΕ EXTENDIBLE
+                        HASHING ΣΕ 10 ΛΕΠΤΑ</h2>
+                    <p style="font-size: 1.1rem; opacity: 0.95;">Ακολούθησε αυτόν τον οδηγό μηχανικά και θα μπορείς να
+                        λύσεις ΟΠΟΙΑΔΗΠΟΤΕ άσκηση.</p>
+                </div>
+
+                <!-- THE CORE CONCEPT -->
+                <div class="exam-warning" style="margin-bottom: 2rem; border: 3px solid #9b59b6;">
+                    <div class="box-title"><i class="fas fa-star"></i> Η ΒΑΣΙΚΗ ΙΔΕΑ - Θυμήσου Μόνο Αυτό!</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;">
+                        <div style="background: #f3e5f5; padding: 1rem; border-radius: 8px; color: #4a148c;">
+                            <h4 style="color: #9b59b6;">📚 ΚΑΤΑΛΟΓΟΣ (Directory)</h4>
+                            <p>Πίνακας με <strong>2<sup>D</sup></strong> θέσεις</p>
+                            <p>Κάθε θέση δείχνει σε έναν κάδο</p>
+                        </div>
+                        <div style="background: #e8f5e9; padding: 1rem; border-radius: 8px; color: #1b5e20;">
+                            <h4 style="color: #27ae60;">🪣 ΚΑΔΟΙ (Buckets)</h4>
+                            <p>Αποθηκεύουν τα δεδομένα</p>
+                            <p>Χωρητικότητα: <strong>B</strong> στοιχεία</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISUAL DIAGRAM OF STRUCTURE -->
+                <div class="card" style="margin-bottom: 2rem; border: 2px solid #9b59b6;">
+                    <h3 style="color: #9b59b6;"><i class="fas fa-eye"></i> Πώς Μοιάζει η Δομή</h3>
+                    <p>Παράδειγμα με D=2 (4 θέσεις καταλόγου) και B=2 (κάδοι χωράνε 2 στοιχεία):</p>
+
+                    <svg width="550" height="200" viewBox="0 0 550 200" style="display: block; margin: 1.5rem auto;">
+                        <!-- Directory Label -->
+                        <text x="60" y="20" text-anchor="middle" fill="#9b59b6" font-weight="bold"
+                            font-size="14">ΚΑΤΑΛΟΓΟΣ</text>
+                        <text x="60" y="35" text-anchor="middle" fill="#666" font-size="11">(D=2)</text>
+
+                        <!-- Directory Entries -->
+                        <rect x="20" y="50" width="80" height="30" fill="#e8daef" stroke="#9b59b6" stroke-width="2" />
+                        <text x="15" y="70" text-anchor="end" fill="#9b59b6" font-size="11" font-weight="bold">00</text>
+                        <text x="60" y="70" text-anchor="middle" fill="#333" font-size="12">→</text>
+
+                        <rect x="20" y="80" width="80" height="30" fill="#e8daef" stroke="#9b59b6" stroke-width="2" />
+                        <text x="15" y="100" text-anchor="end" fill="#9b59b6" font-size="11"
+                            font-weight="bold">01</text>
+                        <text x="60" y="100" text-anchor="middle" fill="#333" font-size="12">→</text>
+
+                        <rect x="20" y="110" width="80" height="30" fill="#e8daef" stroke="#9b59b6" stroke-width="2" />
+                        <text x="15" y="130" text-anchor="end" fill="#9b59b6" font-size="11"
+                            font-weight="bold">10</text>
+                        <text x="60" y="130" text-anchor="middle" fill="#333" font-size="12">→</text>
+
+                        <rect x="20" y="140" width="80" height="30" fill="#e8daef" stroke="#9b59b6" stroke-width="2" />
+                        <text x="15" y="160" text-anchor="end" fill="#9b59b6" font-size="11"
+                            font-weight="bold">11</text>
+                        <text x="60" y="160" text-anchor="middle" fill="#333" font-size="12">→</text>
+
+                        <!-- Arrows -->
+                        <line x1="100" y1="65" x2="180" y2="65" stroke="#555" stroke-width="1.5"
+                            marker-end="url(#arrowhead)" />
+                        <line x1="100" y1="95" x2="140" y2="95" stroke="#555" stroke-width="1.5" />
+                        <line x1="140" y1="95" x2="140" y2="65" stroke="#555" stroke-width="1.5" />
+                        <line x1="100" y1="125" x2="180" y2="125" stroke="#555" stroke-width="1.5"
+                            marker-end="url(#arrowhead)" />
+                        <line x1="100" y1="155" x2="180" y2="185" stroke="#555" stroke-width="1.5"
+                            marker-end="url(#arrowhead)" />
+
+                        <!-- Arrowhead marker -->
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#555" />
+                            </marker>
+                        </defs>
+
+                        <!-- Buckets -->
+                        <text x="310" y="20" text-anchor="middle" fill="#27ae60" font-weight="bold"
+                            font-size="14">ΚΑΔΟΙ</text>
+
+                        <!-- Bucket A (d'=1) -->
+                        <rect x="180" y="45" width="120" height="40" rx="5" fill="#d5f5e3" stroke="#27ae60"
+                            stroke-width="2" />
+                        <circle cx="195" cy="55" r="8" fill="#9b59b6" />
+                        <text x="195" y="58" text-anchor="middle" fill="white" font-size="10"
+                            font-weight="bold">1</text>
+                        <text x="240" y="62" text-anchor="middle" fill="#1b5e20" font-size="11">4, 16</text>
+                        <text x="240" y="80" text-anchor="middle" fill="#27ae60" font-size="10">d'=1</text>
+                        <text x="310" y="62" fill="#666" font-size="10">← 00, 01 μοιράζονται!</text>
+
+                        <!-- Bucket B (d'=2) -->
+                        <rect x="180" y="105" width="120" height="40" rx="5" fill="#d5f5e3" stroke="#27ae60"
+                            stroke-width="2" />
+                        <circle cx="195" cy="115" r="8" fill="#9b59b6" />
+                        <text x="195" y="118" text-anchor="middle" fill="white" font-size="10"
+                            font-weight="bold">2</text>
+                        <text x="240" y="122" text-anchor="middle" fill="#1b5e20" font-size="11">6, 10</text>
+                        <text x="240" y="140" text-anchor="middle" fill="#27ae60" font-size="10">d'=2</text>
+
+                        <!-- Bucket C (d'=2) -->
+                        <rect x="180" y="165" width="120" height="40" rx="5" fill="#d5f5e3" stroke="#27ae60"
+                            stroke-width="2" />
+                        <circle cx="195" cy="175" r="8" fill="#9b59b6" />
+                        <text x="195" y="178" text-anchor="middle" fill="white" font-size="10"
+                            font-weight="bold">2</text>
+                        <text x="240" y="182" text-anchor="middle" fill="#1b5e20" font-size="11">7, 15</text>
+                        <text x="240" y="200" text-anchor="middle" fill="#27ae60" font-size="10">d'=2</text>
+
+                        <!-- Legend -->
+                        <rect x="380" y="60" width="160" height="80" rx="8" fill="#f8f9fa" stroke="#ddd" />
+                        <text x="460" y="80" text-anchor="middle" fill="#333" font-weight="bold"
+                            font-size="12">Σύμβολα:</text>
+                        <circle cx="400" cy="100" r="10" fill="#9b59b6" />
+                        <text x="400" y="104" text-anchor="middle" fill="white" font-size="10"
+                            font-weight="bold">d'</text>
+                        <text x="420" y="104" fill="#333" font-size="11">= Local Depth</text>
+                        <text x="390" y="125" fill="#333" font-size="11">D = Global Depth</text>
+                    </svg>
+
+                    <div class="prof-tip" style="background: #f3e5f5; padding: 1rem;">
+                        <strong>🔑 Κλειδί:</strong> Αν <strong>d' < D</strong>, πολλές θέσεις καταλόγου δείχνουν στον
+                                ίδιο κάδο!
+                    </div>
+                </div>
+
+                <!-- THE DECISION ALGORITHM -->
+                <div class="card" style="margin-bottom: 2rem; border: 2px solid #e74c3c;">
+                    <h3 style="color: #e74c3c;"><i class="fas fa-brain"></i> Ο ΑΛΓΟΡΙΘΜΟΣ ΕΙΣΑΓΩΓΗΣ - Μηχανικά Βήματα
+                    </h3>
+
+                    <div style="background: #ffebee; padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 1: Βρες τον Κάδο</h4>
+                        <ol>
+                            <li>Υπολόγισε: <strong>h(κλειδί)</strong> → binary</li>
+                            <li>Πάρε τα <strong>πρώτα D bits</strong> (MSB ή LSB ανάλογα την εκφώνηση)</li>
+                            <li>Μετέτρεψε σε δεκαδικό → αυτός είναι ο index στον κατάλογο</li>
+                            <li>Ακολούθησε τον pointer στον κάδο</li>
+                        </ol>
+                    </div>
+
+                    <div style="background: #ffcdd2; padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 2: Έλεγξε τον Κάδο</h4>
+                        <p><strong>Χωράει;</strong> (< B στοιχεία;)</p>
+                                <ul>
+                                    <li>✅ <strong>ΝΑΙ:</strong> Βάλε το στοιχείο. <span
+                                            style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 4px;">ΤΕΛΟΣ</span>
+                                    </li>
+                                    <li>❌ <strong>ΟΧΙ:</strong> Πήγαινε στο Βήμα 3</li>
+                                </ul>
+                    </div>
+
+                    <div style="background: #ef9a9a; padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 3: Ο Κάδος είναι ΓΕΜΑΤΟΣ - Τι κάνω;</h4>
+                        <p style="font-size: 1.1rem; color: #b71c1c;"><strong>🎯 ΡΩΤΑ: d' < D ή d'=D;</strong>
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+                            <div style="background: #c8e6c9; padding: 1rem; border-radius: 8px; color: #1b5e20;">
+                                <h5 style="color: #27ae60;">📗 Περίπτωση A: d' < D</h5>
+                                        <p><strong>= SPLIT ΜΟΝΟ!</strong></p>
+                                        <ol style="font-size: 0.9rem;">
+                                            <li>Κάνε split τον κάδο</li>
+                                            <li>d' του κάδου → d' + 1</li>
+                                            <li>Μοίρασε τα στοιχεία ξανά</li>
+                                            <li>Ενημέρωσε τους pointers</li>
+                                        </ol>
+                                        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #388e3c;"><strong>Ο
+                                                κατάλογος ΔΕΝ αλλάζει!</strong></p>
+                            </div>
+                            <div style="background: #ffe0b2; padding: 1rem; border-radius: 8px; color: #e65100;">
+                                <h5 style="color: #ff9800;">📙 Περίπτωση B: d' = D</h5>
+                                <p><strong>= DOUBLE + SPLIT!</strong></p>
+                                <ol style="font-size: 0.9rem;">
+                                    <li><strong>Διπλασίασε</strong> τον κατάλογο</li>
+                                    <li>D → D + 1</li>
+                                    <li>Κάνε split τον κάδο (d' + 1)</li>
+                                    <li>Μοίρασε τα στοιχεία</li>
+                                </ol>
+                                <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #f57c00;"><strong>Ο κατάλογος
+                                        ΔΙΠΛΑΣΙΑΖΕΤΑΙ!</strong></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: #c5cae9; padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 4: Μοίρασμα Στοιχείων μετά από Split</h4>
+                        <p>Μετά το split, πρέπει να ξαναμοιράσεις τα στοιχεία:</p>
+                        <ul>
+                            <li>Κάθε στοιχείο κοιτάει τώρα <strong>d'+1 bits</strong></li>
+                            <li>Αν το νέο bit είναι <strong>0</strong> → Αριστερός κάδος</li>
+                            <li>Αν το νέο bit είναι <strong>1</strong> → Δεξιός κάδος</li>
+                        </ul>
+                        <div class="prof-tip" style="background: #fff; padding: 0.75rem; margin-top: 0.5rem;">
+                            <strong>⚠️ ΠΡΟΣΟΧΗ:</strong> Αν μετά το split όλα πάνε στον ίδιο κάδο, κάνε ΞΑΝΑ split!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WORKED EXAMPLE WITH SVG -->
+                <div class="card" style="margin-bottom: 2rem; border: 2px solid #27ae60; background: #f1f8e9;">
+                    <h3 style="color: #27ae60;"><i class="fas fa-pencil-alt"></i> ΠΛΗΡΕΣ ΠΑΡΑΔΕΙΓΜΑ: Εισαγωγή 5, 9, 14,
+                        6, 7</h3>
+                    <p>B=2 (κάδος χωράει 2), h(x) = x mod 8 (3 bits), MSB</p>
+
+                    <!-- Step 0: Initial State -->
+                    <div style="background: white; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                        <h5 style="color: #1b5e20;">Αρχική Κατάσταση (D=1)</h5>
+                        <svg width="400" height="100" viewBox="0 0 400 100"
+                            style="display: block; margin: 0.5rem auto;">
+                            <!-- Directory -->
+                            <rect x="20" y="20" width="60" height="25" fill="#e8daef" stroke="#9b59b6"
+                                stroke-width="2" />
+                            <text x="10" y="37" text-anchor="end" fill="#9b59b6" font-size="11"
+                                font-weight="bold">0</text>
+                            <rect x="20" y="45" width="60" height="25" fill="#e8daef" stroke="#9b59b6"
+                                stroke-width="2" />
+                            <text x="10" y="62" text-anchor="end" fill="#9b59b6" font-size="11"
+                                font-weight="bold">1</text>
+                            <text x="50" y="12" text-anchor="middle" fill="#9b59b6" font-size="10">D=1</text>
+                            <!-- Arrows -->
+                            <line x1="80" y1="32" x2="130" y2="32" stroke="#555" stroke-width="1.5" />
+                            <line x1="80" y1="57" x2="130" y2="57" stroke="#555" stroke-width="1.5" />
+                            <!-- Buckets -->
+                            <rect x="130" y="15" width="80" height="35" rx="4" fill="#d5f5e3" stroke="#27ae60"
+                                stroke-width="2" />
+                            <circle cx="145" cy="25" r="7" fill="#9b59b6" />
+                            <text x="145" y="28" text-anchor="middle" fill="white" font-size="9"
+                                font-weight="bold">1</text>
+                            <text x="170" y="37" text-anchor="middle" fill="#1b5e20" font-size="11">κενό</text>
+                            <rect x="130" y="50" width="80" height="35" rx="4" fill="#d5f5e3" stroke="#27ae60"
+                                stroke-width="2" />
+                            <circle cx="145" cy="60" r="7" fill="#9b59b6" />
+                            <text x="145" y="63" text-anchor="middle" fill="white" font-size="9"
+                                font-weight="bold">1</text>
+                            <text x="170" y="72" text-anchor="middle" fill="#1b5e20" font-size="11">κενό</text>
+                        </svg>
+                    </div>
+
+                    <!-- Step 1: Insert 5, 9 -->
+                    <div style="background: white; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                        <h5 style="color: #1b5e20;">Βήμα 1: Εισαγωγή 5, 9</h5>
+                        <p style="font-size: 0.9rem;">• h(5)=5=<strong>101</strong> → MSB(1)=<strong>1</strong> → Bucket
+                            1<br />
+                            • h(9)=1=<strong>001</strong> → MSB(1)=<strong>0</strong> → Bucket 0</p>
+                        <svg width="400" height="100" viewBox="0 0 400 100"
+                            style="display: block; margin: 0.5rem auto;">
+                            <!-- Directory -->
+                            <rect x="20" y="20" width="60" height="25" fill="#e8daef" stroke="#9b59b6"
+                                stroke-width="2" />
+                            <text x="10" y="37" text-anchor="end" fill="#9b59b6" font-size="11"
+                                font-weight="bold">0</text>
+                            <rect x="20" y="45" width="60" height="25" fill="#e8daef" stroke="#9b59b6"
+                                stroke-width="2" />
+                            <text x="10" y="62" text-anchor="end" fill="#9b59b6" font-size="11"
+                                font-weight="bold">1</text>
+                            <text x="50" y="12" text-anchor="middle" fill="#9b59b6" font-size="10">D=1</text>
+                            <!-- Arrows -->
+                            <line x1="80" y1="32" x2="130" y2="32" stroke="#555" stroke-width="1.5" />
+                            <line x1="80" y1="57" x2="130" y2="57" stroke="#555" stroke-width="1.5" />
+                            <!-- Buckets -->
+                            <rect x="130" y="15" width="80" height="35" rx="4" fill="#d5f5e3" stroke="#27ae60"
+                                stroke-width="2" />
+                            <circle cx="145" cy="25" r="7" fill="#9b59b6" />
+                            <text x="145" y="28" text-anchor="middle" fill="white" font-size="9"
+                                font-weight="bold">1</text>
+                            <text x="175" y="37" text-anchor="middle" fill="#1b5e20" font-size="12"
+                                font-weight="bold">9</text>
+                            <rect x="130" y="50" width="80" height="35" rx="4" fill="#d5f5e3" stroke="#27ae60"
+                                stroke-width="2" />
+                            <circle cx="145" cy="60" r="7" fill="#9b59b6" />
+                            <text x="145" y="63" text-anchor="middle" fill="white" font-size="9"
+                                font-weight="bold">1</text>
+                            <text x="175" y="72" text-anchor="middle" fill="#1b5e20" font-size="12"
+                                font-weight="bold">5</text>
+                        </svg>
+                    </div>
+
+                    <!-- Step 2: Insert 14 -->
+                    <div style="background: white; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                        <h5 style="color: #1b5e20;">Βήμα 2: Εισαγωγή 14</h5>
+                        <p style="font-size: 0.9rem;">• h(14)=6=<strong>110</strong> → MSB(1)=<strong>1</strong> →
+                            Bucket 1<br />
+                            • Χωράει! (1 στοιχείο ήδη, B=2)</p>
+                        <svg width="400" height="100" viewBox="0 0 400 100"
+                            style="display: block; margin: 0.5rem auto;">
+                            <rect x="20" y="20" width="60" height="25" fill="#e8daef" stroke="#9b59b6"
+                                stroke-width="2" />
+                            <text x="10" y="37" text-anchor="end" fill="#9b59b6" font-size="11"
+                                font-weight="bold">0</text>
+                            <rect x="20" y="45" width="60" height="25" fill="#e8daef" stroke="#9b59b6"
+                                stroke-width="2" />
+                            <text x="10" y="62" text-anchor="end" fill="#9b59b6" font-size="11"
+                                font-weight="bold">1</text>
+                            <text x="50" y="12" text-anchor="middle" fill="#9b59b6" font-size="10">D=1</text>
+                            <line x1="80" y1="32" x2="130" y2="32" stroke="#555" stroke-width="1.5" />
+                            <line x1="80" y1="57" x2="130" y2="57" stroke="#555" stroke-width="1.5" />
+                            <rect x="130" y="15" width="80" height="35" rx="4" fill="#d5f5e3" stroke="#27ae60"
+                                stroke-width="2" />
+                            <circle cx="145" cy="25" r="7" fill="#9b59b6" />
+                            <text x="145" y="28" text-anchor="middle" fill="white" font-size="9"
+                                font-weight="bold">1</text>
+                            <text x="175" y="37" text-anchor="middle" fill="#1b5e20" font-size="12"
+                                font-weight="bold">9</text>
+                            <rect x="130" y="50" width="80" height="35" rx="4" fill="#c8e6c9" stroke="#27ae60"
+                                stroke-width="3" />
+                            <circle cx="145" cy="60" r="7" fill="#9b59b6" />
+                            <text x="145" y="63" text-anchor="middle" fill="white" font-size="9"
+                                font-weight="bold">1</text>
+                            <text x="175" y="72" text-anchor="middle" fill="#1b5e20" font-size="12"
+                                font-weight="bold">5, 14</text>
+                            <text x="220" y="72" fill="#27ae60" font-size="10">✓ ΓΕΜΑΤΟ</text>
+                        </svg>
+                    </div>
+
+                    <!-- Step 3: Insert 6 - SPLIT! -->
+                    <div
+                        style="background: #fff3e0; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 2px solid #ff9800;">
+                        <h5 style="color: #e65100;">⚠️ Βήμα 3: Εισαγωγή 6 - SPLIT!</h5>
+                        <p style="font-size: 0.9rem;">• h(6)=6=<strong>110</strong> → MSB(1)=<strong>1</strong> → Bucket
+                            1<br />
+                            • Bucket 1 είναι ΓΕΜΑΤΟ! d'=1, D=1 → <strong>d' = D → DOUBLE + SPLIT!</strong></p>
+
+                        <svg width="480" height="130" viewBox="0 0 480 130" style="display: block; margin: 1rem auto;">
+                            <!-- New Directory D=2 -->
+                            <rect x="20" y="25" width="60" height="22" fill="#e8daef" stroke="#9b59b6"
+                                stroke-width="2" />
+                            <text x="10" y="40" text-anchor="end" fill="#9b59b6" font-size="10"
+                                font-weight="bold">00</text>
+                            <rect x="20" y="47" width="60" height="22" fill="#e8daef" stroke="#9b59b6"
+                                stroke-width="2" />
+                            <text x="10" y="62" text-anchor="end" fill="#9b59b6" font-size="10"
+                                font-weight="bold">01</text>
+                            <rect x="20" y="69" width="60" height="22" fill="#e8daef" stroke="#9b59b6"
+                                stroke-width="2" />
+                            <text x="10" y="84" text-anchor="end" fill="#9b59b6" font-size="10"
+                                font-weight="bold">10</text>
+                            <rect x="20" y="91" width="60" height="22" fill="#e8daef" stroke="#9b59b6"
+                                stroke-width="2" />
+                            <text x="10" y="106" text-anchor="end" fill="#9b59b6" font-size="10"
+                                font-weight="bold">11</text>
+                            <text x="50" y="15" text-anchor="middle" fill="#9b59b6" font-size="11"
+                                font-weight="bold">D=2</text>
+
+                            <!-- Arrows -->
+                            <line x1="80" y1="36" x2="130" y2="45" stroke="#555" stroke-width="1.5" />
+                            <line x1="80" y1="58" x2="100" y2="58" stroke="#555" stroke-width="1.5" />
+                            <line x1="100" y1="58" x2="100" y2="45" stroke="#555" stroke-width="1.5" />
+                            <line x1="100" y1="45" x2="130" y2="45" stroke="#555" stroke-width="1.5" />
+                            <line x1="80" y1="80" x2="130" y2="75" stroke="#555" stroke-width="1.5" />
+                            <line x1="80" y1="102" x2="130" y2="105" stroke="#555" stroke-width="1.5" />
+
+                            <!-- Buckets -->
+                            <rect x="130" y="25" width="90" height="35" rx="4" fill="#d5f5e3" stroke="#27ae60"
+                                stroke-width="2" />
+                            <circle cx="145" cy="35" r="7" fill="#9b59b6" />
+                            <text x="145" y="38" text-anchor="middle" fill="white" font-size="8"
+                                font-weight="bold">1</text>
+                            <text x="180" y="47" text-anchor="middle" fill="#1b5e20" font-size="11"
+                                font-weight="bold">9</text>
+
+                            <rect x="130" y="60" width="90" height="35" rx="4" fill="#fff9c4" stroke="#ff9800"
+                                stroke-width="2" />
+                            <circle cx="145" cy="70" r="7" fill="#9b59b6" />
+                            <text x="145" y="73" text-anchor="middle" fill="white" font-size="8"
+                                font-weight="bold">2</text>
+                            <text x="180" y="82" text-anchor="middle" fill="#1b5e20" font-size="11"
+                                font-weight="bold">14</text>
+                            <text x="230" y="82" fill="#ff9800" font-size="10">h(14)=110</text>
+
+                            <rect x="130" y="95" width="90" height="35" rx="4" fill="#c8e6c9" stroke="#27ae60"
+                                stroke-width="3" />
+                            <circle cx="145" cy="105" r="7" fill="#9b59b6" />
+                            <text x="145" y="108" text-anchor="middle" fill="white" font-size="8"
+                                font-weight="bold">2</text>
+                            <text x="180" y="117" text-anchor="middle" fill="#1b5e20" font-size="11"
+                                font-weight="bold">5, 6</text>
+                            <text x="230" y="117" fill="#27ae60" font-size="10">h(5)=101, h(6)=110</text>
+
+                            <!-- Explanation -->
+                            <text x="350" y="50" fill="#e65100" font-size="11" font-weight="bold">Μετά το split:</text>
+                            <text x="350" y="70" fill="#333" font-size="10">• 5: 101 → bit 2 = 0 → 10</text>
+                            <text x="350" y="85" fill="#333" font-size="10">• 6: 110 → bit 2 = 1 → 11</text>
+                            <text x="350" y="100" fill="#333" font-size="10">• 14: 110 → bit 2 = 1 → 11</text>
+                        </svg>
+                        <p style="font-size: 0.85rem; color: #e65100;"><strong>Σημείωση:</strong> Τώρα κοιτάμε τα 2
+                            πρώτα bits!</p>
+                    </div>
+                </div>
+
+                <!-- ULTRA QUICK CHEAT SHEET -->
+                <div class="card" style="margin-bottom: 2rem; background: #263238; color: white;">
+                    <h3 style="color: #80deea;"><i class="fas fa-cheat-sheet"></i> 📝 ULTRA-ΣΥΝΟΠΤΙΚΟ CHEAT SHEET</h3>
+
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                            <h4 style="color: #a5d6a7;">ΕΙΣΑΓΩΓΗ</h4>
+                            <pre style="color: #c8e6c9; font-size: 0.85rem; margin: 0;">
+1. h(key) → πάρε D bits
+2. Πήγαινε στον κάδο
+3. Χωράει; → ΤΕΛΟΣ
+4. Κάδος γεμάτος!
+   d' < D → SPLIT ONLY
+   d' = D → DOUBLE + SPLIT
+                            </pre>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                            <h4 style="color: #ffcc80;">Η ΧΡΥΣΗ ΕΡΩΤΗΣΗ</h4>
+                            <div style="font-size: 1.2rem; text-align: center; margin: 1rem 0; color: #ffe082;">
+                                <strong>d' < D ή d'=D;</strong>
+                            </div>
+                            <ul style="font-size: 0.9rem; color: #fff9c4;">
+                                <li><strong>d' < D:</strong> Split μόνο</li>
+                                <li><strong>d' = D:</strong> Double πρώτα!</li>
+                            </ul>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                            <h4 style="color: #ef9a9a;">ΤΥΠΟΙ</h4>
+                            <ul style="font-size: 0.9rem; color: #ffcdd2;">
+                                <li>Μέγεθος καταλόγου: <strong>2<sup>D</sup></strong></li>
+                                <li>Pointers σε κάδο: <strong>2<sup>D-d'</sup></strong></li>
+                                <li>Πάντα: <strong>d' ≤ D</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="margin: 3rem 0; border-color: #ddd;">
+
+                <!-- ORIGINAL CONTENT BELOW -->
                 <!-- Intro -->
                 <div class="card" style="margin-bottom: 2rem; border-left: 5px solid var(--primary-blue);">
                     <h3><i class="fas fa-bullseye"></i> Γιατί Δυναμικός Κατακερματισμός;</h3>
