@@ -51,6 +51,224 @@
                 <h1 style="color: var(--primary-blue-dark); margin-bottom: 2rem;">B+ Trees: Πλήρης Θεωρία & Αλγόριθμοι
                 </h1>
 
+                <!-- QUICK MASTERY SECTION -->
+                <div class="card"
+                    style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; margin-bottom: 2rem; padding: 2rem;">
+                    <h2 style="color: white; margin-bottom: 1rem;"><i class="fas fa-bolt"></i> 🚀 ΜΑΘΕ B+ TREE ΣΕ 10
+                        ΛΕΠΤΑ</h2>
+                    <p style="font-size: 1.1rem; opacity: 0.95;">Ακολούθησε αυτόν τον οδηγό μηχανικά και θα μπορείς να
+                        λύσεις ΟΠΟΙΟΔΗΠΟΤΕ πρόβλημα B+ Tree.</p>
+                </div>
+
+                <!-- THE GOLDEN RULE -->
+                <div class="exam-warning" style="margin-bottom: 2rem; border: 3px solid #e74c3c;">
+                    <div class="box-title"><i class="fas fa-star"></i> Ο ΧΡΥΣΟΣ ΚΑΝΟΝΑΣ - Θυμήσου Μόνο Αυτό!</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;">
+                        <div style="background: #e8f5e9; padding: 1rem; border-radius: 8px; color: #1b5e20;">
+                            <h4 style="color: #27ae60;">📥 INSERTION</h4>
+                            <p><strong>Τα δεδομένα πάνε ΠΑΝΤΑ στα ΦΥΛΛΑ.</strong></p>
+                            <p>Αν γεμίσει → Split → Κλειδί ανεβαίνει.</p>
+                        </div>
+                        <div style="background: #ffebee; padding: 1rem; border-radius: 8px; color: #b71c1c;">
+                            <h4 style="color: #e74c3c;">📤 DELETION</h4>
+                            <p><strong>Διαγράφεις ΠΑΝΤΑ από ΦΥΛΛΟ.</strong></p>
+                            <p>Αν αδειάσει (< d) → Borrow ή Merge.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SMART THINKING METHOD -->
+                <div class="card" style="margin-bottom: 2rem; border-left: 5px solid #9b59b6;">
+                    <h3 style="color: #9b59b6;"><i class="fas fa-brain"></i> ΜΕΘΟΔΟΣ ΣΚΕΨΗΣ: Οι 3 Ερωτήσεις</h3>
+                    <p>Σε ΚΑΘΕ βήμα, ρώτα τον εαυτό σου με αυτή τη σειρά:</p>
+                    <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+                        <ol style="font-size: 1.1rem; line-height: 2.5;">
+                            <li><strong style="color: #e74c3c;">🎯 ΠΟΥ;</strong> → Σε ποιον κόμβο είμαι; (Φύλλο ή
+                                Εσωτερικός;)</li>
+                            <li><strong style="color: #f39c12;">📊 ΠΟΣΑ;</strong> → Πόσα κλειδιά έχει τώρα; (< d,=d, ή>
+                                    2d;)</li>
+                            <li><strong style="color: #27ae60;">✅ ΤΙ ΚΑΝΩ;</strong> → Με βάση τα παραπάνω, ποια
+                                ενέργεια;</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- INSERTION ALGORITHM - MECHANICAL STEPS -->
+                <div class="card" style="margin-bottom: 2rem; border: 2px solid #27ae60;">
+                    <h3 style="color: #27ae60;"><i class="fas fa-plus-circle"></i> ΑΛΓΟΡΙΘΜΟΣ ΕΙΣΑΓΩΓΗΣ - Μηχανικά
+                        Βήματα</h3>
+
+                    <div style="background: #e8f5e9; padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 1: Βρες το Φύλλο</h4>
+                        <p>Ξεκίνα από τη ρίζα. Σε κάθε κόμβο, ρώτα: "Πού ανήκει το νέο κλειδί;"</p>
+                        <ul>
+                            <li>Αν κλειδί < πρώτο κλειδί κόμβου → Αριστερός pointer</li>
+                            <li>Αν κλειδί ≥ τελευταίο κλειδί → Δεξιότερος pointer</li>
+                            <li>Αλλιώς → Βρες μεταξύ ποιων πέφτει</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #c8e6c9; padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 2: Εισαγωγή στο Φύλλο</h4>
+                        <p><strong>Χωράει;</strong> (keys ≤ 2d μετά την εισαγωγή;)</p>
+                        <ul>
+                            <li>✅ <strong>ΝΑΙ:</strong> Βάλε το κλειδί ταξινομημένα. <span
+                                    style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 4px;">ΤΕΛΟΣ</span>
+                            </li>
+                            <li>❌ <strong>ΟΧΙ:</strong> Πήγαινε στο Βήμα 3 (Split)</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #a5d6a7; padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 3: Split Φύλλου</h4>
+                        <ol>
+                            <li>Βάλε το νέο κλειδί (θα έχεις 2d+1 κλειδιά)</li>
+                            <li>Χώρισε: Αριστερά τα πρώτα d, Δεξιά τα υπόλοιπα d+1</li>
+                            <li><strong style="color: #1b5e20; font-size: 1.1rem;">📋 COPY UP:</strong> Το μικρότερο
+                                κλειδί του δεξιού ΑΝΤΙΓΡΑΦΕΤΑΙ στον γονέα</li>
+                        </ol>
+                        <div class="prof-tip" style="margin-top: 1rem; background: #fff; padding: 0.75rem;">
+                            <strong>💡 Γιατί COPY;</strong> Επειδή το κλειδί ΜΕΝΕΙ στο φύλλο (είναι data!) ΚΑΙ
+                            αντιγράφεται πάνω.
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: #81c784; padding: 1.5rem; border-radius: 10px; margin-top: 1rem; color: #1b5e20;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 4: Έλεγχος Γονέα (Αναδρομικό)</h4>
+                        <p><strong>Ο γονέας χωράει το νέο separator;</strong></p>
+                        <ul>
+                            <li>✅ <strong>ΝΑΙ:</strong> Εισήγαγε ταξινομημένα. <span
+                                    style="background: #1b5e20; color: white; padding: 2px 8px; border-radius: 4px;">ΤΕΛΟΣ</span>
+                            </li>
+                            <li>❌ <strong>ΟΧΙ:</strong> Split εσωτερικού κόμβου:
+                                <ul>
+                                    <li>Χώρισε: Αριστερά d, <strong>Μεσαίος</strong> 1, Δεξιά d</li>
+                                    <li><strong style="font-size: 1.1rem;">⬆️ PUSH UP:</strong> Ο μεσαίος ΦΕΥΓΕΙ και
+                                        πάει στον γονέα (δεν μένει κάτω!)</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <p style="margin-top: 0.5rem;"><strong>Αν η ρίζα κάνει split:</strong> Δημιούργησε νέα ρίζα με
+                            τον μεσαίο. (Ύψος +1)</p>
+                    </div>
+                </div>
+
+                <!-- DELETION ALGORITHM - MECHANICAL STEPS -->
+                <div class="card" style="margin-bottom: 2rem; border: 2px solid #e74c3c;">
+                    <h3 style="color: #e74c3c;"><i class="fas fa-minus-circle"></i> ΑΛΓΟΡΙΘΜΟΣ ΔΙΑΓΡΑΦΗΣ - Μηχανικά
+                        Βήματα</h3>
+
+                    <div style="background: #ffebee; padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 1: Βρες και Διέγραψε</h4>
+                        <p>Βρες το κλειδί στο φύλλο (ίδια διαδικασία με αναζήτηση) και αφαίρεσέ το.</p>
+                    </div>
+
+                    <div style="background: #ffcdd2; padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 2: Έλεγχος Underflow</h4>
+                        <p><strong>Έχει το φύλλο τουλάχιστον d κλειδιά;</strong></p>
+                        <ul>
+                            <li>✅ <strong>ΝΑΙ:</strong> <span
+                                    style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 4px;">ΤΕΛΟΣ</span>
+                                (μπορεί να χρειαστεί update separator αν διέγραψες το πρώτο κλειδί)</li>
+                            <li>❌ <strong>ΟΧΙ (< d):</strong> <strong style="color: #e74c3c;">UNDERFLOW!</strong> →
+                                        Πήγαινε στο Βήμα 3</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #ef9a9a; padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 3: Ρώτα τον Αδελφό</h4>
+                        <p><strong>Έχει ο αδελφός ΠΕΡΙΣΣΟΤΕΡΑ από d κλειδιά;</strong></p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                            <div style="background: #c8e6c9; padding: 1rem; border-radius: 8px; color: #1b5e20;">
+                                <h5>✅ ΝΑΙ → BORROW</h5>
+                                <ol style="font-size: 0.9rem;">
+                                    <li>Πάρε κλειδί από τον αδελφό</li>
+                                    <li>Ενημέρωσε τον separator</li>
+                                    <li><span
+                                            style="background: #27ae60; color: white; padding: 2px 6px; border-radius: 4px;">ΤΕΛΟΣ</span>
+                                    </li>
+                                </ol>
+                            </div>
+                            <div style="background: #ffcc80; padding: 1rem; border-radius: 8px; color: #e65100;">
+                                <h5>❌ ΟΧΙ (= d) → MERGE</h5>
+                                <ol style="font-size: 0.9rem;">
+                                    <li>Ένωσε με τον αδελφό</li>
+                                    <li>Αφαίρεσε τον separator από γονέα</li>
+                                    <li>Έλεγξε γονέα! (βήμα 4)</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: #e57373; padding: 1.5rem; border-radius: 10px; margin-top: 1rem; color: white;">
+                        <h4 style="margin-bottom: 1rem;">Βήμα 4: Αναδρομή στον Γονέα</h4>
+                        <p>Μετά από merge, ο γονέας έχασε ένα child και ένα separator.</p>
+                        <p><strong>Έχει ο γονέας underflow; (< d κλειδιά)</strong>
+                        </p>
+                        <ul>
+                            <li>❌ <strong>ΟΧΙ:</strong> <span
+                                    style="background: #27ae60; padding: 2px 8px; border-radius: 4px;">ΤΕΛΟΣ</span></li>
+                            <li>✅ <strong>ΝΑΙ:</strong> Επανέλαβε Βήμα 3 για τον γονέα, ΜΕ μια διαφορά:
+                                <div
+                                    style="background: rgba(255,255,255,0.2); padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem;">
+                                    <strong>⬇️ PULL DOWN:</strong> Στο merge εσωτερικών, ο separator ΚΑΤΕΒΑΙΝΕΙ και
+                                    γίνεται κλειδί!
+                                </div>
+                            </li>
+                        </ul>
+                        <p style="margin-top: 1rem;"><strong>Αν η ρίζα μείνει κενή:</strong> Το μοναδικό της παιδί
+                            γίνεται νέα ρίζα. (Ύψος -1)</p>
+                    </div>
+                </div>
+
+                <!-- ULTRA QUICK REFERENCE -->
+                <div class="card" style="margin-bottom: 2rem; background: #263238; color: white;">
+                    <h3 style="color: #80cbc4;"><i class="fas fa-cheat-sheet"></i> 📝 ULTRA-ΣΥΝΟΠΤΙΚΟ CHEAT SHEET</h3>
+
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                            <h4 style="color: #a5d6a7;">INSERTION</h4>
+                            <pre style="color: #c8e6c9; font-size: 0.85rem; margin: 0;">
+1. Βρες φύλλο
+2. Χωράει; → ΤΕΛΟΣ
+3. Split φύλλου → COPY UP
+4. Γονέας χωράει; → ΤΕΛΟΣ
+5. Split εσωτερ. → PUSH UP
+6. Loop στο 4
+                            </pre>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                            <h4 style="color: #ef9a9a;">DELETION</h4>
+                            <pre style="color: #ffcdd2; font-size: 0.85rem; margin: 0;">
+1. Βρες & διέγραψε
+2. ≥d κλειδιά; → ΤΕΛΟΣ
+3. Αδελφός >d; → BORROW
+4. Αδελφός =d; → MERGE
+5. Γονέας OK; → ΤΕΛΟΣ
+6. Loop στο 3 (PULL DOWN!)
+                            </pre>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                            <h4 style="color: #ffe082;">ΤΑ 3 ΚΛΕΙΔΙΑ</h4>
+                            <ul style="font-size: 0.9rem; color: #fff9c4;">
+                                <li><strong>COPY:</strong> Split φύλλου</li>
+                                <li><strong>PUSH:</strong> Split εσωτερικού</li>
+                                <li><strong>PULL:</strong> Merge εσωτερικού</li>
+                            </ul>
+                            <p style="font-size: 0.8rem; color: #90a4ae; margin-top: 0.5rem;">
+                                Φύλλα = Data (κρατάνε)<br />
+                                Εσωτερικοί = Δείκτες (μοιράζουν)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="margin: 3rem 0; border-color: #ddd;">
+
+                <!-- ORIGINAL CONTENT BELOW -->
                 <!-- Intro -->
                 <div class="card" style="margin-bottom: 2rem; border-left: 5px solid var(--primary-blue);">
                     <h3><i class="fas fa-bullseye"></i> Γιατί B+ Trees;</h3>
