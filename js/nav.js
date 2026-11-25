@@ -109,6 +109,7 @@ const topics = [
     { id: 'topic5', title: 'ISAM & B+ Δέντρα', path: 'topic5_bplus.html', icon: SVG_ICONS.decisionTree, subpages: [] },
     { id: 'topic6', title: 'Εξωτερική Ταξινόμηση', path: 'topic6_extsort.html', icon: SVG_ICONS.barChart, subpages: [] },
     { id: 'cram', title: 'Cram Sheet', path: 'cram_sheet.html', icon: SVG_ICONS.book },
+    { id: 'a4', title: 'Τυπολόγιο A4', path: 'tipologio_a4.html', icon: SVG_ICONS.fileQuestion },
     { id: 'quiz', title: 'Interactive Quiz', path: 'interactive_quiz.html', icon: SVG_ICONS.fileQuestion },
     { id: 'flashcards', title: 'Flashcards Test', path: 'flashcards.html', icon: SVG_ICONS.gradCap }
 ];
