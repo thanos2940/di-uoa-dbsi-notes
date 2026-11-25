@@ -1,0 +1,48 @@
+/* Layout fixes for grid/container overflow */
+.grid2 {
+    min-width: 0;
+}
+
+.grid2>* {
+    min-width: 0;
+}
+
+/* Flexbox fixes */
+.flex,
+.flex-col-gap12,
+.flex-row-center-mt8,
+.flex-col-center-gap6,
+.flex-row-between-mb12 {
+    min-width: 0;
+}
+
+.flex>*,
+.flex-col-gap12>*,
+.flex-row-center-mt8>*,
+.flex-col-center-gap6>*,
+.flex-row-between-mb12>* {
+    min-width: 0;
+}
+
+/* General overflow protection for component boxes */
+.card,
+.tip,
+.cb,
+.topic-section-card,
+.fitem {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.grid2 {
+    background: var(--surf);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.grid2>div {
+    margin-bottom: 12px;
+}

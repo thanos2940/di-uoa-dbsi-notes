@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΥΣΒΔ · Πρόοδος · Interactive Quiz</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/quiz.css">
+    <style>
+        :root {
+            --bg: #05070a;
+            --surf: #0c0f16;
+            --surf2: #141822;
+            --border: #1e2433;
+            --green: #4ade80;
+            --green-rgb: 74, 222, 128;
+            --blue: #60a5fa;
+            --purple: #c084fc;
+            --orange: #fb923c;
+            --orange-rgb: 251, 146, 60;
+            --txt: #f1f5f9;
+            --muted: #94a3b8;
+            --dim: #475569;
+        }
+    </style>
+</head>
+<body class="quiz-page-body">
+
+    <!-- Navigation Hub -->
+    <div id="site-nav"></div>
+
+    <main class="quiz-app-container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="glass-card start-screen">
+            <h1>Course Quiz</h1>
+            <p>Επίλεξε τις ενότητες που θέλεις να εξεταστείς και ξεκίνα το τεστ!</p>
+            
+            <div id="topic-selector" class="topic-selector">
+                <!-- Buttons will be injected by JS -->
+            </div>
+            
+            <button id="start-btn" class="start-quiz-btn" disabled>Ξεκίνα το Τεστ</button>
+        </div>
+
+        <!-- Quiz Interface -->
+        <div id="quiz-interface" class="glass-card" style="display: none;">
+            <div class="quiz-header">
+                <div class="q-progress" id="progress-text">Ερώτηση <span id="current-num">1</span> από <span id="total-num">10</span></div>
+                <div class="q-timer">
+                    <button id="view-toggle-btn" class="view-toggle-btn" style="background: transparent; border: 1px solid var(--border); color: var(--txt); padding: 5px 10px; border-radius: 5px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; transition: var(--transition);">Λίστα</button>
+                </div>
+            </div>
+            
+            <div class="progress-bar-container" id="progress-bar-container">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            
+            <div id="questions-wrapper">
+                <!-- Dynamically populated question blocks -->
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="glass-card results-screen" style="display: none;">
+            <div class="score-circle">
+                <div id="score-num" class="score-num">0</div>
+                <div class="score-label">Σκορ</div>
+            </div>
+            <h2 id="final-score-title" style="font-family: 'Syne', sans-serif; margin-bottom: 10px;">Ολοκληρώθηκε!</h2>
+            <p id="final-score-text" style="color: var(--muted); margin-bottom: 30px;"></p>
+            
+            <button id="restart-btn" class="restart-btn">Δοκίμασε Ξανά</button>
+        </div>
+    </main>
+
+    <footer class="footer">
+        &copy; 2026 WebNotes Project — ΥΣΒΔ · Πρόοδος
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/nav.js"></script>
+    <script src="data/questions.js"></script>
+    <script src="js/interactive_quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcards Test · ΥΣΒΔ · Πρόοδος</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<style>
+:root{
+  --bg:#0d1117;--bg-rgb:13,17,23;--surf:#161b22;--surf2:#1c2230;--border:#30363d;
+  --blue:#58a6ff;--blue-rgb:88,166,255;--bdim:#0d1f40;
+  --green:#3fb950;--green-rgb:63,185,80;--gdim:#0d2218;
+  --yellow:#e3b341;--ydim:#2d2208;
+  --red:#f85149;--rdim:#2d1010;
+  --cyan:#39d4c8;--cdim:#0a2422;
+  --purple:#bc8cff;--purple-rgb:188,140,255;--pdim:#1a1040;
+  --orange:#f0883e;--orange-rgb:240,136,62;--odim:#2d1800;
+  --txt:#e6edf3;--muted:#8b949e;--dim:#6e7681;
+}
+.hero{background:linear-gradient(150deg,var(--bg) 0%,var(--pdim) 55%,var(--bg) 100%)}
+.hero::after{
+  content:'$ flashcards --all --shuffle';
+  position:absolute;right:32px;bottom:16px;
+  font-family:'JetBrains Mono',monospace;font-size:clamp(1rem,3vw,2.2rem);
+  color:rgba(188,140,255,.07);pointer-events:none;font-weight:700;
+}
+</style>
+<script src="js/nav.js" defer></script>
+<script src="data/flashcards.js" defer></script>
+<script src="js/flashcards.js" defer></script>
+</head>
+<body>
+<div id="site-nav"></div>
+
+<div class="hero">
+  <div class="hero-label">ΥΣΒΔ k18 · Flashcards</div>
+  <h1>Flashcards <em>Test</em></h1>
+  <p>Πέρνα όλες τις κάρτες θεωρίας σαν τεστ: σκέψου την απάντηση, αναποδογύρισε την κάρτα, και σημείωσε αν το ήξερες. Η θεωρία εξετάζεται με ανάπτυξη — εδώ εξασκείσαι ακριβώς σε αυτό.</p>
+  <div class="chips">
+    <span class="chip">flip cards</span>
+    <span class="chip">self-assessment</span>
+    <span class="chip">shuffle</span>
+  </div>
+</div>
+
+<div id="fc-test" class="fctest-wrap">
+
+  <!-- START -->
+  <div id="fc-start" class="fctest-card">
+    <h2 style="font-family:'Syne',sans-serif;margin-bottom:6px">Διάλεξε κεφάλαια</h2>
+    <p style="color:var(--muted);font-size:0.9rem">Επίλεξε ένα ή περισσότερα κεφάλαια (ή «Όλα»).</p>
+    <div id="fc-topic-grid" class="fc-topic-grid"></div>
+    <label style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:0.85rem;margin:6px 0 18px">
+      <input type="checkbox" id="fc-shuffle" checked> Ανακάτεψε τις κάρτες (shuffle)
+    </label>
+    <button id="fc-start-btn" class="fc-primary-btn" disabled>Ξεκίνα το Test →</button>
+  </div>
+
+  <!-- STAGE -->
+  <div id="fc-stage" class="fctest-card" style="display:none">
+    <div class="fctest-progress">
+      <span>Κάρτα <span id="fc-cur">1</span> / <span id="fc-tot">10</span></span>
+      <span id="fc-chap" style="color:var(--purple)"></span>
+    </div>
+    <div class="fctest-bar"><div id="fc-fill" style="width:0%"></div></div>
+
+    <div id="fc-stage-card" class="flip-card fctest-stage-card" tabindex="0"></div>
+
+    <div class="fctest-controls">
+      <button id="fc-prev" class="fc-ctrl">← Προηγούμενη</button>
+      <button id="fc-flip" class="fc-ctrl">↻ Αναποδογύρισε</button>
+      <button id="fc-dunno" class="fc-ctrl dunno">✗ Δεν το ήξερα</button>
+      <button id="fc-know" class="fc-ctrl know">✓ Το ήξερα</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="fc-results" class="fctest-card" style="display:none;text-align:center">
+    <div class="fc-score-num" id="fc-score">0%</div>
+    <h2 style="font-family:'Syne',sans-serif;margin:6px 0 4px">Ολοκληρώθηκε!</h2>
+    <p id="fc-score-detail" style="color:var(--muted);margin-bottom:24px"></p>
+    <button id="fc-restart" class="fc-primary-btn">↺ Νέο Test</button>
+  </div>
+
+</div>
+
+<div class="footer">ΥΣΒΔ k18 · Flashcards Test</div>
+</body>
+</html>

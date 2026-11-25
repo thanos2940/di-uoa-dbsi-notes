@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 2 · Buffer Manager & Πολιτικές Αντικατάστασης</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/chapter.css">
+<link rel="stylesheet" href="styles/sims.css">
+<style>
+.hero{background:linear-gradient(150deg,var(--bg) 0%,var(--cdim) 55%,var(--bg) 100%)}
+.hero::after{content:'victim = argmax(t − t2)';color:rgba(57,212,200,.07)}
+</style>
+<script src="js/nav.js" defer></script>
+<script src="data/questions.js" defer></script>
+<script src="js/quiz-loader.js" defer></script>
+<script src="data/flashcards.js" defer></script>
+<script src="js/flashcards.js" defer></script>
+<script src="js/sims/buffer.js" defer></script>
+<script src="js/sims/widgets.js" defer></script>
+</head>
+<body>
+<div id="site-nav"></div>
+
+<div class="hero">
+  <div class="hero-label">ΥΣΒΔ k18 · Topic 2 · διαφάνειες 002 (μέρος 1) + πίνακας διάλεξης «I/O & Buffer»</div>
+  <h1>Disk Space & <em>Buffer Manager</em></h1>
+  <p>Πώς το ΣΔΒΔ διαχειρίζεται τα μπλοκ του δίσκου και τα πλαίσια (frames) της μνήμης: ο αλγόριθμος αίτησης σελίδας, pin-count & dirty bit, και οι πολιτικές αντικατάστασης FIFO, LRU, CLOCK, MRU, LRU-2 — με το κλασικό παράδειγμα των εμφωλιασμένων βρόχων όπου το LRU «πνίγεται» (sequential flooding).</p>
+  <div class="chips"><span class="chip">bitmap</span><span class="chip">page table</span><span class="chip">pin / dirty</span><span class="chip">LRU vs MRU</span><span class="chip">CLOCK</span><span class="chip">LRU-2</span><span class="chip">simulator</span></div>
+</div>
+
+<nav class="toc">
+  <a href="#essence">🎯 Η Ουσία</a>
+  <a href="#diskspace">Disk Space Mgr</a>
+  <a href="#pool">Buffer Pool</a>
+  <a href="#request">Αίτηση σελίδας</a>
+  <a href="#policies">Πολιτικές</a>
+  <a href="#nestedloop">LRU vs MRU</a>
+  <a href="#clock">CLOCK</a>
+  <a href="#lru2">LRU-2</a>
+  <a href="#osvsdbms">ΛΣ vs ΣΔΒΔ</a>
+  <a href="#playground">Simulator</a>
+</nav>
+
+<div class="wrap">
+
+<section id="essence">
+  <div class="sh"><div class="sh-icon" style="background:var(--gdim)">🎯</div><h2>Η Ουσία σε 60 δευτερόλεπτα</h2></div>
+  <div class="gbox"><div class="lbl" style="color:var(--green)">ΤΙ ΚΑΝΕΙ</div>
+    Ο <strong>buffer manager</strong> κρατά στη RAM ένα σταθερό πλήθος «θέσεων» (πλαίσια/frames) για μπλοκ του δίσκου. Όταν κάποιος ζητά ένα μπλοκ: αν είναι ήδη μέσα → δωρεάν (hit)· αλλιώς → 1 I/O για να το φέρει, και αν δεν υπάρχει ελεύθερη θέση πρέπει να <strong>διώξει</strong> κάποιο (θύμα). Ποιο θα διώξει το αποφασίζει η <strong>πολιτική αντικατάστασης</strong>.</div>
+  <p style="margin-bottom:14px"><strong>Διαίσθηση:</strong> σκέψου ένα γραφείο με 3 θέσεις για βιβλία ενώ η βιβλιοθήκη είναι στον διπλανό όροφο. Κάθε φορά που χρειάζεσαι βιβλίο που δεν είναι στο γραφείο, κάνεις διαδρομή (I/O). Αν διαβάζεις κυκλικά 4 βιβλία με 3 θέσεις και πετάς πάντα «το πιο παλιό» (LRU), πετάς ακριβώς αυτό που θα χρειαστείς αμέσως μετά! Τότε είναι καλύτερο να πετάς «το πιο πρόσφατο» (MRU).</p>
+  <div class="compare">
+    <div class="good-side"><div class="side-label" style="color:var(--green)">✅ LRU δουλεύει καλά όταν…</div><ul style="font-size:0.86rem;padding-left:18px;line-height:1.7;margin:0"><li>υπάρχει τοπικότητα (ό,τι χρησιμοποίησες πρόσφατα θα το ξαναχρειαστείς)</li><li>το «εσωτερικό» σύνολο χωράει στη μνήμη</li><li>γενικός φόρτος ΛΣ</li></ul></div>
+    <div class="bad-side"><div class="side-label" style="color:var(--red)">❌ LRU αποτυγχάνει όταν…</div><ul style="font-size:0.86rem;padding-left:18px;line-height:1.7;margin:0"><li>κάνεις <strong>επαναλαμβανόμενες σειριακές σαρώσεις</strong> αρχείου μεγαλύτερου από τη μνήμη (sequential flooding)</li><li>μια μεγάλη σάρωση «μολύνει» τη δεξαμενή άλλων ερωτημάτων</li></ul></div>
+  </div>
+  <div class="tip"><div class="tip-icon">📝</div><div class="tip-text"><strong>Για τις εξετάσεις θυμήσου:</strong> (1) Κόστος = <strong>αριθμός αστοχιών</strong> (μπλοκ που διαβάστηκαν από τον δίσκο). (2) Εμφωλιασμένοι βρόχοι, R εξωτερικό, LRU: αν <strong>M ≥ p(S)+1</strong> → κόστος <strong>p(R)+p(S)</strong>· αλλιώς <strong>p(R)+p(R)·p(S)</strong> (κάθε αίτηση = I/O). (3) Το MRU σώζει μέρος του εσωτερικού πίνακα σε κάθε επανάληψη. (4) Θύμα ποτέ ένα frame με pin-count &gt; 0· dirty → πρώτα γράψιμο στον δίσκο.</div></div>
+</section>
+
+<section id="diskspace">
+  <div class="sh"><div class="sh-icon" style="background:var(--cdim)">💾</div><h2>1. Disk Space Manager</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Το κατώτερο στρώμα του ΣΔΒΔ (κάτω από τον Buffer Manager, βλ. αρχιτεκτονική στο <a href="topic1_storage.html#dbms">Topic 1</a>). Ανεξάρτητα αν ο δίσκος είναι μόνος του ή RAID, δίνει στο ΣΔΒΔ την έννοια του <strong>μπλοκ ως μονάδα δεδομένων</strong>· μέγεθος μπλοκ = μέγεθος σελίδας· όλη η κίνηση γίνεται σε σελίδες/μπλοκ.</p>
+  <div class="grid2">
+    <div><div class="card-title">Τι κάνει</div><ul style="font-size:.92rem">
+      <li>Δεσμεύει/αποδεσμεύει σελίδες ως <strong>λογικά συνεχόμενη ακολουθία μπλοκ</strong>.</li>
+      <li>Κρύβει την πολυπλοκότητα του υλικού και του file system του ΛΣ.</li>
+      <li>«Αναγκάζει» τα ανώτερα επίπεδα να βλέπουν τα δεδομένα ως <strong>συλλογή σελίδων</strong>.</li>
+      <li>Παρακολουθεί (1) μπλοκ σε χρήση, (2) ελεύθερα μπλοκ — με τον καιρό δημιουργούνται «τρύπες».</li></ul></div>
+    <div><div class="card-title">Ελεύθερα μπλοκ: λίστα vs bitmap</div>
+      <p style="font-size:.9rem;margin-bottom:6px"><strong>Λίστα</strong> ελεύθερων μπλοκ: κάποια trade-offs. <strong>Bitmap</strong>: 1 bit ανά μπλοκ δίσκου, SET = κατειλημμένο, RESET = ελεύθερο.</p>
+      <div class="cells"><span class="r">1</span><span class="r">1</span><span class="g">0</span><span class="r">1</span><span class="g">0</span><span class="g">0</span><span class="r">1</span><span class="r">1</span><span class="g">0</span><span class="r">1</span></div>
+      <p style="font-size:.85rem;color:var(--muted);margin-top:6px">Πολύ μικρότερο από τον δίσκο → μένει στη RAM· οι bitwise πράξεις βρίσκουν ελεύθερο μπλοκ πολύ πιο γρήγορα από τη διάσχιση λίστας στον δίσκο.</p></div>
+  </div>
+  <div class="card"><div class="card-title">ΛΣ ή δικός του διαχειριστής;</div>
+    <p style="font-size:.92rem;margin-bottom:6px">Το file system βλέπει ένα αρχείο ως <strong>ακολουθία bytes</strong>: το «διάβασε byte i του αρχείου f» μεταφράζεται σε «διάβασε το raw μπλοκ m [της τροχιάς t του κυλίνδρου c]». Το ΣΔΒΔ θα μπορούσε να χρησιμοποιήσει το FS, αλλά συχνά φτιάχνει <strong>δικό του disk space manager παρακάμπτοντας το FS</strong>, γιατί:</p>
+    <ul style="font-size:.92rem;margin:0"><li><strong>φορητότητα</strong>: δεν εξαρτάται από συγκεκριμένο ΛΣ, διαχειρίζεται απευθείας τον χώρο του·</li><li>αποφεύγει τα <strong>όρια μέγιστου μεγέθους αρχείου</strong> κάποιων file systems.</li></ul></div>
+  <div class="section-quiz" data-topic="topic2" data-section="diskspace"></div>
+</section>
+
+<section id="pool">
+  <div class="sh"><div class="sh-icon" style="background:var(--cdim)">🧠</div><h2>2. Buffer Pool & Μετα-δεδομένα</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px"><strong>Ενδιάμεση μνήμη (buffer)</strong>: τμήμα της κύριας μνήμης αφιερωμένο στη μεταφορά μπλοκ από/προς τον δίσκο. Όλα τα μπλοκ έχουν το ίδιο μέγεθος. Ο Buffer Manager τοποθετεί μπλοκ στη δεξαμενή, «θυσιάζει» (victimizes) περιεχόμενο πλαισίου όταν δεν υπάρχει χώρος, και <strong>κρύβει</strong> το γεγονός ότι δεν είναι όλα τα δεδομένα στη μνήμη.</p>
+  <div class="card"><div class="card-title">Τι κρατά για κάθε πλαίσιο (Buffer Pool Page-Table)</div>
+    <table class="vtbl"><thead><tr><th>Πεδίο</th><th>Ρόλος</th></tr></thead><tbody>
+      <tr><td><strong>BlockID → FrameID</strong></td><td>σε ποιο πλαίσιο βρίσκεται κάθε μπλοκ του δίσκου</td></tr>
+      <tr><td><strong>dirty-bit</strong></td><td>γίνεται 1 όταν το μπλοκ τροποποιηθεί μετά τη μεταφορά του στη μνήμη → πρέπει να γραφτεί πίσω πριν αντικατασταθεί</td></tr>
+      <tr><td><strong>timestamp</strong></td><td>πότε χρησιμοποιήθηκε τελευταία φορά (για LRU κ.λπ.)</td></tr>
+      <tr><td><strong>rd-count / pin-count</strong></td><td>πόσοι «χρήστες» χρησιμοποιούν ταυτόχρονα τη σελίδα· &gt; 0 ⇒ <strong>pinned</strong></td></tr>
+    </tbody></table>
+    <p style="font-size:.85rem;color:var(--muted);margin-top:10px">Παράδειγμα διαφάνειας (δεξαμενή 5 πλαισίων):</p>
+    <div class="tblwrap"><table class="vtbl"><thead><tr><th>BlockID</th><th>FrameID</th><th>pinned / rd-count</th><th>dirty</th><th>tstamp</th></tr></thead><tbody>
+      <tr><td>b#121</td><td>f2</td><td>0</td><td>1</td><td>08:09:11</td></tr>
+      <tr><td>b#154</td><td>f0</td><td>3</td><td></td><td>08:19:11</td></tr>
+      <tr><td>b#134</td><td>f3</td><td>1</td><td></td><td>08:19:15</td></tr></tbody></table></div>
+    <p style="font-size:.85rem;color:var(--muted)">Εδώ μόνο το f2 (b#121, rd-count 0) είναι υποψήφιο θύμα από τα κατειλημμένα — και είναι dirty, άρα θα κοστίσει ένα γράψιμο. Τα f1, f4 είναι ελεύθερα.</p></div>
+  <div class="wbox"><div class="lbl" style="color:var(--yellow)">⚠️ Πότε ΔΕΝ αντικαθίσταται ένα frame</div>Όσο <strong>rd-count &gt; 0</strong> το frame είναι σιωπηρά καρφιτσωμένο και δεν εξετάζεται για θύμα. Όταν τελειώνουν τα ερωτήματα, μειώνουν το pin-count τους· ο query engine μπορεί και να <em>ξεκαρφιτσώσει ρητά</em> σελίδες που ξέρει ότι δεν θα ξαναχρειαστεί.<br><strong>Βέλτιστο κριτήριο</strong>: διώξε το frame που θα χρησιμοποιηθεί <strong>πιο μακριά στο μέλλον</strong> — ανέφικτο, γιατί δεν βλέπουμε το μέλλον.</div>
+  <div class="section-quiz" data-topic="topic2" data-section="pool"></div>
+</section>
+
+<section id="request">
+  <div class="sh"><div class="sh-icon" style="background:var(--cdim)">📥</div><h2>3. Ο Αλγόριθμος Αίτησης Σελίδας</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Δύο εκδοχές του ίδιου αλγορίθμου: των διαφανειών και του πίνακα της διάλεξης. Τα «ακριβά» βήματα είναι αυτά που αγγίζουν τον δίσκο.</p>
+  <div class="grid2">
+    <div><div class="card-title">Διαφάνεια: Page-Is-Requested(PID)</div>
+      <div class="cb" style="padding:12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:0.8rem;line-height:1.8"><span class="kw">function</span> <span class="fn">Page-Is-Requested</span>(PID):
+    <span class="kw">if</span> PID στη δεξαμενή:
+        rd-count++
+    <span class="kw">else</span>:
+        διάλεξε θύμα με την πολιτική
+            μεταξύ των <span class="kw">unpinned</span> frames
+        rd-count = RESET
+        <span class="kw">if</span> dirty-bit == SET:
+            <span class="st">γράψε</span> το frame στον δίσκο
+        <span class="st">διάβασε</span> το μπλοκ στο frame
+    <span class="kw">return</span> διεύθυνση του frame</div></div>
+    <div><div class="card-title">Πίνακας διάλεξης: «Αναζήτηση μπλοκ B»</div>
+      <div class="dg" style="margin:0"><div class="dg-col">
+        <div class="dg-box" style="border-color:var(--green)"><div class="t">ΑΝ το B στη μνήμη</div><div class="s">ΤΟΤΕ επιστροφή δείκτη στο B</div></div>
+        <div class="dg-box" style="border-color:var(--blue)"><div class="t">ΑΛΛΙΩΣ ΑΝ υπάρχει χώρος</div><div class="s">ΤΟΤΕ μεταφορά του B στη μνήμη <b style="color:var(--red)">(ακριβό)</b>, επιστροφή δείκτη</div></div>
+        <div class="dg-box" style="border-color:var(--orange)"><div class="t">ΑΛΛΙΩΣ επιλογή θύματος B′</div><div class="s">ΑΝ το B′ άλλαξε από τότε που ήρθε → γράψιμο B′ στον δίσκο <b style="color:var(--red)">(ακριβό)</b>· μεταφορά B, επιστροφή δείκτη</div></div>
+      </div></div></div>
+  </div>
+  <div class="ibox"><div class="lbl" style="color:var(--blue)">Ο διαχειριστής κρατά στη μνήμη όλη την πληροφορία για την επιλογή</div>Ποιο μπλοκ του δίσκου είναι σε κάθε μπλοκ της ΕΜ · ένα «βρώμικο μπιτ» για κάθε μπλοκ μνήμης που γίνεται 1 όταν γίνει οποιαδήποτε αλλαγή μετά τη μεταφορά · πότε χρησιμοποιήθηκε τελευταία φορά το μπλοκ.</div>
+  <div class="section-quiz" data-topic="topic2" data-section="request"></div>
+</section>
+
+<section id="policies">
+  <div class="sh"><div class="sh-icon" style="background:var(--cdim)">♻️</div><h2>4. Πολιτικές Αντικατάστασης</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">«Οι στρατηγικές που είναι κατάλληλες για ΣΔΒΔ <strong>δεν είναι απαραίτητα</strong> αυτές που είναι για ΛΣ» (πίνακας διάλεξης). Οι διαφάνειες απαριθμούν:</p>
+  <table class="vtbl"><thead><tr><th>Πολιτική</th><th>Διώχνει…</th><th>Υλοποίηση / παρατήρηση</th></tr></thead><tbody>
+    <tr><td><strong>FIFO</strong></td><td>αυτό που μπήκε πρώτο</td><td>ουρά· αγνοεί τη χρήση</td></tr>
+    <tr><td><strong style="color:var(--cyan)">LRU</strong></td><td>το λιγότερο πρόσφατα χρησιμοποιημένο</td><td>παραδοσιακή επιλογή ΛΣ· timestamps/μετρητές → <strong>ακριβό</strong>· παθαίνει sequential flooding</td></tr>
+    <tr><td><strong style="color:var(--cyan)">CLOCK</strong></td><td>το πρώτο frame με ref = 0 που βρίσκει ο «δείκτης»</td><td>φθηνή <strong>προσέγγιση του LRU</strong>· επίσης flooding</td></tr>
+    <tr><td><strong style="color:var(--orange)">MRU</strong></td><td>τη σελίδα που <strong>ξεκαρφιτσώθηκε πιο πρόσφατα</strong></td><td>λύνει εν μέρει το flooding μεγάλων σαρώσεων, αλλά είναι «υπερβολικό/αδιάκριτο»</td></tr>
+    <tr><td><strong style="color:var(--purple)">LRU-2</strong> (LRU-k)</td><td>τη σελίδα με τη μεγαλύτερη απόσταση από την <strong>προτελευταία</strong> αναφορά</td><td>λαμβάνει υπόψη και τη <strong>συχνότητα</strong>· αποφεύγει το flooding φθηνά</td></tr>
+  </tbody></table>
+  <div class="card"><div class="card-title">Τι θέλουμε στο ΣΔΒΔ (διαφάνεια «What Has to be Accomplished»)</div><ul style="font-size:.92rem;margin:0">
+    <li>Το ΣΔΒΔ μπορεί συχνά να <strong>προβλέψει</strong> ποιες σελίδες θα ζητηθούν — τα μοτίβα αναφορών είναι πιο «βατά» από ό,τι στα ΛΣ.</li>
+    <li>Πρέπει να λαμβάνεται υπόψη και η <strong>συχνότητα</strong>.</li>
+    <li>Το <strong>prefetching</strong> σελίδων είναι πολύ αποτελεσματικό.</li>
+    <li>Σημαντικό: η <strong>ρητή εξαναγκασμένη εγγραφή</strong> (force out) μιας σελίδας — δεν την παρέχουν πάντα τα ΛΣ.</li></ul></div>
+  <div class="section-quiz" data-topic="topic2" data-section="policies"></div>
+</section>
+
+<section id="nestedloop">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">🔁</div><h2>5. Εμφωλιασμένοι Βρόχοι: LRU vs MRU <span class="exam-badge">θέμα εξετάσεων</span></h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Το παράδειγμα του πίνακα της διάλεξης — και η βάση του θέματος «κόστος εμφωλιασμένων βρόχων με LRU για διάφορα M».</p>
+  <div class="grid2">
+    <div><div class="card-title">Αλγόριθμος (ζεύξη εγγραφών R &amp; S)</div>
+      <div class="cb" style="padding:12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:0.82rem;line-height:1.9"><span class="kw">ΓΙΑ ΚΑΘΕ</span> μπλοκ r του R:        <span class="cm">// εξωτερικό</span>
+    <span class="fn">φέρ' το στη μνήμη</span>
+    <span class="kw">ΓΙΑ ΚΑΘΕ</span> μπλοκ s του S:    <span class="cm">// εσωτερικό</span>
+        <span class="fn">φέρ' το στη μνήμη</span>
+        «κάνε κάτι στη μνήμη χωρίς αλλαγές»</div>
+      <p style="font-size:.88rem;color:var(--muted);margin-top:8px">Ακολουθία αιτήσεων: R1, S1…S<sub>p(S)</sub>, R2, S1…S<sub>p(S)</sub>, … Συνολικά p(R)·(1+p(S)) αιτήσεις.</p></div>
+    <div><div class="card-title">Παράδειγμα πίνακα: R = {A, B}, S = {Γ, Δ, Ε, Ζ}</div>
+      <p style="font-size:.9rem;margin-bottom:6px">Μνήμη: 2 πλαίσια «για το R» και 2 πλαίσια «για το S».</p>
+      <div class="retval-row">
+        <div class="retval"><div class="retval-num" style="color:var(--red)">10</div><div class="retval-desc">LRU, R εξωτερικό</div></div>
+        <div class="retval"><div class="retval-num" style="color:var(--green)">8</div><div class="retval-desc">MRU, R εξωτερικό</div></div>
+        <div class="retval"><div class="retval-num" style="color:var(--cyan)">6</div><div class="retval-desc">S εξωτερικό (LRU ή MRU)</div></div></div></div>
+  </div>
+  <div class="card"><div class="card-title">Ίχνος για το S (2 πλαίσια), R εξωτερικό</div>
+    <div class="tblwrap"><table class="buf-table">
+      <tr><th>αίτηση</th><th>Γ</th><th>Δ</th><th>Ε</th><th>Ζ</th><th>Γ</th><th>Δ</th><th>Ε</th><th>Ζ</th><th>I/O</th></tr>
+      <tr><td><b>LRU</b></td><td class="miss">Γ,–</td><td class="miss">Γ,Δ</td><td class="miss">Ε,Δ</td><td class="miss">Ε,Ζ</td><td class="miss">Γ,Ζ</td><td class="miss">Γ,Δ</td><td class="miss">Ε,Δ</td><td class="miss">Ε,Ζ</td><td><b>8</b> + 2 (A,B) = <b>10</b></td></tr>
+      <tr><td><b>MRU</b></td><td class="miss">Γ,–</td><td class="miss">Γ,Δ</td><td class="miss">Γ,Ε</td><td class="miss">Γ,Ζ</td><td class="hit">Γ,Ζ ✓</td><td class="miss">Δ,Ζ</td><td class="miss">Ε,Ζ</td><td class="hit">Ε,Ζ ✓</td><td><b>6</b> + 2 = <b>8</b></td></tr>
+    </table></div>
+    <p style="font-size:.88rem;margin-top:8px"><strong>Γιατί;</strong> Με LRU, σε κάθε νέα σάρωση του S διώχνεται ακριβώς η σελίδα που θα ζητηθεί σε λίγο → <strong>κάθε</strong> αίτηση είναι αστοχία (<em>sequential flooding</em>). Με MRU «θυσιάζεται» μόνο μία θέση και οι υπόλοιπες κρατούν σελίδες που ξαναζητούνται. Με S εξωτερικό, ο μικρός R (2 μπλοκ) χωράει ολόκληρος στα πλαίσιά του → κάθε μπλοκ διαβάζεται <strong>μία φορά</strong>: 4 + 2 = 6.</p></div>
+  <div class="ibox"><div class="lbl" style="color:var(--blue)">Διαφάνεια «The Need for Buffer-Frame Replacement Policy»</div>r ⋈ s με r = 3 μπλοκ, s = 5 μπλοκ και 3 πλαίσια: ένα για τη ροή του r, ένα για τη ροή του s, ένα για τα αποτελέσματα. Η διπλή for-loop θέλει «~15 I/Os»: κάθε ένα από τα 3 μπλοκ του r προκαλεί σάρωση των 5 μπλοκ του s (3·5 = 15), συν 3 αναγνώσεις του r = 18 αναγνώσεις συνολικά. Με περισσότερα πλαίσια και καλή πολιτική το κόστος πέφτει — γι' αυτό χρειαζόμαστε πολιτική αντικατάστασης.</div>
+  <div class="keyfact"><strong>Γενικός κανόνας (κοινή δεξαμενή M πλαισίων, R εξωτερικό, LRU):</strong><br>
+    • Αν <strong>M ≥ p(S) + 1</strong>: ο S χωράει μαζί με 1 πλαίσιο για το τρέχον μπλοκ του R → κάθε μπλοκ διαβάζεται μία φορά → <strong>p(R) + p(S)</strong>.<br>
+    • Αν <strong>M ≤ p(S)</strong>: flooding → κάθε αίτηση I/O → <strong>p(R) + p(R)·p(S)</strong>.<br>
+    Παράδειγμα p(R)=5, p(S)=8: M=5 → 45, M=7 → 45, M=8 → 45, M=10 → 13.</div>
+  <div class="tip"><div class="tip-icon">🎯</div><div><div class="tip-title">Exam Focus — «Αλγόριθμοι ζεύξης, LRU, M = p(R), p(R)+2, p(S), p(S)+2»</div><div class="tip-text">Βαθμολογείται: (α) να βρεις αν ο <strong>εσωτερικός</strong> χωράει μαζί με ένα πλαίσιο για τον εξωτερικό, (β) να γράψεις τον σωστό τύπο για κάθε M. Λυμένο με όλες τις περιπτώσεις: <a href="exam_prep.html#join">Exam Prep → Ζεύξη με LRU</a>.</div></div></div>
+  <div id="nl-sim"></div>
+  <div class="section-quiz" data-topic="topic2" data-section="nestedloop"></div>
+</section>
+
+<section id="clock">
+  <div class="sh"><div class="sh-icon" style="background:var(--cdim)">🕐</div><h2>6. CLOCK — Προσέγγιση του LRU</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Το «γνήσιο» LRU θέλει timestamps σε κάθε αναφορά → ακριβό. Το CLOCK κάνει σχεδόν το ίδιο με <strong>1 bit ανά frame</strong>.</p>
+  <div class="grid2">
+    <div><ol style="font-size:.92rem">
+      <li>Τα frames σε <strong>κυκλική</strong> διάταξη: f0, f1, f2, f3, f4 και πάλι f0.</li>
+      <li>Κάθε frame έχει <strong>ref bit</strong>, αρχικά RESET (0).</li>
+      <li>Κάθε φορά που μια σελίδα βρίσκεται στη δεξαμενή (hit) → ref = SET (1).</li>
+      <li>Ένας εικονικός δείκτης (βραχίονας) κινείται δεξιόστροφα:<br>• ref == SET → το κάνει RESET και προχωρά (δεύτερη ευκαιρία)<br>• ref == RESET → <strong>αυτό είναι το θύμα</strong>.</li></ol></div>
+    <div class="dg" style="margin:0"><div style="font-size:.8rem;color:var(--muted);text-align:center;margin-bottom:6px">Διαφάνεια 14: (a) ο δείκτης στο f2 με ref=1 → (b) το μηδενίζει, προχωρά στο f3 με ref=0 → θύμα</div>
+      <div class="dg-row">
+        <div class="dg-box" style="flex:0 0 96px;border-color:var(--yellow)"><div class="t">f2 ◀ δείκτης</div><div class="s">DB#051<br>ref 1 → 0</div></div></div>
+      <div class="dg-row" style="margin-top:6px">
+        <div class="dg-box" style="flex:0 0 96px"><div class="t">f1</div><div class="s">DB#067<br>ref 0</div></div>
+        <div class="dg-box" style="flex:0 0 96px;border-color:var(--red)"><div class="t" style="color:var(--red)">f3 θύμα</div><div class="s">DB#101<br>ref 0</div></div></div>
+      <div class="dg-row" style="margin-top:6px">
+        <div class="dg-box" style="flex:0 0 96px"><div class="t">f0</div><div class="s">DB#145<br>ref 0</div></div>
+        <div class="dg-box" style="flex:0 0 96px"><div class="t">f4</div><div class="s">DB#131<br>ref 0</div></div></div>
+    </div>
+  </div>
+  <div class="rbox"><div class="lbl" style="color:var(--red)">🚨 Sequential flooding</div>Το περιεχόμενο της δεξαμενής «μολύνεται» από μεγάλες σειριακές σαρώσεις, που μπορεί να τρέχουν ταυτόχρονα με άλλα ερωτήματα: ένα μακρύ SELECT διώχνει σελίδες που θα χρειαστούν σύντομα ή «ανήκουν» σε άλλα ερωτήματα/ενημερώσεις. Το παθαίνουν <strong>και το LRU και το CLOCK</strong>.</div>
+  <div id="clock-sim"></div>
+  <div class="section-quiz" data-topic="topic2" data-section="clock"></div>
+</section>
+
+<section id="lru2">
+  <div class="sh"><div class="sh-icon" style="background:var(--pdim)">⏱️</div><h2>7. LRU-k και LRU-2</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Το απλό LRU (= LRU-1) κρατά <strong>ένα</strong> timestamp ανά σελίδα. Το <strong>LRU-k</strong> κρατά τις <strong>k τελευταίες</strong> αναφορές.</p>
+  <div class="card"><div class="card-title">Λειτουργία LRU-k</div><ol style="font-size:.92rem;margin:0">
+    <li><strong>Track history:</strong> για κάθε σελίδα, οι k τελευταίες χρονοσφραγίδες αναφοράς.</li>
+    <li><strong>k-distance:</strong> όταν χρειάζεται θύμα τη στιγμή t, υπολογίζεται για κάθε σελίδα η απόσταση D = t − (k-οστή πιο πρόσφατη αναφορά).</li>
+    <li><strong>Θύμα</strong> = η σελίδα με τη <strong>μέγιστη</strong> D.</li>
+    <li><strong>Οριακή συνθήκη:</strong> αν μια σελίδα έχει &lt; k αναφορές, η παλαιότερη θεωρείται −∞ → D = ∞. Χρειάζεται κανόνας ισοπαλίας.</li></ol></div>
+  <p><strong>LRU-2</strong> έχει όλα τα θεωρητικά πλεονεκτήματα του LRU-k <strong>φθηνά</strong>: μόνο 2 timestamps ανά σελίδα — t1 (πιο πρόσφατη) και t2 (προτελευταία)· αν η σελίδα έχει 1 αναφορά, t2 = −∞. Λιγότερος χώρος από LRU-k.</p>
+  <div class="card"><div class="card-title">Λυμένο παράδειγμα διαφάνειας — θύμα τη στιγμή t = 23</div>
+    <div class="tblwrap"><table class="vtbl"><thead><tr><th></th><th>f0</th><th>f1</th><th>f2</th><th>f3</th><th>f4</th></tr></thead><tbody>
+      <tr><td>σελίδα</td><td>DB#145</td><td>DB#067</td><td>DB#051</td><td>DB#101</td><td>DB#131</td></tr>
+      <tr><td>t1</td><td>18</td><td>15</td><td>13</td><td>21</td><td>20</td></tr>
+      <tr><td>t2</td><td>12</td><td>—</td><td>9</td><td>11</td><td>—</td></tr>
+      <tr><td><strong>D = 23 − t2</strong></td><td>11</td><td style="color:var(--red)"><strong>∞</strong></td><td>14</td><td>12</td><td style="color:var(--red)"><strong>∞</strong></td></tr></tbody></table></div>
+    <p style="font-size:.92rem;margin-top:8px">Ισοπαλία f1/f4 (∞). Κανόνας: αντικατέστησε αυτή με το <strong>νωρίτερο t1</strong> → f1 (t1=15 &lt; 20). <strong>Θύμα: f1 (DB#067).</strong></p></div>
+  <div class="gbox"><div class="lbl" style="color:var(--green)">✅ Γιατί το LRU-2 αποφεύγει το flooding</div>Οι σελίδες που αναφέρθηκαν <strong>μόνο μία φορά</strong> (π.χ. από μια μεγάλη σάρωση) έχουν t2 = −∞ και μπαίνουν σε μια δευτερεύουσα <strong>ουρά FIFO</strong> από την οποία επιλέγονται τα θύματα. Οι σελίδες με «επαναλαμβανόμενη χρήση» (≥ 2 αναφορές πρόσφατα) <strong>δεν</strong> θυσιάζονται.</div>
+  <div id="lru2-sim"></div>
+  <div class="section-quiz" data-topic="topic2" data-section="lru2"></div>
+</section>
+
+<section id="osvsdbms">
+  <div class="sh"><div class="sh-icon" style="background:var(--cdim)">⚔️</div><h2>8. Virtual Memory (ΛΣ) vs Buffer του ΣΔΒΔ & Άλλα Θέματα</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Γιατί να μην αφήσουμε το ΛΣ να κάνει όλη τη διαχείριση; Γιατί έχει <strong>«ανταγωνιστική» σχέση</strong> με το ΣΔΒΔ.</p>
+  <div class="compare">
+    <div class="bad-side"><div class="side-label" style="color:var(--red)">Προβλήματα με το ΛΣ</div><ul style="font-size:.86rem;margin:0"><li>ΛΣ και ΣΔΒΔ κάνουν buffer τα <strong>ίδια δεδομένα</strong> (διπλή αποθήκευση)</li><li>το swapping του ΛΣ μπορεί να βγάλει σελίδες του ΣΔΒΔ στον δίσκο → ανεπιθύμητες καταστάσεις</li><li>το ΛΣ δεν εγγυάται σχεδόν-άμεση εγγραφή στον δίσκο</li></ul></div>
+    <div class="good-side"><div class="side-label" style="color:var(--green)">Τι κάνει καλύτερα το ΣΔΒΔ</div><ul style="font-size:.86rem;margin:0"><li><strong>προβλέπει</strong> τα μοτίβα I/O του και κάνει <strong>prefetching</strong></li><li>μπορεί να κάνει <strong>unpin & force out</strong> τροποποιημένες σελίδες</li><li>χτίζει πρωτόκολλα <strong>WAL</strong> για ανάκαμψη</li><li>γι' αυτό συχνά παρακάμπτει το ΛΣ με πρόσβαση σε <strong>raw disk</strong></li></ul></div>
+  </div>
+  <div class="grid2">
+    <div><div class="card-title">📌 Καρφιτσωμένα μπλοκ (πίνακας διάλεξης)</div><p style="font-size:.9rem">Μπλοκ που παραμένουν στη μνήμη και <strong>δεν είναι υποψήφια</strong> για αντικατάσταση μέχρι να ξεκαρφιτσωθούν. Παράδειγμα: εμφωλιασμένοι βρόχοι με R εξωτερικό και LRU — το τρέχον μπλοκ του R είναι καρφιτσωμένο όσο σαρώνεται ο S.</p></div>
+    <div><div class="card-title">💾 Εξαναγκασμένη εγγραφή (forced output)</div><p style="font-size:.9rem">Για λόγους <strong>ασφάλειας</strong> και <strong>προετοιμασίας ανάκαμψης</strong> μετά από βλάβη, είναι απαραίτητο κάποιες φορές κάποια μπλοκ να γράφονται <strong>αμέσως</strong> στον δίσκο, χωρίς να περιμένουν την αντικατάστασή τους από τον γενικό αλγόριθμο. Γενικά τα ΛΣ <strong>δεν</strong> χρησιμοποιούν τέτοιες τεχνικές.</p></div>
+  </div>
+  <div class="section-quiz" data-topic="topic2" data-section="osvsdbms"></div>
+</section>
+
+<section id="playground">
+  <div class="sh"><div class="sh-icon" style="background:var(--cdim)">🕹️</div><h2>9. Simulator & Flashcards</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Γράψε τη δική σου ακολουθία αιτήσεων (π.χ. από άσκηση) και δες κάθε βήμα. Για CLOCK φαίνονται τα ref bits και ο δείκτης (◀), για LRU-2 τα t1/t2.</p>
+  <div id="ref-sim"></div>
+  <h3>🗂️ Flashcards κεφαλαίου</h3>
+  <div data-fc-deck="topic2"></div>
+  <div class="section-quiz" data-topic="topic2" data-section="playground"></div>
+</section>
+
+</div>
+<div class="footer">ΥΣΒΔ (k18) · ΕΚΠΑ · Topic 2: Disk Space & Buffer Manager</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  SimUI.bufferNL(document.getElementById('nl-sim'), {pR:2, pS:4, M:4});
+  SimUI.refString(document.getElementById('clock-sim'), {refs:'A B C D A E A B F C', M:4, policy:'CLOCK'});
+  SimUI.refString(document.getElementById('lru2-sim'), {refs:'051 101 145 051 067 145 131 101 NEW', M:5, policy:'LRU2'});
+  SimUI.refString(document.getElementById('ref-sim'), {refs:'A B C D A B E A B C D E', M:3, policy:'LRU'});
+});
+</script>
+</body>
+</html>

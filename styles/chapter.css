@@ -1,0 +1,56 @@
+/* chapter.css — shared per-chapter block from the webnotes-builder template
+   (dark tokens, syntax colours, helper classes, exam-prep components).
+   Each page only overrides the hero accent in its own <style>. */
+:root{
+  --bg:#0d1117;--bg-rgb:13,17,23;--surf:#161b22;--surf2:#1c2230;--border:#30363d;
+  --blue:#58a6ff;--blue-rgb:88,166,255;--bdim:#0d1f40;
+  --green:#3fb950;--green-rgb:63,185,80;--gdim:#0d2218;
+  --yellow:#e3b341;--ydim:#2d2208;
+  --red:#f85149;--rdim:#2d1010;
+  --cyan:#39d4c8;--cdim:#0a2422;
+  --purple:#bc8cff;--purple-rgb:188,140,255;--pdim:#1a1040;
+  --orange:#f0883e;--orange-rgb:240,136,62;--odim:#2d1800;
+  --txt:#e6edf3;--muted:#8b949e;--dim:#6e7681;
+}
+.hero::after{position:absolute;right:32px;bottom:16px;font-family:'JetBrains Mono',monospace;font-size:clamp(1rem,3vw,2.2rem);pointer-events:none;font-weight:700}
+.cb{background:#060a10}
+.kw{color:var(--blue);font-weight:600}.fn{color:var(--yellow);font-weight:600}.st{color:var(--orange)}
+.cm{color:var(--dim);font-style:italic}.nm{color:var(--purple)}.tp{color:var(--cyan)}.mc{color:var(--purple);font-weight:600}.pr{color:var(--muted)}
+.struct-box{background:#060a10;border:1px solid var(--border);border-radius:10px;padding:18px 22px;font-family:'JetBrains Mono',monospace;line-height:2;overflow-x:auto}
+html[data-theme="light"] .struct-box,html[data-theme="light"] .thread-diagram{background:#f8fafc}
+.sf-type{color:var(--cyan)}.sf-field{color:var(--txt)}.sf-comment{color:var(--dim);font-style:italic}
+.thread-diagram{background:#060a10;border:1px solid var(--border);border-radius:10px;padding:18px;font-family:'JetBrains Mono',monospace;text-align:left;line-height:2.1;overflow-x:auto;font-size:.85rem}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.good-side{background:var(--gdim);border:1px solid rgba(63,185,80,.2);border-radius:8px;padding:12px}
+.bad-side{background:var(--rdim);border:1px solid rgba(248,81,73,.2);border-radius:8px;padding:12px}
+.side-label{font-size:0.8125rem;font-family:'JetBrains Mono',monospace;letter-spacing:1px;font-weight:700;margin-bottom:0.5rem;text-transform:uppercase}
+.retval-row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.retval{flex:1;min-width:120px;background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.retval-num{font-family:'JetBrains Mono',monospace;font-weight:700;margin-bottom:4px}
+.retval-desc{color:var(--muted)}
+ul,ol{padding-left:1.5rem}
+.vtbl{overflow-x:auto;display:table;width:100%}
+.tblwrap{overflow-x:auto;margin:12px 0}
+/* exam-prep components (references/11-exam-prep.md §5) */
+.exam-stmt{background:var(--surf);border:1px solid var(--border);border-left:4px solid var(--orange);border-radius:8px;padding:16px 20px;margin:14px 0;overflow-wrap:anywhere}
+.exam-stmt .stmt-label{font-family:'JetBrains Mono',monospace;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;color:var(--orange);font-weight:700;margin-bottom:8px}
+.qa-card{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:0;margin:18px 0;overflow:hidden}
+.qa-q{background:var(--surf2);padding:14px 20px;font-weight:700;color:var(--txt);font-size:1.02rem;border-left:4px solid var(--green);display:flex;gap:10px;align-items:flex-start}
+.qa-q .qno{color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:700;flex-shrink:0}
+.qa-a{padding:16px 22px}
+.exam-badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:1px;text-transform:uppercase;color:var(--yellow);background:var(--ydim);border:1px solid rgba(227,179,65,.3);border-radius:20px;padding:2px 9px;margin-left:6px;vertical-align:middle}
+details.selftest{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin:12px 0}
+details.selftest summary{cursor:pointer;color:var(--purple);font-weight:600;font-size:0.92rem}
+details.selftest[open] summary{margin-bottom:8px}
+.keyfact{background:linear-gradient(135deg,rgba(63,185,80,.08),rgba(63,185,80,.03));border:1px solid rgba(63,185,80,.3);border-radius:10px;padding:12px 16px;margin:12px 0}
+.qa-layout{display:grid;grid-template-columns:1fr;gap:20px}
+@media (min-width:992px){.qa-layout{grid-template-columns:1.25fr 1fr}}
+.qa-main-ans{display:flex;flex-direction:column;justify-content:center}
+.qa-side-notes{background:rgba(88,166,255,0.04);border:1px dashed rgba(88,166,255,0.2);border-radius:10px;padding:16px;font-size:0.88rem;line-height:1.6;color:var(--muted);display:flex;flex-direction:column;gap:12px}
+.side-notes-header{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--blue);font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:6px;margin-bottom:4px;border-bottom:1px solid rgba(88,166,255,0.15);padding-bottom:6px}
+.side-notes-concept{border-bottom:1px dashed rgba(127,127,127,0.2);padding-bottom:10px}
+.side-notes-concept:last-child{border-bottom:none;padding-bottom:0}
+.concept-title{color:var(--txt);font-weight:600;font-size:0.88rem;margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.concept-desc{margin:0;font-size:0.84rem;color:var(--muted)}
+.src-note{font-size:.78rem;color:var(--dim);font-family:'JetBrains Mono',monospace;margin:-6px 0 14px}
