@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exam Prep · ΥΣΒΔ Πρόοδος</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/chapter.css">
+<link rel="stylesheet" href="styles/sims.css">
+<style>
+.hero{background:linear-gradient(150deg,var(--bg) 0%,var(--odim) 55%,var(--bg) 100%)}
+.hero::after{content:'$ ./proodos --tomorrow';color:rgba(240,136,62,.08)}
+</style>
+<script src="js/nav.js" defer></script>
+<script src="data/questions.js" defer></script>
+<script src="js/quiz-loader.js" defer></script>
+<script src="js/sims/bptree.js" defer></script>
+<script src="js/sims/buffer.js" defer></script>
+<script src="js/sims/exthash.js" defer></script>
+<script src="js/sims/extsort.js" defer></script>
+<script src="js/sims/widgets.js" defer></script>
+</head>
+<body>
+<div id="site-nav"></div>
+
+<div class="hero">
+  <div class="hero-label">ΥΣΒΔ · Exam Prep · ΞΕΚΙΝΑ ΑΠΟ ΕΔΩ</div>
+  <h1>Πρόοδος: <em>τι πέφτει & πώς λύνεται</em></h1>
+  <p>Ένα crash course σε μία σελίδα: η στρατηγική, ο πίνακας τύπων που «πέφτει σίγουρα», οι συνταγές για κάθε υπολογιστική άσκηση, το διαγώνισμα του 2024 λυμένο βήμα-βήμα με διαδραστικούς λύτες (βάλε το δικό σου ΑΜ!), πρότυπες απαντήσεις θεωρίας και drills Σωστό/Λάθος.</p>
+  <div class="chips"><span class="chip">στρατηγική</span><span class="chip">τυπολόγιο</span><span class="chip">B+ ρίζα</span><span class="chip">επεκτατός</span><span class="chip">LRU ζεύξη</span><span class="chip">ταξινόμηση</span><span class="chip">θεωρία</span><span class="chip">Σ/Λ</span></div>
+</div>
+
+<nav class="toc">
+  <a href="#strategy">Στρατηγική</a>
+  <a href="#primer">Τα βασικά</a>
+  <a href="#core-facts">Τυπολόγιο</a>
+  <a href="#bplus">B+ (24 μον.)</a>
+  <a href="#exthash">Επεκτατός (12)</a>
+  <a href="#join">Ζεύξη LRU (12)</a>
+  <a href="#howto">Συνταγές</a>
+  <a href="#sorting">Ταξινόμηση</a>
+  <a href="#answers">Θεωρία</a>
+  <a href="#trace">Σ/Λ drills</a>
+  <a href="#skip">Τι αφήνεις</a>
+</nav>
+
+<div class="wrap">
+
+<section id="strategy">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">🧭</div><h2>1. Στρατηγική: πώς να περάσεις</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Από το διαθέσιμο διαγώνισμα (Μάρτιος 2024, 60 μονάδες) και τις διαλέξεις της προόδου: τα θέματα είναι <strong>μηχανικές ασκήσεις με αριθμούς από το ΑΜ</strong> σε πίνακες που συμπληρώνεις. Αν μάθεις τις 4–5 «συνταγές», έχεις τη βάση με άνεση.</p>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th>Οικογένεια</th><th>Στο διαγώνισμα 2024</th><th>Στην ύλη της προόδου</th><th>Προτεραιότητα</th></tr></thead><tbody>
+    <tr><td><strong>B+ εισαγωγή → νέα ρίζα</strong></td><td>12 μον.</td><td>004 (κεντρικό)</td><td><span class="exam-badge">Tier 1</span></td></tr>
+    <tr><td><strong>B+ διαγραφή → νέα ρίζα</strong></td><td>12 μον.</td><td>004</td><td><span class="exam-badge">Tier 1</span></td></tr>
+    <tr><td><strong>Buffer / LRU κόστος εμφωλιασμένων βρόχων</strong></td><td>12 μον.</td><td>002 + πίνακας διάλεξης</td><td><span class="exam-badge">Tier 1</span></td></tr>
+    <tr><td><strong>Εξωτερική ταξινόμηση: περάσματα/κόστος</strong></td><td>—</td><td>005 (όλη η διάλεξη)</td><td><span class="exam-badge">Tier 1</span></td></tr>
+    <tr><td>Επεκτατός κατακερματισμός</td><td>12 μον.</td><td>μόνο στατικός στο 003</td><td><span class="exam-badge">Tier 2</span></td></tr>
+    <tr><td>Θεωρία Σ/Λ & ορισμοί (dense/sparse, clustered, A1-A3, RAID, SSD, LRU-2)</td><td>12 μον. (άλλη ύλη)</td><td>001–005</td><td><span class="exam-badge">Tier 2</span></td></tr>
+    <tr><td>Μικροί υπολογισμοί: HDD χρόνος, RAID χώρος, εγγραφές/μπλοκ, μοντέλο κόστους</td><td>—</td><td>001, 002, 003</td><td><span class="exam-badge">Tier 2</span></td></tr></tbody></table></div>
+  <div class="keyfact"><strong>Αριθμητική της βάσης:</strong> οι τρεις Tier-1 ασκήσεις του 2024 (2×B+ και ζεύξη LRU) έδιναν <strong>36/60</strong> μόνες τους. Με B+ + LRU + ταξινόμηση σωστά είσαι πάνω από τη βάση· η θεωρία είναι το «μαξιλάρι».</div>
+  <div class="tip"><div class="tip-icon">⏱️</div><div class="tip-text"><strong>Χρόνος:</strong> (1) Ξεκίνα από το B+ — είναι καθαρά μηχανικό. (2) Ζωγράφισε <em>μόνο</em> το μονοπάτι που αλλάζει. (3) Στους πίνακες «σημειώστε τον αριθμό στο κενό κελί»: γράψε πρώτα την τιμή A/Γ/w που προκύπτει από το ΑΜ — συχνά δίνει μονάδες μόνη της. (4) Στα Σ/Λ μην αφήνεις κενό αν δεν υπάρχει αρνητική βαθμολογία.</div></div>
+  <div class="section-quiz" data-topic="examprep" data-section="strategy"></div>
+</section>
+
+<section id="primer">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">🧱</div><h2>2. Τα απολύτως βασικά (για αρχάριο)</h2></div>
+  <div class="grid2">
+    <div><ul style="font-size:.92rem">
+      <li><strong>Μπλοκ / σελίδα</strong>: η μονάδα μεταφοράς δίσκος ↔ μνήμη. <strong>Κόστος = πλήθος I/O</strong>.</li>
+      <li><strong>Frame / πλαίσιο</strong>: μια θέση στη μνήμη για ένα μπλοκ. M ή B = πόσα έχουμε.</li>
+      <li><strong>Hit / miss</strong>: το μπλοκ ήταν στη μνήμη (0 I/O) ή όχι (1 I/O).</li>
+      <li><strong>Πολιτική αντικατάστασης</strong>: ποιο μπλοκ διώχνουμε όταν η μνήμη είναι γεμάτη (LRU: το πιο παλιό σε χρήση· MRU: το πιο πρόσφατο).</li></ul></div>
+    <div><ul style="font-size:.92rem">
+      <li><strong>Ευρετήριο</strong>: δομή που από κλειδί σε πάει στα μπλοκ. <strong>Clustered</strong> = τα δεδομένα είναι ταξινομημένα όπως το ευρετήριο.</li>
+      <li><strong>B+ δέντρο</strong>: ισοζυγισμένο δέντρο-ευρετήριο· τα δεδομένα στα φύλλα, πινακίδες στους εσωτερικούς κόμβους.</li>
+      <li><strong>Run</strong>: ταξινομημένο κομμάτι αρχείου κατά την εξωτερική ταξινόμηση.</li>
+      <li><strong>RID</strong>: (σελίδα, slot) — η διεύθυνση μιας εγγραφής.</li></ul></div></div>
+  <div class="section-quiz" data-topic="examprep" data-section="primer"></div>
+</section>
+
+<section id="core-facts">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">📋</div><h2>3. Ο πίνακας που πέφτει σίγουρα <span class="exam-badge">πέφτει σίγουρα</span></h2></div>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th>Τι</th><th>Τύπος</th><th>Πώς να το θυμάσαι</th></tr></thead><tbody>
+    <tr><td>Χρόνος I/O HDD</td><td>t<sub>s</sub> + t<sub>r</sub> + t<sub>tr</sub>, t<sub>r</sub> = ½ · 60/RPM</td><td>«πήγαινε – περίμενε – διάβασε»</td></tr>
+    <tr><td>N μπλοκ τυχαία / σειριακά</td><td>N(t<sub>s</sub>+t<sub>r</sub>+t<sub>tr</sub>) / t<sub>s</sub>+t<sub>r</sub>+N·t<sub>tr</sub></td><td>σειριακά πληρώνεις seek μία φορά</td></tr>
+    <tr><td>RAID αξιοποίηση</td><td>D/(D+C): 0→100%, 1→50%, 4/5→D/(D+1), 6→D/(D+2)</td><td>D=4: 100 / 50 / 80 / 66 %</td></tr>
+    <tr><td>MTTF πίνακα</td><td>MTTF<sub>δίσκου</sub> / N</td><td>50.000 h / 100 = 500 h</td></tr>
+    <tr><td>Νέα parity (RAID-4/5)</td><td>(OldData ⊕ NewData) ⊕ OldParity</td><td>μικρή εγγραφή = 4 I/O</td></tr>
+    <tr><td>WAF (SSD)</td><td>φυσικά γραμμένα / λογικά γραμμένα</td><td>≥ 1· garbage collection</td></tr>
+    <tr><td>Εγγραφές/μπλοκ (bitmap)</td><td>⌊(M − κεφαλίδα)/(μ + 1 bit)⌋</td><td>κάθε εγγραφή + 1 bit ύπαρξης</td></tr>
+    <tr><td>Διεύθυνση εγγραφής i</td><td>A + (i−1)·μ</td><td>σταθερό μήκος</td></tr>
+    <tr><td>Nested loop, R εξωτ., LRU, κοινή μνήμη M</td><td>M ≥ p(S)+1 → <b>p(R)+p(S)</b> · αλλιώς <b>p(R)+p(R)·p(S)</b></td><td>χωράει ο εσωτερικός + 1 θέση;</td></tr>
+    <tr><td>Heap: scan / ισότητα / εισαγωγή / διαγραφή</td><td>B(D+RC) / 0.5·B(D+RC) / 2D+C / C+D</td><td>heap = φθηνές εισαγωγές</td></tr>
+    <tr><td>Sorted: ισότητα / εισαγωγή</td><td>D·log₂B + C·log₂R / B(D+RC)</td><td>sorted = φθηνή αναζήτηση</td></tr>
+    <tr><td>Ύψος δέντρου</td><td>⌈log<sub>F</sub>N⌉ · χειρότερα ⌈log<sub>⌈n/2⌉</sub>K⌉</td><td>F=100 → 10⁸ μπλοκ σε 4 I/O</td></tr>
+    <tr><td>B+ βαθμός d</td><td>n δείκτες: n·p + (n−1)·k ≤ σελίδα, d = (n−1)/2</td><td>4096, 12, 8 → n=205, d=102</td></tr>
+    <tr><td>Ext. sort περάσματα</td><td>1 + ⌈log<sub>B−1</sub>⌈N/B⌉⌉</td><td>συγχώνευση με B−1, όχι B!</td></tr>
+    <tr><td>Ext. sort κόστος</td><td>2N · #περάσματα</td><td>διάβασε + γράψε ανά πέρασμα</td></tr>
+    <tr><td>2-way</td><td>1 + ⌈log₂N⌉ περάσματα</td><td>N=7 → 4</td></tr>
+    <tr><td>Replacement sort</td><td>runs ≈ 2B (τυχαία είσοδος)</td><td>διπλάσια runs, λιγότερα περάσματα</td></tr>
+    <tr><td>LRU-2 θύμα</td><td>max(t − t2), t2 = −∞ αν 1 αναφορά, ισοπαλία: νωρίτερο t1</td><td>«ποιος δεν έχει 2η επίσκεψη»</td></tr>
+    <tr><td>Page directory entries</td><td>σελίδα / (pid + ένδειξη) = 4096/8 = 512</td><td></td></tr></tbody></table></div>
+  <p style="font-size:.9rem">Εκτυπώσιμη μορφή: <a href="cram_sheet.html">🖨️ Cram Sheet</a>.</p>
+  <div class="section-quiz" data-topic="examprep" data-section="core-facts"></div>
+</section>
+
+<section id="bplus">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">🌳</div><h2>4. Άσκηση B+: «ποιοι αριθμοί θα είναι στη νέα ρίζα;» <span class="exam-badge">24 μον. · 2024</span></h2></div>
+  <div class="exam-stmt"><div class="stmt-label">Άσκηση 1 — Εισαγωγή (12 μονάδες)</div>
+    <p>Πρωτεύον ευρετήριο B+. Κάθε ενδιάμεσος κόμβος χωρά έως <strong>3 δείκτες και 2 τιμές</strong>· κάθε φύλλο (μπλοκ δεδομένων) έως <strong>3 εγγραφές</strong>. Ρίζα [333 | 688] · ενδιάμεσοι [145 | 252], [433 | 579], [777 | 881] · φύλλα 041 082 123 | 164 195 236 | 267 298 329 | 351 382 423 | 464 495 546 | 587 628 669 | 691 732 763 | 794 825 856 | 887 928 969.</p>
+    <p>Έστω A το δεκαπλάσιο του αριθμού από τα δύο τελευταία ψηφία του ΑΜ (π.χ. …58 → A = 580). Σημειώστε τον A και κυκλώστε τον έναν ή τους δύο αριθμούς της ρίζας του <strong>νέου</strong> δέντρου μετά την εισαγωγή του A.</p></div>
+  <div class="card"><div class="card-title">Λύση για A = 580 (βήμα-βήμα)</div><div class="thread-diagram">
+<span style="color:var(--yellow)">1. Κάθοδος:</span> 580 ≥ 333 και &lt; 688 → μεσαίο [433|579] · 580 ≥ 579 → φύλλο [587, 628, 669]<br>
+<span style="color:var(--yellow)">2. Φύλλο:</span> [580, 587, 628, 669] = 4 &gt; 3 → split [580, 587] | [628, 669], <b style="color:var(--green)">COPY-UP 628</b><br>
+<span style="color:var(--yellow)">3. Γονέας:</span> [433, 579, 628] = 3 κλειδιά &gt; 2 → [433] | [628], <b style="color:var(--purple)">PUSH-UP 579</b><br>
+<span style="color:var(--yellow)">4. Ρίζα:</span> [333, 579, 688] = 3 &gt; 2 → [333] | [688], <b style="color:var(--purple)">PUSH-UP 579</b><br>
+<span style="color:var(--green);font-weight:700">5. Νέα ρίζα: [ 579 ]</span> — κυκλώνεις το 579 στον πίνακα (ύψος +1)</div></div>
+  <div id="ep-ins"></div>
+  <div class="card"><div class="card-title">Όλες οι απαντήσεις (για κάθε A)</div><div class="tblwrap"><table class="vtbl"><thead><tr><th>A</th><th>000–330</th><th>340–430</th><th>440–490</th><th>500–540</th><th>550–570</th><th>580–680</th><th>690–990</th></tr></thead><tbody><tr><td>νέα ρίζα</td><td><b>333</b></td><td><b>433</b></td><td><b>495</b></td><td><b>A</b> (νέος αριθμός)</td><td><b>546</b></td><td><b>579</b></td><td><b>688</b></td></tr></tbody></table></div>
+    <p style="font-size:.85rem;color:var(--muted);margin:6px 0 0">Για A = 500–540 η ρίζα είναι το ίδιο το A, που δεν υπάρχει στον πίνακα → το γράφεις στο κελί «νέος αριθμός» και το κυκλώνεις.</p></div>
+  <div class="exam-stmt"><div class="stmt-label">Άσκηση 2 — Διαγραφή (12 μονάδες)</div>
+    <p>Ίδιες προδιαγραφές. Ρίζα [479] · επίπεδο 2: [252], [701] · επίπεδο 3: [145], [333], [601], [881] · φύλλα 082 123 | 164 236 | 267 329 | 382 464 | 495 587 | 628 691 | 732 825 | 887 999. Γ = ο αμέσως μεγαλύτερος αριθμός του A που υπάρχει στο αρχείο (A=580 → Γ=587, A=590 → Γ=628). Ποιοι αριθμοί στη νέα ρίζα μετά τη διαγραφή του Γ;</p></div>
+  <div class="card"><div class="card-title">Λύση για Γ = 587</div><div class="thread-diagram">
+<span style="color:var(--yellow)">0. Παρατήρηση:</span> φύλλα με 2 εγγραφές = ελάχιστο (⌈3/2⌉), εσωτερικοί με 1 κλειδί = ελάχιστο → κανείς δεν δανείζει!<br>
+<span style="color:var(--yellow)">1. Φύλλο:</span> [495, 587] → [495] υποχείλιση· αδελφός [628, 691] στο ελάχιστο → <b>συγχώνευση</b> [495, 628, 691]· ο γονέας [601] χάνει το 601<br>
+<span style="color:var(--yellow)">2. Επίπεδο 3:</span> ο κόμβος έμεινε με 0 κλειδιά· αδελφός [881] στο ελάχιστο → συγχώνευση: [] + <b>701 κατεβαίνει</b> + [881] = [701, 881]<br>
+<span style="color:var(--yellow)">3. Επίπεδο 2:</span> ο [701] άδειασε· αδελφός [252] στο ελάχιστο → συγχώνευση: [252] + <b>479 κατεβαίνει</b> = [252, 479]<br>
+<span style="color:var(--yellow)">4. Ρίζα:</span> η παλιά ρίζα [479] έμεινε χωρίς κλειδιά → αφαιρείται, ύψος −1<br>
+<span style="color:var(--green);font-weight:700">5. Νέα ρίζα: [ 252 | 479 ]</span></div></div>
+  <div id="ep-del"></div>
+  <div class="ibox"><div class="lbl" style="color:var(--blue)">Γενικός κανόνας για αυτό το δέντρο</div>Γ στο <strong>αριστερό</strong> μισό (082…464) → νέα ρίζα <strong>[479 | 701]</strong>. Γ στο <strong>δεξί</strong> μισό (495…999) → νέα ρίζα <strong>[252 | 479]</strong>. Το 479 είναι πάντα εκεί γιατί «κατεβαίνει» και ενώνεται με τον αδελφό.</div>
+  <div class="rbox"><div class="lbl" style="color:var(--red)">🚨 Παγίδες που κόβουν μονάδες</div>(1) Να βάλεις το κλειδί σε λάθος παιδί όταν είναι <strong>ίσο</strong> με διαχωριστή — ίσο πάει <strong>δεξιά</strong>. (2) Να κάνεις push-up στο split φύλλου (σωστό: copy-up). (3) Στη διαγραφή να «δανειστείς» από κόμβο στο ελάχιστο. (4) Να ξεχάσεις ότι η ρίζα με 0 κλειδιά εξαφανίζεται.</div>
+  <div class="section-quiz" data-topic="examprep" data-section="bplus"></div>
+</section>
+
+<section id="exthash">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">#️⃣</div><h2>5. Άσκηση Επεκτατού Κατακερματισμού <span class="exam-badge">12 μον. · 2024</span></h2></div>
+  <div class="exam-stmt"><div class="stmt-label">Άσκηση 3 — Εισαγωγή w (12 μονάδες)</div>
+    <p>Πίνακας επεκτατού κατακερματισμού με τα <strong>πρώτα (υψηλής τάξης) bits</strong> 5-bit τιμών· κάθε μπλοκ χωρά έως 3 εγγραφές. Κατάσταση: D = 3 (8 κελιά). A (000–011): Ξενοφών 00101, Ρέα 01100, Αριστείδης 01011 · B (100): Σωκράτης 10011, Αγησίλαος 10001, Περσεφόνη 10000 · Γ (101): Αφροδίτη 10110, Ήρα 10101, Λυδία 10110 · Δ (110, 111): Άρης 11001, Σοφοκλής 11101, Λεωνίδας 11010. Γράμματα ανά τριάδες: αβγ 10111 · δεζ 11010 · ηθι 10011 · κλμ 01100 · νξω 11101 · πρσ 10001 · τυφ 10100 · χψο 00011.</p>
+    <p>w = το 3ο γράμμα του επωνύμου (Ιωαννίδης → w = «α»). Συμπλήρωσε: μέγεθος πίνακα, βάθος, #μπλοκ, και για A, B, Γ, Δ, νέο μπλοκ: τοπικό βάθος & περιεχόμενα (όσων άλλαξαν).</p></div>
+  <div class="card"><div class="card-title">Βήμα 0 — Τοπικά βάθη (το κλειδί όλης της άσκησης)</div><p style="font-size:.92rem;margin:0">A δείχνεται από 4 κελιά (000–011) → d′ = 3 − log₂4 = <strong>1</strong> · B, Γ από 1 κελί → <strong>3</strong> · Δ από 2 κελιά (110, 111) → <strong>2</strong>. Όλοι οι κάδοι είναι <strong>γεμάτοι</strong> → κάθε εισαγωγή προκαλεί split. Αν d′ = D = 3 (B, Γ) → <strong>διπλασιασμός</strong> πίνακα σε 16.</p></div>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th>w (hash)</th><th>κάδος</th><th>μέγεθος / βάθος</th><th>#μπλοκ</th><th>τι αλλάζει</th></tr></thead><tbody>
+    <tr><td>α β γ (10111)</td><td>Γ</td><td><b>16 / 4</b></td><td>5</td><td>Γ d′=4: {Ήρα} · νέο d′=4 (1011): {Αφροδίτη, Λυδία, w}</td></tr>
+    <tr><td>δ ε ζ (11010)</td><td>Δ</td><td>8 / 3</td><td>5</td><td>Δ d′=3 (110): {Άρης, Λεωνίδας, w} · νέο d′=3 (111): {Σοφοκλής}</td></tr>
+    <tr><td>η θ ι (10011)</td><td>B</td><td><b>16 / 4</b></td><td>5</td><td>B d′=4 (1000): {Αγησίλαος, Περσεφόνη} · νέο d′=4 (1001): {Σωκράτης, w}</td></tr>
+    <tr><td>κ λ μ (01100)</td><td>A</td><td>8 / 3</td><td>5</td><td>A d′=2 (00): {Ξενοφών} · νέο d′=2 (01): {Ρέα, Αριστείδης, w}</td></tr>
+    <tr><td>ν ξ ω (11101)</td><td>Δ</td><td>8 / 3</td><td>5</td><td>Δ d′=3: {Άρης, Λεωνίδας} · νέο d′=3: {Σοφοκλής, w}</td></tr>
+    <tr><td>π ρ σ (10001)</td><td>B</td><td><b>16 / 4</b></td><td>5</td><td>B d′=4: {Αγησίλαος, Περσεφόνη, w} · νέο d′=4: {Σωκράτης}</td></tr>
+    <tr><td>τ υ φ (10100)</td><td>Γ</td><td><b>16 / 4</b></td><td>5</td><td>Γ d′=4 (1010): {Ήρα, w} · νέο d′=4 (1011): {Αφροδίτη, Λυδία}</td></tr>
+    <tr><td>χ ψ ο (00011)</td><td>A</td><td>8 / 3</td><td>5</td><td>A d′=2: {Ξενοφών, w} · νέο d′=2: {Ρέα, Αριστείδης}</td></tr></tbody></table></div>
+  <p style="font-size:.88rem;color:var(--muted)">Σε όλες τις περιπτώσεις δημιουργείται ακριβώς <strong>ένα</strong> νέο μπλοκ (η στήλη «νέο μπλοκ 2» μένει κενή). Οι κάδοι που δεν άλλαξαν κρατούν το ίδιο τοπικό βάθος.</p>
+  <div id="ep-eh"></div>
+  <div class="section-quiz" data-topic="examprep" data-section="exthash"></div>
+</section>
+
+<section id="join">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">🔁</div><h2>6. Άσκηση Ζεύξης με LRU <span class="exam-badge">12 μον. · 2024</span></h2></div>
+  <div class="exam-stmt"><div class="stmt-label">Άσκηση 4 — Εμφωλιασμένοι βρόχοι επιπέδου μπλοκ με LRU</div>
+    <p>Αρχεία R, S χωρίς ευρετήρια, ζεύξη R.A = S.A, δεν μετράμε το γράψιμο του αποτελέσματος. p(R), p(S) = το προτελευταίο και το τελευταίο ψηφίο του ΑΜ (0 → 10), t(R), t(S) = δεκαπλάσιά τους, V(A,R)=V(A,S)=100. Με <strong>LRU</strong>, R εξωτερικό και S εσωτερικό, το κόστος I/O για <strong>M = p(R), p(R)+2, p(S), p(S)+2</strong> (3 μονάδες η καθεμία).</p></div>
+  <div class="card"><div class="card-title">Η ιδέα σε 2 γραμμές</div>
+    <p style="font-size:.92rem">Ακολουθία αιτήσεων: R1, S1…S<sub>p(S)</sub>, R2, S1…S<sub>p(S)</sub>, … Με LRU, όταν ξαναρχίζει η σάρωση του S, η σελίδα που ζητάμε (S1) είναι <strong>η πιο παλιά</strong> → αν δεν χωράει όλος ο S μαζί με ένα πλαίσιο για το τρέχον μπλοκ του R, διώχνεται ακριβώς πριν τη χρειαστούμε (<strong>sequential flooding</strong>) → <strong>κάθε</strong> αίτηση είναι I/O.</p>
+    <div class="retval-row"><div class="retval"><div class="retval-num" style="color:var(--green)">M ≥ p(S) + 1</div><div class="retval-desc">κόστος = <b>p(R) + p(S)</b></div></div><div class="retval"><div class="retval-num" style="color:var(--red)">M ≤ p(S)</div><div class="retval-desc">κόστος = <b>p(R) + p(R)·p(S)</b></div></div></div></div>
+  <div class="card"><div class="card-title">Λυμένο για ΑΜ …58 → p(R)=5, p(S)=8, t(R)=50, t(S)=80</div>
+    <table class="vtbl"><thead><tr><th>M</th><th>τιμή</th><th>χωράει ο S + 1;</th><th>κόστος</th></tr></thead><tbody>
+      <tr><td>p(R)</td><td>5</td><td>5 ≥ 9; όχι</td><td>5 + 5·8 = <b>45</b></td></tr>
+      <tr><td>p(R)+2</td><td>7</td><td>όχι</td><td><b>45</b></td></tr>
+      <tr><td>p(S)</td><td>8</td><td>8 ≥ 9; όχι (λείπει 1 θέση!)</td><td><b>45</b></td></tr>
+      <tr><td>p(S)+2</td><td>10</td><td>ναι</td><td>5 + 8 = <b>13</b></td></tr></tbody></table>
+    <p style="font-size:.85rem;color:var(--muted);margin:8px 0 0">Η παγίδα: M = p(S) <strong>δεν</strong> αρκεί — χρειάζεται και ένα πλαίσιο για το μπλοκ του R. Αν p(R) ≥ p(S)−1, τότε και το M = p(R) ή p(R)+2 μπορεί να ξεπερνά το p(S) → κόστος p(R)+p(S). Το μοντέλο: κοινή δεξαμενή M πλαισίων, χωρίς πλαίσιο εξόδου (δεν μετράμε το γράψιμο του αποτελέσματος).</p></div>
+  <div class="sim" id="ep-join">
+    <div class="sim-title">🎯 Βάλε το δικό σου ΑΜ</div>
+    <div class="sim-controls"><label>2 τελευταία ψηφία ΑΜ <input type="number" class="am" min="0" max="99" value="58"></label></div>
+    <div class="sim-out o"></div></div>
+  <p style="font-size:.9rem">Δες και το βήμα-βήμα με όλες τις πολιτικές: <a href="topic2_buffer.html#nestedloop">Topic 2 → LRU vs MRU</a> (εκεί και το παράδειγμα του πίνακα: LRU 10, MRU 8, S εξωτερικό 6).</p>
+  <div class="section-quiz" data-topic="examprep" data-section="join"></div>
+</section>
+
+<section id="howto">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">🧑‍🍳</div><h2>7. Συνταγές για τις μικρές υπολογιστικές ασκήσεις</h2></div>
+  <div class="grid2">
+    <div class="card" style="margin:0"><div class="card-title">💽 HDD χρόνος</div><ol style="font-size:.88rem;margin:0"><li>t<sub>r</sub> = ½·60000/RPM ms (5400 → 5,56· 7200 → 4,17)</li><li>t<sub>tr</sub> = μέγεθος μπλοκ / ρυθμός</li><li>τυχαία: N·(t<sub>s</sub>+t<sub>r</sub>+t<sub>tr</sub>) · σειριακά: t<sub>s</sub>+t<sub>r</sub>+N·t<sub>tr</sub></li></ol><p style="font-size:.82rem;color:var(--muted);margin:6px 0 0">WD Blue: 16.082 ms vs 38 ms. Παγίδα: MB/s vs KB — μετάτρεψε σε ms.</p></div>
+    <div class="card" style="margin:0"><div class="card-title">🗄️ RAID</div><ol style="font-size:.88rem;margin:0"><li>Βρες C: 0→0, 1/0+1→D, 2→Hamming (D=4: 3), 3/4/5→1, 6→2</li><li>Αξιοποίηση = D/(D+C)</li><li>MTTF πίνακα ≈ MTTF/(D+C)</li><li>Μικρή εγγραφή: RAID-4/5 = 4 I/O, RAID-6 = 6 I/O</li></ol></div>
+    <div class="card" style="margin:0"><div class="card-title">♻️ LRU-2 θύμα</div><ol style="font-size:.88rem;margin:0"><li>Για κάθε frame: D = t − t2 (t2 = −∞ → D = ∞)</li><li>Θύμα = max D</li><li>Ισοπαλία → νωρίτερο t1</li></ol><p style="font-size:.82rem;color:var(--muted);margin:6px 0 0">Διαφάνεια: t=23 → D = 11, ∞, 14, 12, ∞ → f1 (t1=15 &lt; 20).</p></div>
+    <div class="card" style="margin:0"><div class="card-title">🕐 CLOCK</div><ol style="font-size:.88rem;margin:0"><li>hit → ref = 1</li><li>για θύμα: ο δείκτης περνά frames· ref=1 → 0 και προχωρά· ref=0 → θύμα</li><li>μετά τη φόρτωση ο δείκτης πάει στο επόμενο</li></ol></div>
+    <div class="card" style="margin:0"><div class="card-title">📏 Εγγραφές ανά μπλοκ</div><ol style="font-size:.88rem;margin:0"><li>διαθέσιμα bits = (M − κεφαλίδα)·8</li><li>ανά εγγραφή = μ·8 + 1</li><li>⌊ διαθέσιμα / ανά εγγραφή ⌋</li></ol><p style="font-size:.82rem;color:var(--muted);margin:6px 0 0">4096, 32, 100 → 40 εγγραφές.</p></div>
+    <div class="card" style="margin:0"><div class="card-title">⚖️ Μοντέλο κόστους</div><ol style="font-size:.88rem;margin:0"><li>Αναγνώρισε heap ή sorted</li><li>Αντικατάστησε στον πίνακα του Topic 4 (B, R, D, C)</li><li>Μονάδες! D σε ms, C σε ns</li></ol><p style="font-size:.82rem;color:var(--muted);margin:6px 0 0">B=10⁶, R=100, D=5ms, C=50ns: scan = 10⁶·(5 + 100·0,00005) ms = 5.005.000 ms ≈ 83 λεπτά.</p></div>
+  </div>
+  <div class="section-quiz" data-topic="examprep" data-section="howto"></div>
+</section>
+
+<section id="sorting">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">📊</div><h2>8. Εξωτερική Ταξινόμηση: η συνταγή</h2></div>
+  <div class="exam-stmt"><div class="stmt-label">Άσκηση 5 — τυπική μορφή</div><p>Αρχείο N = 108 σελίδων, B = 5 πλαίσια. (α) Πόσα runs στο πέρασμα 0; (β) Πόσα περάσματα συνολικά; (γ) Κόστος I/O; (δ) Πόσα πλαίσια χρειάζονται για ταξινόμηση σε 2 περάσματα;</p></div>
+  <div class="card"><div class="thread-diagram">
+<span style="color:var(--yellow)">(α)</span> ⌈108/5⌉ = <b>22</b> runs<br>
+<span style="color:var(--yellow)">(β)</span> 22 → ⌈22/4⌉=6 → ⌈6/4⌉=2 → 1 : 3 συγχωνεύσεις + πέρασμα 0 = <b>4</b><br>
+<span style="color:var(--yellow)">(γ)</span> 2 · 108 · 4 = <b>864 I/O</b><br>
+<span style="color:var(--yellow)">(δ)</span> 2 περάσματα ⇔ ⌈N/B⌉ ≤ B−1 ⇔ B(B−1) ≥ 108 → B = <b>11</b> (11·10 = 110 ≥ 108· με B=10: 10·9=90 &lt; 108)</div></div>
+  <div class="tip"><div class="tip-icon">🧠</div><div class="tip-text"><strong>Μνημονικό:</strong> «<em>Πρώτα κόβω με B, μετά ενώνω με B−1, και πληρώνω 2N κάθε φορά.</em>» Με B πλαίσια ταξινομείς σε 2 περάσματα περίπου <strong>B²</strong> σελίδες.</div></div>
+  <div id="ep-sort"></div>
+  <div class="section-quiz" data-topic="examprep" data-section="sorting"></div>
+</section>
+
+<section id="answers">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">✍️</div><h2>9. Πρότυπες Απαντήσεις Θεωρίας</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Κάθε κάρτα: αριστερά η απάντηση όπως θα τη γράψεις, δεξιά η εξήγηση για αρχάριο.</p>
+
+  <div class="qa-card"><div class="qa-q"><span class="qno">Q1.</span><span>Γιατί τα ΣΔΒΔ υλοποιούν δικό τους buffer manager αντί να βασίζονται στο ΛΣ;</span></div><div class="qa-a"><div class="qa-layout">
+    <div class="qa-main-ans"><ol style="margin:0"><li>Το ΣΔΒΔ <strong>προβλέπει</strong> τα μοτίβα αναφορών (σαρώσεις, ζεύξεις) καλύτερα από ένα γενικό ΛΣ → κατάλληλη πολιτική αντικατάστασης και <strong>prefetching</strong>.</li><li>Χρειάζεται να κάνει <strong>pin/unpin</strong> και <strong>force out</strong> τροποποιημένων σελίδων — απαραίτητο για <strong>WAL</strong> και ανάκαμψη· το ΛΣ δεν εγγυάται άμεση εγγραφή.</li><li>Αποφεύγει τη <strong>διπλή αποθήκευση</strong> (ΛΣ και ΣΔΒΔ κάνουν buffer τα ίδια δεδομένα) και τα προβλήματα από το <strong>swapping</strong> του ΛΣ — γι' αυτό συχνά χρησιμοποιεί raw disk.</li></ol></div>
+    <div class="qa-side-notes"><div class="side-notes-header">💡 Για Αρχάριους</div><div class="side-notes-concept"><div class="concept-title">🎯 Prefetching</div><p class="concept-desc">Φέρνω σελίδες πριν τις ζητήσουν, επειδή ξέρω ότι σε σάρωση έρχεται «η επόμενη».</p></div><div class="side-notes-concept"><div class="concept-title">📝 WAL</div><p class="concept-desc">Πρώτα γράφω στο log τι θα αλλάξω, μετά αλλάζω — για να μπορώ να επανέλθω μετά από κατάρρευση.</p></div></div></div></div></div>
+
+  <div class="qa-card"><div class="qa-q"><span class="qno">Q2.</span><span>Τι είναι το sequential flooding; Πώς το αντιμετωπίζουν το MRU και το LRU-2;</span></div><div class="qa-a"><div class="qa-layout">
+    <div class="qa-main-ans"><p>Όταν μια μεγάλη σειριακή σάρωση (π.χ. ο εσωτερικός πίνακας σε εμφωλιασμένους βρόχους, μεγαλύτερος από τη δεξαμενή) τρέχει με <strong>LRU/CLOCK</strong>, κάθε σελίδα διώχνεται λίγο πριν ξαναζητηθεί → <strong>κάθε αίτηση είναι I/O</strong>, και «μολύνεται» η δεξαμενή άλλων ερωτημάτων.</p><ul><li><strong>MRU</strong>: διώχνει την πιο πρόσφατα ξεκαρφιτσωμένη → κρατά τις υπόλοιπες σελίδες της σάρωσης για τον επόμενο γύρο (π.χ. 8 αντί 10 I/O).</li><li><strong>LRU-2</strong>: σελίδες με μία μόνο αναφορά (t2 = −∞) πάνε σε ουρά FIFO και γίνονται πρώτα θύματα· σελίδες με επαναλαμβανόμενη χρήση προστατεύονται.</li></ul></div>
+    <div class="qa-side-notes"><div class="side-notes-header">💡 Για Αρχάριους</div><div class="side-notes-concept"><div class="concept-title">🌊 Flooding</div><p class="concept-desc">Σαν να διαβάζεις κυκλικά 4 βιβλία με 3 θέσεις στο γραφείο και να πετάς πάντα το παλαιότερο: πετάς πάντα αυτό που θα διαβάσεις μετά.</p></div></div></div></div></div>
+
+  <div class="qa-card"><div class="qa-q"><span class="qno">Q3.</span><span>Διαφορές πυκνού και αραιού ευρετηρίου. Γιατί το δευτερεύον πρέπει να είναι πυκνό;</span></div><div class="qa-a"><div class="qa-layout">
+    <div class="qa-main-ans"><p><strong>Πυκνό</strong>: entry για <strong>κάθε</strong> τιμή κλειδιού του αρχείου. <strong>Αραιό</strong>: entries για μέρος των τιμών (π.χ. μία ανά μπλοκ)· απαιτεί αρχείο <strong>ταξινομημένο</strong> στο κλειδί· για k βρίσκεις το μεγαλύτερο entry ≤ k και σαρώνεις σειριακά. Το αραιό θέλει λιγότερο χώρο και συντήρηση, το πυκνό είναι ταχύτερο.</p><p style="margin:0">Το <strong>δευτερεύον</strong> είναι σε πεδίο με διαφορετική διάταξη από το αρχείο → οι εγγραφές μιας τιμής είναι σκόρπιες, άρα δεν μπορείς να «σαρώσεις από το προηγούμενο entry» → χρειάζεται entry (ή κάδος δεικτών) για <strong>κάθε</strong> εγγραφή.</p></div>
+    <div class="qa-side-notes"><div class="side-notes-header">💡 Για Αρχάριους</div><div class="side-notes-concept"><div class="concept-title">📖 Αραιό</div><p class="concept-desc">Σαν τις λέξεις-οδηγούς στην κορυφή της σελίδας λεξικού: δείχνουν μόνο την πρώτη λέξη, βρίσκεις τις υπόλοιπες επειδή είναι αλφαβητικά.</p></div></div></div></div></div>
+
+  <div class="qa-card"><div class="qa-q"><span class="qno">Q4.</span><span>Συγκρίνετε ISAM και B+ δέντρο.</span></div><div class="qa-a"><div class="qa-layout">
+    <div class="qa-main-ans"><div class="compare"><div class="good-side" style="background:var(--odim);border-color:rgba(240,136,62,.2)"><div class="side-label" style="color:var(--orange)">ISAM</div><ul style="font-size:.85rem;margin:0"><li><strong>στατικό</strong>: οι κόμβοι ευρετηρίου δεν αλλάζουν μετά την κατασκευή</li><li>εισαγωγές → <strong>σελίδες υπερχείλισης</strong>· διαγραφές αφήνουν «νεκρά» κλειδιά</li><li>με τον καιρό χάνει την ισορροπία (skew)</li><li>καλό για αρχεία που αλλάζουν σπάνια· δεν έχει θέμα με διπλότυπα</li></ul></div><div class="good-side"><div class="side-label" style="color:var(--green)">B+</div><ul style="font-size:.85rem;margin:0"><li><strong>δυναμικό</strong>: split/merge</li><li><strong>πάντα ισοζυγισμένο</strong>, χωρίς υπερχειλίσεις</li><li>κάθε κόμβος ≥ 50% γεμάτος</li><li>ύψος log<sub>F</sub>N, στην πράξη 3–5</li></ul></div></div><p style="margin:0">Κοινά: κόμβος = μπλοκ, κανόνας «P<sub>i</sub> → ≥ K<sub>i</sub>», λογαριθμική αναζήτηση με βάση το fan-out (≫ 2, άρα καλύτερο από δυαδική αναζήτηση).</p></div>
+    <div class="qa-side-notes"><div class="side-notes-header">💡 Για Αρχάριους</div><div class="side-notes-concept"><div class="concept-title">🌳 Skew</div><p class="concept-desc">Κάποια φύλλα αποκτούν μακριές ουρές υπερχείλισης ενώ άλλα όχι — η αναζήτηση γίνεται άνιση.</p></div></div></div></div></div>
+
+  <div class="qa-card"><div class="qa-q"><span class="qno">Q5.</span><span>Ποιες είναι οι εναλλακτικές A1, A2, A3 για τα data entries; Τι είναι clustered ευρετήριο;</span></div><div class="qa-a"><div class="qa-layout">
+    <div class="qa-main-ans"><ul style="margin:0"><li><strong>A1</strong>: k* = η ίδια η εγγραφή → indexed file organization (πρωτεύον).</li><li><strong>A2</strong>: k* = &lt;k, rid&gt;.</li><li><strong>A3</strong>: k* = &lt;k, λίστα rid&gt; → τυπικά δευτερεύον.</li></ul><p style="margin:8px 0 0"><strong>Clustered</strong>: η διάταξη των εγγραφών στο αρχείο είναι ίδια (ή κοντά) με τη διάταξη των entries. A1 σε ταξινομημένο αρχείο είναι εξ ορισμού clustered· A2/A3 μόνο αν το αρχείο είναι ταξινομημένο στο κλειδί. Σε range queries το clustered διαβάζει κάθε μπλοκ μία φορά, το unclustered μπορεί έως μία φορά ανά εγγραφή.</p></div>
+    <div class="qa-side-notes"><div class="side-notes-header">💡 Για Αρχάριους</div><div class="side-notes-concept"><div class="concept-title">🏷️ rid</div><p class="concept-desc">Η «διεύθυνση» μιας εγγραφής: (σελίδα, θέση μέσα στη σελίδα).</p></div></div></div></div></div>
+
+  <div class="qa-card"><div class="qa-q"><span class="qno">Q6.</span><span>Τι είναι η slotted σελίδα και γιατί διευκολύνει τα RIDs;</span></div><div class="qa-a"><div class="qa-layout">
+    <div class="qa-main-ans"><p style="margin:0">Κάθε σελίδα έχει στο τέλος της <strong>κατάλογο slots</strong>, το slot i κρατά &lt;offset, length&gt; της εγγραφής i, και πλήθος N. Οι εγγραφές γεμίζουν από την αρχή, ο κατάλογος από το τέλος, ο ελεύθερος χώρος είναι στη μέση. Το RID = &lt;page, slot&gt; <strong>δεν</strong> δείχνει φυσική θέση, άρα μπορούμε να μετακινήσουμε εγγραφές μέσα στη σελίδα (compaction, αλλαγή μεγέθους) χωρίς να αλλάξει το RID. Διαγραφή: offset = −1, το slot ξαναχρησιμοποιείται.</p></div>
+    <div class="qa-side-notes"><div class="side-notes-header">💡 Για Αρχάριους</div><div class="side-notes-concept"><div class="concept-title">🚪 Slot</div><p class="concept-desc">Σαν τα κουδούνια μιας πολυκατοικίας: «διαμέρισμα 3» μένει ίδιο ακόμα κι αν ο ένοικος αλλάξει δωμάτιο.</p></div></div></div></div></div>
+
+  <div class="qa-card"><div class="qa-q"><span class="qno">Q7.</span><span>Τι είναι το write amplification στους SSD και γιατί συμβαίνει;</span></div><div class="qa-a"><div class="qa-layout">
+    <div class="qa-main-ans"><p style="margin:0">WAF = φυσικά δεδομένα που γράφονται στη NAND / λογικά δεδομένα που γράφει το ΛΣ. Στη NAND γράφεις σε <strong>σελίδες</strong> αλλά σβήνεις μόνο ολόκληρα <strong>blocks</strong> (MB), και μια θέση δεν ξαναγράφεται χωρίς διαγραφή. Άρα μια ενημέρωση 4 KB γράφεται σε νέα σελίδα (out-of-place) και η παλιά γίνεται άκυρη· όταν ο <strong>garbage collector</strong> ανακτήσει το block, πρέπει να αντιγράψει όλες τις έγκυρες σελίδες του (MB) σε νέο block. Συνέπειες: πιο αργές εγγραφές (write 10×, erase 100× της ανάγνωσης) και φθορά κελιών.</p></div>
+    <div class="qa-side-notes"><div class="side-notes-header">💡 Για Αρχάριους</div><div class="side-notes-concept"><div class="concept-title">🧹 Garbage collector</div><p class="concept-desc">Σαν να θες να σβήσεις μία γραμμή σε τετράδιο που σβήνεται μόνο ολόκληρο: αντιγράφεις τις καλές σελίδες σε νέο τετράδιο και πετάς το παλιό.</p></div></div></div></div></div>
+
+  <div class="qa-card"><div class="qa-q"><span class="qno">Q8.</span><span>Συγκρίνετε RAID-1, RAID-4 και RAID-5.</span></div><div class="qa-a"><div class="qa-layout">
+    <div class="qa-main-ans"><ul style="margin:0"><li><strong>RAID-1</strong>: mirroring· 50% αξιοποίηση· γρήγορες αναγνώσεις (2 αντίγραφα), εγγραφή σε 2 δίσκους· καλύτερο για μικρές εγγραφές.</li><li><strong>RAID-4</strong>: block striping + 1 δίσκος parity· D/(D+1) (80% για D=4)· μικρή εγγραφή = read-modify-write με NewParity = (Old⊕New)⊕OldParity· ο δίσκος parity γίνεται <strong>bottleneck</strong>.</li><li><strong>RAID-5</strong>: όπως RAID-4 αλλά η parity <strong>μοιράζεται round-robin</strong> σε όλους τους D+1 → πολλές εγγραφές παράλληλα, ίδια αξιοποίηση· καλύτερο από RAID-4.</li></ul></div>
+    <div class="qa-side-notes"><div class="side-notes-header">💡 Για Αρχάριους</div><div class="side-notes-concept"><div class="concept-title">⊕ Parity</div><p class="concept-desc">Αν χαθεί ένας δίσκος, ξαναβρίσκεις τα bits του από το XOR όλων των άλλων — σαν να ξέρεις το άθροισμα και να λείπει ένας προσθετέος.</p></div></div></div></div></div>
+
+  <div class="qa-card"><div class="qa-q"><span class="qno">Q9.</span><span>Περιγράψτε τη γενικευμένη external merge sort και το replacement sort.</span></div><div class="qa-a"><div class="qa-layout">
+    <div class="qa-main-ans"><ol style="margin:0"><li>Πέρασμα 0: γέμισε τα B πλαίσια, ταξινόμησε στη μνήμη, γράψε → ⌈N/B⌉ runs.</li><li>Περάσματα 1…: B−1 πλαίσια εισόδου (ένα ανά run), 1 εξόδου· βγάζεις κάθε φορά το μικρότερο → συγχώνευση B−1 runs.</li><li>#περάσματα = 1 + ⌈log<sub>B−1</sub>⌈N/B⌉⌉, κόστος 2N·#περάσματα.</li></ol><p style="margin:8px 0 0"><strong>Replacement sort</strong> (για το πέρασμα 0): B−2 πλαίσια current set, 1 input, 1 output· βγάζει το μικρότερο κλειδί ≥ του τελευταίου που βγήκε· όταν δεν υπάρχει τέτοιο, κλείνει το run. Μέσο μήκος runs ≈ 2B → λιγότερα runs, λιγότερα περάσματα.</p></div>
+    <div class="qa-side-notes"><div class="side-notes-header">💡 Για Αρχάριους</div><div class="side-notes-concept"><div class="concept-title">🃏 Merge</div><p class="concept-desc">Έχεις ταξινομημένες τράπουλες ανοιχτές στο τραπέζι: παίρνεις κάθε φορά τη μικρότερη πάνω κάρτα.</p></div></div></div></div></div>
+
+  <div class="qa-card"><div class="qa-q"><span class="qno">Q10.</span><span>Πώς λειτουργεί ο buffer manager όταν ζητείται μια σελίδα;</span></div><div class="qa-a"><div class="qa-layout">
+    <div class="qa-main-ans"><ol style="margin:0"><li>Αν η σελίδα είναι στη δεξαμενή → αύξησε pin-count, επέστρεψε διεύθυνση (hit).</li><li>Αλλιώς, αν υπάρχει ελεύθερο frame → διάβασέ την εκεί (1 I/O).</li><li>Αλλιώς επίλεξε θύμα με την πολιτική <strong>μόνο μεταξύ unpinned</strong> frames· αν είναι dirty γράψ' το πρώτα στον δίσκο· διάβασε τη νέα σελίδα· pin-count = 1.</li></ol><p style="margin:8px 0 0">Μεταδεδομένα ανά frame: BlockID, dirty bit, pin/rd-count, timestamp.</p></div>
+    <div class="qa-side-notes"><div class="side-notes-header">💡 Για Αρχάριους</div><div class="side-notes-concept"><div class="concept-title">📌 Pin</div><p class="concept-desc">«Κάποιος τη χρησιμοποιεί τώρα, μην την πετάξεις».</p></div><div class="side-notes-concept"><div class="concept-title">✏️ Dirty</div><p class="concept-desc">«Άλλαξε στη μνήμη, ο δίσκος έχει παλιά έκδοση».</p></div></div></div></div></div>
+  <div class="section-quiz" data-topic="examprep" data-section="answers"></div>
+</section>
+
+<section id="trace">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">🔥</div><h2>10. Drills Σωστό / Λάθος</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Απάντησε στο χαρτί πρώτα, μετά πάτα «Δες απάντηση». Στο 2024 το Σ/Λ ήταν σε άλλη ύλη· αυτά είναι στο ίδιο στυλ για την ύλη της προόδου.</p>
+  <div class="quiz"><h3>🔥 Δίσκοι, SSD, RAID</h3><div class="qitems">
+    <div class="qitem"><div class="qq">Ο χρόνος περιστροφικής καθυστέρησης κυριαρχεί στο κόστος ενός I/O σε HDD.</div><div class="qa" id="tq1" style="display:none"><strong>Λάθος.</strong> Κυριαρχεί ο χρόνος <strong>αναζήτησης (seek)</strong>, γιατί περιλαμβάνει μηχανική κίνηση του βραχίονα.</div><button class="qa-toggle" onclick="toggleAnswer('tq1', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Στη NAND-flash η διαγραφή γίνεται σε μονάδα μεγαλύτερη από τη μονάδα εγγραφής.</div><div class="qa" id="tq2" style="display:none"><strong>Σωστό.</strong> Εγγραφή ανά σελίδα (4–64 KB), διαγραφή ανά block (MB).</div><button class="qa-toggle" onclick="toggleAnswer('tq2', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Το RAID-0 προσφέρει αξιοπιστία χάρη στο striping.</div><div class="qa" id="tq3" style="display:none"><strong>Λάθος.</strong> Μόνο απόδοση· καμία πλεονασματικότητα — η βλάβη ενός δίσκου χάνει δεδομένα.</div><button class="qa-toggle" onclick="toggleAnswer('tq3', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Το RAID-5 έχει καλύτερη αξιοποίηση χώρου από το RAID-4 για το ίδιο D.</div><div class="qa" id="tq4" style="display:none"><strong>Λάθος.</strong> Ίδια (D/(D+1))· κερδίζει στην παράλληλη εκτέλεση εγγραφών επειδή η parity είναι κατανεμημένη.</div><button class="qa-toggle" onclick="toggleAnswer('tq4', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Πίνακας 100 δίσκων με MTTF 50.000 h έχει MTTF περίπου 500 h.</div><div class="qa" id="tq5" style="display:none"><strong>Σωστό.</strong> Ανεξάρτητες βλάβες → MTTF/N.</div><button class="qa-toggle" onclick="toggleAnswer('tq5', this)">Δες απάντηση</button></div>
+  </div></div>
+  <div class="quiz"><h3>🔥 Buffer & αρχεία</h3><div class="qitems">
+    <div class="qitem"><div class="qq">Ένα frame με pin-count &gt; 0 μπορεί να επιλεγεί ως θύμα αν είναι το LRU.</div><div class="qa" id="tq6" style="display:none"><strong>Λάθος.</strong> Τα pinned frames δεν είναι υποψήφια μέχρι να ξεκαρφιτσωθούν.</div><button class="qa-toggle" onclick="toggleAnswer('tq6', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Το CLOCK είναι προσέγγιση του MRU.</div><div class="qa" id="tq7" style="display:none"><strong>Λάθος.</strong> Είναι προσέγγιση του <strong>LRU</strong> (και γι' αυτό παθαίνει flooding).</div><button class="qa-toggle" onclick="toggleAnswer('tq7', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Στο LRU-2, μια σελίδα με μία μόνο αναφορά έχει άπειρη απόσταση και είναι πρώτη υποψήφια για θύμα.</div><div class="qa" id="tq8" style="display:none"><strong>Σωστό.</strong> t2 = −∞ → D = ∞· έτσι αποφεύγεται το flooding.</div><button class="qa-toggle" onclick="toggleAnswer('tq8', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Στο packed layout, η διαγραφή εγγραφής μπορεί να αλλάξει το RID άλλης εγγραφής.</div><div class="qa" id="tq9" style="display:none"><strong>Σωστό.</strong> Η συμπίεση μετακινεί εγγραφές σε άλλα slots — γι' αυτό υπάρχει το bitmap/slotted.</div><button class="qa-toggle" onclick="toggleAnswer('tq9', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Η εισαγωγή σε heap file κοστίζει B(D+RC).</div><div class="qa" id="tq10" style="display:none"><strong>Λάθος.</strong> 2D + C (φέρε το τελευταίο μπλοκ, πρόσθεσε, γράψε). B(D+RC) είναι στο ταξινομημένο αρχείο.</div><button class="qa-toggle" onclick="toggleAnswer('tq10', this)">Δες απάντηση</button></div>
+  </div></div>
+  <div class="quiz"><h3>🔥 Ευρετήρια, B+, ταξινόμηση</h3><div class="qitems">
+    <div class="qitem"><div class="qq">Ένα αρχείο μπορεί να έχει πολλά clustered ευρετήρια σε διαφορετικά πεδία.</div><div class="qa" id="tq11" style="display:none"><strong>Λάθος.</strong> Το αρχείο ταξινομείται με έναν τρόπο → το πολύ ένα clustered/πρωτεύον.</div><button class="qa-toggle" onclick="toggleAnswer('tq11', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Το αραιό ευρετήριο μπορεί να χτιστεί σε αταξινόμητο αρχείο.</div><div class="qa" id="tq12" style="display:none"><strong>Λάθος.</strong> Απαιτεί αρχείο ταξινομημένο στο κλειδί.</div><button class="qa-toggle" onclick="toggleAnswer('tq12', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Σε split εσωτερικού κόμβου B+, το μεσαίο κλειδί μένει και στον κόμβο.</div><div class="qa" id="tq13" style="display:none"><strong>Λάθος.</strong> Push-up: μετακινείται. Μόνο στο split φύλλου γίνεται copy-up.</div><button class="qa-toggle" onclick="toggleAnswer('tq13', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Μετά από διαγραφή χωρίς υποχείλιση, πρέπει να αφαιρεθεί το κλειδί και από τους εσωτερικούς κόμβους.</div><div class="qa" id="tq14" style="display:none"><strong>Λάθος.</strong> Τα κλειδιά-διαχωριστές μένουν (π.χ. το 17 στη ρίζα μετά τη διαγραφή του 17).</div><button class="qa-toggle" onclick="toggleAnswer('tq14', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Ένα hash ευρετήριο βοηθά στο «age BETWEEN 20 AND 30».</div><div class="qa" id="tq15" style="display:none"><strong>Λάθος.</strong> Ο κατακερματισμός εξυπηρετεί μόνο ισότητες.</div><button class="qa-toggle" onclick="toggleAnswer('tq15', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Ευρετήριο &lt;sal, age&gt; είναι εξίσου καλό με &lt;age, sal&gt; για «age = 25 AND sal BETWEEN 3000 AND 5000».</div><div class="qa" id="tq16" style="display:none"><strong>Λάθος.</strong> Με &lt;age,sal&gt; πας στο 25 και σαρώνεις μόνο το εύρος· με &lt;sal,age&gt; τα age=25 είναι σκόρπια.</div><button class="qa-toggle" onclick="toggleAnswer('tq16', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Στην external merge sort με B πλαίσια, συγχωνεύονται B runs ανά πέρασμα.</div><div class="qa" id="tq17" style="display:none"><strong>Λάθος.</strong> B−1· ένα πλαίσιο είναι για την έξοδο.</div><button class="qa-toggle" onclick="toggleAnswer('tq17', this)">Δες απάντηση</button></div>
+    <div class="qitem"><div class="qq">Ταξινόμηση μέσω unclustered B+ είναι πάντα φθηνότερη από external sort.</div><div class="qa" id="tq18" style="display:none"><strong>Λάθος.</strong> Μπορεί να κοστίσει έως ένα I/O ανά εγγραφή (ίδιο μπλοκ πολλές φορές).</div><button class="qa-toggle" onclick="toggleAnswer('tq18', this)">Δες απάντηση</button></div>
+  </div></div>
+</section>
+
+<section id="skip">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">🧹</div><h2>11. Τι να αφήσεις τελευταίο</h2></div>
+  <table class="vtbl"><thead><tr><th>Θέμα</th><th>Γιατί τελευταίο</th><th>«Αν πέσει, γράψε τουλάχιστον…»</th></tr></thead><tbody>
+    <tr><td>Parquet/ORC λεπτομέρειες</td><td>περιγραφικά, σπάνια σε υπολογισμούς</td><td>row-groups + column chunks, min/max για predicate pushdown, projection pushdown</td></tr>
+    <tr><td>Διαδρομή εγγραφής/ανάγνωσης SSD (µs ανά στάδιο)</td><td>λεπτομέρειες αριθμών</td><td>«το φυσικό γράψιμο στη NAND κυριαρχεί (100–1500 µs)»</td></tr>
+    <tr><td>Controllers, ταινίες, οπτικά</td><td>γενική κουλτούρα</td><td>WORM, LTO με native/compressed χωρητικότητα, μεγάλη latency</td></tr>
+    <tr><td>C API heap file</td><td>αφορά εργασίες</td><td>rid_t = (page_id, slot_number)</td></tr>
+    <tr><td>Prefix compression / duplicates στο B+</td><td>λίγες γραμμές</td><td>προθέματα στους εσωτερικούς για μεγαλύτερο fan-out· (key, xid) για unique</td></tr></tbody></table>
+  <div class="tip"><div class="tip-icon">✅</div><div class="tip-text"><strong>Checklist τελευταίου βραδιού:</strong> ☐ λύνω B+ εισαγωγή/διαγραφή στο χαρτί σε &lt;10′ · ☐ ξέρω τον κανόνα M ≥ p(S)+1 · ☐ υπολογίζω περάσματα ταξινόμησης για οποιαδήποτε N, B · ☐ ξέρω D/(D+C) για RAID · ☐ γράφω t<sub>s</sub>+t<sub>r</sub>+t<sub>tr</sub> με αριθμούς · ☐ πέρασα τα <a href="flashcards.html">flashcards</a> και το <a href="interactive_quiz.html">quiz</a>.</div></div>
+</section>
+
+</div>
+<div class="footer">ΥΣΒΔ (k18) · ΕΚΠΑ · Exam Prep για την πρόοδο</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const ex1 = {k:[333,688],c:[{k:[145,252],c:[[41,82,123],[164,195,236],[267,298,329]]},{k:[433,579],c:[[351,382,423],[464,495,546],[587,628,669]]},{k:[777,881],c:[[691,732,763],[794,825,856],[887,928,969]]}]};
+  const ex2 = {k:[479],c:[{k:[252],c:[{k:[145],c:[[82,123],[164,236]]},{k:[333],c:[[267,329],[382,464]]}]},{k:[701],c:[{k:[601],c:[[495,587],[628,691]]},{k:[881],c:[[732,825],[887,999]]}]}]};
+  SimUI.bptExam(document.getElementById('ep-ins'), {title:'Λύτης: εισαγωγή A', spec:ex1, leafCap:3, keyCap:2, mode:'insert', am:58});
+  SimUI.bptExam(document.getElementById('ep-del'), {title:'Λύτης: διαγραφή Γ', spec:ex2, leafCap:3, keyCap:2, mode:'delete', am:58});
+  const it = a => a.map(([label, h]) => ({label, h}));
+  SimUI.extHash(document.getElementById('ep-eh'), {title:'Λύτης: εισαγωγή w', make: () => ExtHash.fromBuckets(3, 5, 3, [
+      {name:'A', d:1, prefix:'0', items: it([['Ξενοφών','00101'],['Ρέα','01100'],['Αριστείδης','01011']])},
+      {name:'B', d:3, prefix:'100', items: it([['Σωκράτης','10011'],['Αγησίλαος','10001'],['Περσεφόνη','10000']])},
+      {name:'Γ', d:3, prefix:'101', items: it([['Αφροδίτη','10110'],['Ήρα','10101'],['Λυδία','10110']])},
+      {name:'Δ', d:2, prefix:'11', items: it([['Άρης','11001'],['Σοφοκλής','11101'],['Λεωνίδας','11010']])}]),
+    choices: [['α β γ','10111'],['δ ε ζ','11010'],['η θ ι','10011'],['κ λ μ','01100'],['ν ξ ω','11101'],['π ρ σ','10001'],['τ υ φ','10100'],['χ ψ ο','00011']]});
+  SimUI.extSortCalc(document.getElementById('ep-sort'));
+  const j = document.getElementById('ep-join');
+  const run = () => {
+    const am = +j.querySelector('.am').value; let a = Math.floor(am / 10) % 10, b = am % 10; if (a === 0) a = 10; if (b === 0) b = 10;
+    const refs = BufferSim.nestedLoopRefs(a, b);
+    const rows = [['p(R)', a], ['p(R)+2', a + 2], ['p(S)', b], ['p(S)+2', b + 2]].map(([l, M]) => {
+      const sim = BufferSim.simulate(refs, M, 'LRU').misses;
+      return `<tr><td>${l}</td><td>${M}</td><td>${M >= b + 1 ? 'ναι' : 'όχι'}</td><td><b>${sim}</b></td></tr>`;
+    }).join('');
+    j.querySelector('.o').innerHTML = `p(R) = <b>${a}</b>, p(S) = <b>${b}</b>, t(R) = <b>${10 * a}</b>, t(S) = <b>${10 * b}</b><table class="vtbl" style="margin-top:8px"><thead><tr><th>M</th><th>τιμή</th><th>M ≥ p(S)+1;</th><th>κόστος LRU</th></tr></thead><tbody>${rows}</tbody></table>`;
+  };
+  j.querySelector('.am').addEventListener('input', run); run();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 1 · ΣΔΒΔ, Ιεραρχία Μνήμης, Δίσκοι & RAID</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/chapter.css">
+<link rel="stylesheet" href="styles/sims.css">
+<style>
+.hero{background:linear-gradient(150deg,var(--bg) 0%,var(--bdim) 55%,var(--bg) 100%)}
+.hero::after{content:'t = ts + tr + ttr';color:rgba(88,166,255,.07)}
+</style>
+<script src="js/nav.js" defer></script>
+<script src="data/questions.js" defer></script>
+<script src="js/quiz-loader.js" defer></script>
+<script src="data/flashcards.js" defer></script>
+<script src="js/flashcards.js" defer></script>
+<script src="js/sims/widgets.js" defer></script>
+</head>
+<body>
+<div id="site-nav"></div>
+
+<div class="hero">
+  <div class="hero-label">ΥΣΒΔ k18 · Topic 1 · διαφάνειες 001-intro + πίνακας διάλεξης «Εισαγωγή & Δίσκος»</div>
+  <h1>ΣΔΒΔ & <em>Αποθήκευση</em></h1>
+  <p>Πού κάθεται το ΣΔΒΔ, γιατί το κόστος μετριέται σε I/O, πώς δουλεύει ένας μαγνητικός δίσκος (seek + περιστροφή + μεταφορά), τι αλλάζει με τα SSD (NAND, write amplification, FTL), τριτογενής αποθήκευση και RAID επίπεδα 0–6.</p>
+  <div class="chips"><span class="chip">memory hierarchy</span><span class="chip">HDD timing</span><span class="chip">SSD / NAND</span><span class="chip">WAF</span><span class="chip">RAID</span><span class="chip">parity XOR</span></div>
+</div>
+
+<nav class="toc">
+  <a href="#essence">🎯 Η Ουσία</a>
+  <a href="#dbms">ΣΔΒΔ</a>
+  <a href="#hierarchy">Ιεραρχία</a>
+  <a href="#hdd">HDD</a>
+  <a href="#placement">Τοποθέτηση</a>
+  <a href="#ssd">SSD</a>
+  <a href="#controller">Controller</a>
+  <a href="#tertiary">Τριτογενής</a>
+  <a href="#raid">RAID</a>
+  <a href="#cards">Flashcards</a>
+</nav>
+
+<div class="wrap">
+
+<section id="essence">
+  <div class="sh"><div class="sh-icon" style="background:var(--gdim)">🎯</div><h2>Η Ουσία σε 60 δευτερόλεπτα</h2></div>
+  <div class="gbox"><div class="lbl" style="color:var(--green)">ΤΙ ΚΑΝΕΙ</div>Ένα ΣΔΒΔ κρατά TB δεδομένων στον <strong>δίσκο</strong> (μη πτητικό, φθηνό) και τα φέρνει σε <strong>σελίδες/μπλοκ</strong> στη RAM για επεξεργασία. Η «κίνηση» μπλοκ πάνω-κάτω στην ιεραρχία μνήμης είναι αυτό που <strong>κυριαρχεί</strong> στον χρόνο. Άρα όλο το μάθημα μετρά κόστος σε <strong>αριθμό I/O</strong>.</div>
+  <p style="margin-bottom:14px"><strong>Διαίσθηση:</strong> ένας μαγνητικός δίσκος είναι σαν πικάπ: για να διαβάσεις, το χέρι πρέπει να πάει στο σωστό «αυλάκι» (<em>seek</em> — το πιο αργό), να περιμένει να έρθει η σωστή θέση από κάτω (<em>περιστροφή</em>) και μετά να διαβάσει (<em>μεταφορά</em>). Αν τα μπλοκ σου είναι το ένα δίπλα στο άλλο, πληρώνεις το seek μία φορά — αν είναι σκόρπια, κάθε φορά. Γι' αυτό τα 1000 μπλοκ θέλουν ~16 s τυχαία αλλά ~38 ms σειριακά!</p>
+  <div class="compare">
+    <div class="good-side"><div class="side-label" style="color:var(--green)">✅ Καλό για τον δίσκο</div><ul style="font-size:0.86rem;padding-left:18px;line-height:1.7;margin:0"><li>σχετικές εγγραφές στο <strong>ίδιο μπλοκ</strong> / ίδιο κύλινδρο</li><li>σειριακή ανάγνωση, prefetching</li><li>buffering στη RAM, scheduling αιτήσεων</li></ul></div>
+    <div class="bad-side"><div class="side-label" style="color:var(--red)">❌ Κακό</div><ul style="font-size:0.86rem;padding-left:18px;line-height:1.7;margin:0"><li>τυχαίες αναγνώσεις σκόρπιων μπλοκ (seek κάθε φορά)</li><li>στα SSD: μικρές τυχαίες εγγραφές → write amplification</li><li>πολλοί δίσκοι χωρίς πλεονασμό → MTTF/N</li></ul></div>
+  </div>
+  <div class="tip"><div class="tip-icon">📝</div><div class="tip-text"><strong>Για τις εξετάσεις θυμήσου:</strong> (1) <strong>t = t<sub>s</sub> + t<sub>r</sub> + t<sub>tr</sub></strong>, μέση περιστροφική = ½ περιστροφής, το seek κυριαρχεί. (2) SSD: ανάγνωση γρήγορη, εγγραφή ~10× πιο αργή, διαγραφή block ~100× · <strong>WAF = φυσικά γραμμένα / λογικά γραμμένα</strong>. (3) RAID αξιοποίηση χώρου = D/(D+C): RAID-1 50%, RAID-4/5 με D=4: 80%, RAID-6: 66%. (4) MTTF πίνακα N δίσκων ≈ MTTF/N· νέα parity = (παλιά ⊕ νέα δεδομένα) ⊕ παλιά parity.</div></div>
+</section>
+
+<section id="dbms">
+  <div class="sh"><div class="sh-icon" style="background:var(--bdim)">🏛️</div><h2>1. Το ΣΔΒΔ: ρόλος, μοντέλα, επίπεδα, αρχιτεκτονική</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Τα ΣΔΒΔ προσφέρουν: <strong>μείωση πλεονασμού & ασυνεπειών</strong>, <strong>γρήγορη πρόσβαση</strong> σε ογκώδη δεδομένα, αποφυγή πολλαπλών αρχείων/μορφών, <strong>περιορισμούς ακεραιότητας</strong>, <strong>ατομικότητα</strong> ενημερώσεων και ταυτόχρονη πρόσβαση, διαχείριση ομάδων χρηστών & <strong>ασφάλεια</strong>.</p>
+  <div class="grid2">
+    <div><div class="card-title">Στοίβα λογισμικού (διαφάνεια 3)</div>
+      <div class="dg-col">
+        <div class="dg-box" style="border-color:var(--dim)"><div class="t">Users Layer</div><div class="s">άνθρωποι που χρησιμοποιούν το σύστημα</div></div>
+        <div class="dg-box" style="border-color:var(--cyan)"><div class="t">App Layer</div><div class="s">desktop apps, web servers, DBMS tools</div></div>
+        <div class="dg-box" style="border-color:var(--green)"><div class="t" style="color:var(--green)">DBMS</div><div class="s">η μοναδική πύλη προς τα δεδομένα</div></div>
+        <div class="dg-box" style="border-color:var(--yellow)"><div class="t">OS</div><div class="s">CPU sched., memory mgmt, file systems, threads, low-level IO</div></div>
+        <div class="dg-box" style="border-color:var(--red)"><div class="t">Hardware</div><div class="s">CPUs, GPUs, RAM, HDDs, SSDs, NICs, buses</div></div></div></div>
+    <div><div class="card-title">Μοντέλα δεδομένων</div>
+      <p style="font-size:.9rem">Συλλογή εργαλείων που περιγράφουν δεδομένα, σχέσεις, σημασιολογία, περιορισμούς. Παραδείγματα: <strong>ER</strong> (σχεδίαση), <strong>Σχεσιακό</strong> (πίνακες, προκύπτει από ER), <strong>JSON</strong>, και Network, Hierarchical, XML, OO.</p>
+      <div class="card-title">Γλώσσες</div>
+      <p style="font-size:.9rem"><strong>DDL</strong>: ορισμός σχημάτων → «πρότυπα» πινάκων στο <strong>data dictionary</strong>, περιορισμοί (primary keys), εξουσιοδότηση. <strong>DML</strong>: πρόσβαση/ενημέρωση. Τα σύγχρονα ΣΔΒΔ πέτυχαν χάρη στη <strong>μη-διαδικαστική</strong> DML: λες <em>τι</em> θέλεις, το ΣΔΒΔ βρίσκει <em>πώς</em>. Η SQL δεν είναι Turing-complete. Τυπικές: σχεσιακή άλγεβρα, σχεσιακός λογισμός.</p></div>
+  </div>
+  <div class="cb" style="padding:12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.8"><span class="kw">CREATE TABLE</span> instructor(
+    ID        <span class="tp">CHAR</span>(<span class="nm">5</span>),
+    name      <span class="tp">VARCHAR</span>(<span class="nm">20</span>),
+    dept_name <span class="tp">VARCHAR</span>(<span class="nm">20</span>),
+    salary    <span class="tp">NUMERIC</span>(<span class="nm">8</span>,<span class="nm">2</span>)
+);
+<span class="kw">SELECT</span> name <span class="kw">FROM</span> instructor <span class="kw">WHERE</span> deprt_name = <span class="st">"Comp.Sci."</span>;</div>
+  <h3>Επίπεδα αφαίρεσης & στάδια σχεδίασης</h3>
+  <div class="grid2">
+    <div><div class="card-title">3 επίπεδα (διαφάνεια 5)</div>
+      <div class="dg-col">
+        <div class="dg-row"><div class="dg-box" style="border-color:var(--purple)"><div class="t">View1</div></div><div class="dg-box" style="border-color:var(--purple)"><div class="t">View2</div></div><div class="dg-box" style="border-color:var(--purple)"><div class="t">View3</div></div></div>
+        <div class="dg-box" style="border-color:var(--blue)"><div class="t">Conceptual Schema</div><div class="s">λογική οργάνωση στο συγκεκριμένο μοντέλο</div></div>
+        <div class="dg-box" style="border-color:var(--green)"><div class="t">Physical Schema</div><div class="s">πώς αποθηκεύονται τα δεδομένα στον δίσκο</div></div></div></div>
+    <div><div class="card-title">Πίνακας διάλεξης: από τον Κόσμο στη ΒΔ</div>
+      <div class="dg-col">
+        <div class="dg-box" style="border-color:var(--dim)"><div class="t">ΚΟΣΜΟΣ</div></div>
+        <div class="dg-box"><div class="t">① σημασιολογική σχεδίαση → σημασιολογικό σχήμα</div><div class="s">μοντέλο οντοτήτων-συσχετίσεων</div></div>
+        <div class="dg-box"><div class="t">② λογική σχεδίαση → λογικό σχήμα (+ εξωτερικά σχήματα, ③β)</div><div class="s">σχεσιακό μοντέλο — <b>ΣΧΒΔ</b> (σχεδίαση ΒΔ)</div></div>
+        <div class="dg-box" style="border-color:var(--green)"><div class="t">③α φυσική σχεδίαση → φυσικό/εσωτερικό σχήμα</div><div class="s">φυσικό μοντέλο: δομές δεδομένων, ταξινομήσεις — <b style="color:var(--green)">ΥΣΒΔ</b> (αυτό το μάθημα)</div></div>
+        <div class="dg-box" style="border-color:var(--dim)"><div class="t">ΒΔ (δίσκος)</div></div></div></div>
+  </div>
+  <div class="ibox"><div class="lbl" style="color:var(--blue)">Πίνακας διάλεξης: ΣΔΒΔ vs ΛΣ</div>Στο μάθημα, το ΣΔΒΔ βλέπει τα αρχεία του (Αρχείο 1…N) μέσα από το λειτουργικό σύστημα. Στα <strong>βιομηχανικά συστήματα</strong> το ΣΔΒΔ συχνά «παρακάμπτει» το ΛΣ και διαχειρίζεται μόνο του τον χώρο του δίσκου (βλ. <a href="topic2_buffer.html#diskspace">Topic 2</a>).</div>
+  <h3 id="arch">Αρχιτεκτονική σχεσιακού ΣΔΒΔ (διαφάνεια 9)</h3>
+  <div class="dg">
+    <div class="dg-row"><div class="dg-box" style="border-color:var(--dim)"><div class="t">Web Forms · App Front End · SQL Prompt</div><div class="s">SQL statements ↓</div></div></div>
+    <div class="dg-row" style="margin-top:8px"><div class="dg-box" style="border-color:var(--purple)"><div class="t">Query Evaluation Engine</div><div class="s">Parser · QP &amp; Optimizer · Plan Executor · Operator Evaluator</div></div></div>
+    <div class="dg-row" style="margin-top:8px">
+      <div class="dg-col" style="flex:2;min-width:220px">
+        <div class="dg-box" style="border-color:var(--blue)"><div class="t">File &amp; Access Methods</div><div class="s">→ Topics 3–6</div></div>
+        <div class="dg-box" style="border-color:var(--cyan)"><div class="t">Buffer Manager</div><div class="s">→ Topic 2</div></div>
+        <div class="dg-box" style="border-color:var(--green)"><div class="t">Disk Space Manager</div><div class="s">→ Topic 2</div></div></div>
+      <div class="dg-col" style="flex:1;min-width:160px">
+        <div class="dg-box" style="border-color:var(--orange)"><div class="t">Transaction Mgr · Lock Mgr</div><div class="s">Concurrency Control</div></div>
+        <div class="dg-box" style="border-color:var(--red)"><div class="t">Recovery Manager</div></div></div></div>
+    <div class="dg-row" style="margin-top:8px"><div class="dg-box" style="border-color:var(--yellow)"><div class="t">Database: Index Files · Data Files · Catalog (Data Dict)</div></div></div>
+  </div>
+  <p style="font-size:.92rem">Πτυχές: <strong>ερωτήματα & ενημερώσεις</strong> πρέπει να επεξεργαστούν · <strong>δοσοληψίες</strong> βασισμένες στην ατομικότητα (τραπεζικές μεταφορές, κρατήσεις θέσεων χωρίς overbooking) · πολλές ταυτόχρονες δοσοληψίες με σωστή εκτέλεση · <strong>ανάκαμψη</strong> μετά από κατάρρευση.</p>
+  <div class="section-quiz" data-topic="topic1" data-section="dbms"></div>
+</section>
+
+<section id="hierarchy">
+  <div class="sh"><div class="sh-icon" style="background:var(--bdim)">🪜</div><h2>2. Μέσα Αποθήκευσης & Ιεραρχία Μνήμης</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Κατάταξη μέσων κατά: <strong>ταχύτητα</strong> (latency & transfer), <strong>κόστος</strong> ανά μονάδα (€/GB), <strong>αξιοπιστία</strong>. Και: <strong>πτητικά</strong> (χάνονται χωρίς ρεύμα) vs <strong>μη πτητικά</strong> (battery-backed RAM, δευτερογενής, τριτογενής αποθήκευση).</p>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th>Τύπος</th><th>Μέγεθος</th><th>Μπλοκ</th><th>Latency</th><th>Bandwidth</th></tr></thead><tbody>
+    <tr><td>L1</td><td>16–64 KB</td><td>64 B</td><td>1 ns</td><td>10–30 TB/s</td></tr>
+    <tr><td>L2</td><td>512 B–4 MB</td><td>64 B</td><td>3–5 ns</td><td>3–8 TB/s</td></tr>
+    <tr><td>L3</td><td>4–32 MB</td><td>64 B</td><td>10–15 ns</td><td>1.5–4 TB/s</td></tr>
+    <tr><td>L4</td><td>32–64 MB</td><td>64 B</td><td>20–25 ns</td><td>200–800 GB/s</td></tr>
+    <tr><td><strong>RAM</strong></td><td>16–128 GB</td><td>64 B</td><td>15–40 ns</td><td>90–130 GB/s</td></tr>
+    <tr><td>NVMe</td><td>TBs</td><td>4–64 KB</td><td>10–50 µs</td><td>14–20 GB/s</td></tr>
+    <tr><td>SSD</td><td>TBs</td><td>4–64 KB</td><td>30–60 µs</td><td>10–14 GB/s</td></tr>
+    <tr><td><strong style="color:var(--red)">HDD</strong></td><td>TBs</td><td>4–64 KB</td><td><strong>4–10 ms</strong></td><td>0.25–0.55 GB/s</td></tr>
+  </tbody></table></div>
+  <p style="font-size:.88rem;color:var(--muted)">Πάνω = μικρότερο, ταχύτερο, ακριβότερο· κάτω = μεγαλύτερο, φθηνότερο. Οι ταινίες (σειριακή πρόσβαση) δεν φαίνονται. RAM → HDD: ~<strong>10⁵–10⁶ φορές</strong> πιο αργά!</p>
+  <div class="grid2">
+    <div><div class="card-title">Πτητική μνήμη</div><ul style="font-size:.9rem"><li><strong>Cache</strong>: η ταχύτερη, μικρότερη, ακριβότερη· L1 64KB/πυρήνα, L2 1–2MB/πυρήνα, L3 16–512MB/socket.</li><li><strong>Κύρια μνήμη</strong>: 10–100s ns, έως 128–256 GB — μικρή για πραγματικές ΒΔ. Η χωρητικότητα διπλασιάζεται, το κόστος πέφτει.</li></ul></div>
+    <div><div class="card-title">Γιατί δίσκος για το ΣΔΒΔ</div><ul style="font-size:.9rem"><li>Η RAM για TBs είναι ακριβή και πτητική.</li><li>Τα δεδομένα σε σελίδες/μπλοκ πρέπει να έρθουν στη RAM: <strong>read I/O</strong> σε ελεύθερο frame· όταν εκτοπίζονται → <strong>write I/O</strong>.</li><li>Αυτή η «κίνηση» μπλοκ <strong>κυριαρχεί</strong> στις λειτουργίες → αποθήκευσε ώστε να ξοδεύεται ελάχιστος χρόνος σε I/O.</li></ul></div>
+  </div>
+  <div class="section-quiz" data-topic="topic1" data-section="hierarchy"></div>
+</section>
+
+<section id="hdd">
+  <div class="sh"><div class="sh-icon" style="background:var(--bdim)">💽</div><h2>3. Μαγνητικοί Δίσκοι (HDD)</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Δεδομένα σε μαγνητικούς δίσκους (platters) που περιστρέφονται συνεχώς με συγκεκριμένα rpm γύρω από <strong>άξονα/άτρακτο (spindle)</strong>.</p>
+  <div class="grid2">
+    <div><div class="card-title">Ανατομία</div><ul style="font-size:.9rem">
+      <li><strong>Platter</strong>: δεδομένα και στις δύο επιφάνειες, <strong>μία κεφαλή (ακίδα) ανά επιφάνεια</strong>.</li>
+      <li><strong>Τροχιά (track)</strong>: ομόκεντρος δακτύλιος· οι εξωτερικές είναι μεγαλύτερες.</li>
+      <li><strong>Κύλινδρος</strong>: όλες οι τροχιές στην ίδια απόσταση από τον άξονα, σε όλους τους δίσκους («χτένι» βραχιόνων).</li>
+      <li><strong>Τομέας (sector)</strong>: σταθερό μέγεθος, συνήθως 256/512 B.</li>
+      <li><strong>Μπλοκ</strong>: 1+ τομείς· σταθερό μέγεθος· <strong>μονάδα εισόδου-εξόδου</strong>. Διαβάζεται, επεξεργάζεται και ξαναγράφεται επί τόπου.</li>
+      <li>Ο <strong>βραχίονας</strong> κινείται μέσα-έξω· ένας stepper-motor τοποθετεί τη συστοιχία κεφαλών· <strong>δεν</strong> διαβάζουν/γράφουν όλες ταυτόχρονα.</li></ul></div>
+    <div class="dg" style="margin:0">
+      <div style="text-align:center;font-size:.8rem;color:var(--muted)">Κάτοψη ενός platter</div>
+      <div style="display:flex;justify-content:center;margin:10px 0">
+        <div style="width:200px;height:200px;border-radius:50%;border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;position:relative">
+          <div style="width:150px;height:150px;border-radius:50%;border:2px dashed var(--cyan);display:flex;align-items:center;justify-content:center">
+            <div style="width:100px;height:100px;border-radius:50%;border:2px solid var(--green);display:flex;align-items:center;justify-content:center">
+              <div style="width:22px;height:22px;border-radius:50%;background:var(--dim)"></div></div></div>
+          <div style="position:absolute;top:6px;right:-6px;font-size:.7rem;color:var(--blue)">τροχιά</div>
+          <div style="position:absolute;width:70px;height:4px;background:var(--red);top:48px;right:-40px;transform:rotate(-30deg)"></div>
+          <div style="position:absolute;top:22px;right:-62px;font-size:.7rem;color:var(--red)">βραχίονας+ακίδα</div>
+        </div></div>
+      <div style="font-size:.78rem;color:var(--muted);text-align:center">Ο κύλινδρος = η ίδια τροχιά σε όλα τα platters (κάθετα).</div></div>
+  </div>
+  <div class="card"><div class="card-title">Χρόνος πρόσβασης ενός I/O</div>
+    <div class="retval-row">
+      <div class="retval"><div class="retval-num" style="color:var(--red)">t<sub>s</sub> seek</div><div class="retval-desc">μετακίνηση κεφαλής στη σωστή τροχιά· μέσο 2–10 ms, full stroke 12–18 ms · <strong>κυριαρχεί</strong></div></div>
+      <div class="retval"><div class="retval-num" style="color:var(--yellow)">t<sub>r</sub> rotational</div><div class="retval-desc">αναμονή να έρθει το μπλοκ κάτω από την κεφαλή· 5.400 ή 7.200 RPM· μέσο = ½ περιστροφής</div></div>
+      <div class="retval"><div class="retval-num" style="color:var(--green)">t<sub>tr</sub> transfer</div><div class="retval-desc">ανάγνωση/εγγραφή όταν η κεφαλή είναι σε θέση· 130–295 MB/s ανάλογα με τον κύλινδρο</div></div></div>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace;margin:8px 0 0">access time = t<sub>s</sub> + t<sub>r</sub> + t<sub>tr</sub></p>
+    <p style="font-size:.85rem;color:var(--muted);text-align:center">Πίνακας διάλεξης: διάβασμα = (1) <strong>αναζήτηση (SEEK)</strong> = κίνηση βραχίονα, (2) <strong>αναμονή/καθυστέρηση (LATENCY)</strong> = κίνηση δίσκου.</p></div>
+  <div class="card"><div class="card-title">Λυμένο: WD Blue 4TB — 1.000 μπλοκ των 4 KB</div>
+    <p style="font-size:.9rem">3 platters, 6 κεφαλές, 1.5–2.5 MB/τροχιά. Μέση περιστροφική 5,56 ms (5.400 RPM: 60.000/5.400/2), μέσο seek 10,5 ms, ρυθμός 175 MB/s → t<sub>tr</sub> = 4KB/175MB/s ≈ 0,022 ms.</p>
+    <div class="thread-diagram"><span style="color:var(--red)">Τυχαία:</span>    1.000 · (10,5 + 5,56 + 0,022) = <b>16.082 ms</b> ≈ 16 s<br><span style="color:var(--green)">Σειριακά:</span> 10,5 + 5,56 + 1.000 · 0,022   = <b>38 ms</b><br><span style="color:var(--yellow)">→</span> η <b>εγγύτητα</b> των μπλοκ στον δίσκο είναι καθοριστική (≈ 420×)</div></div>
+  <div id="hdd-sim"></div>
+  <div class="grid2">
+    <div><div class="card-title">Τεχνικές κατασκευαστών</div><ul style="font-size:.9rem">
+      <li><strong>Track alignment</strong>: οι τομείς «0» όλων των τροχιών ευθυγραμμίζονται → λιγότερη περιστροφική αναμονή.</li>
+      <li><strong>I/O scheduling</strong> στον δίσκο: μέθοδος <strong>ανελκυστήρα (elevator)</strong> ή shortest-positioned track next.</li>
+      <li><strong>Zoning</strong>: οι εξωτερικές τροχιές έχουν περισσότερους τομείς/μπλοκ.</li></ul></div>
+    <div><div class="card-title">Τεχνικές για αποδοτική πρόσβαση</div><ul style="font-size:.9rem">
+      <li>καλό scheduling αιτήσεων → λιγότερη μηχανική κίνηση</li>
+      <li><strong>RAM</strong> ως προσωρινή αποθήκη (buffer)</li>
+      <li><strong>clustering</strong>: σχετικά δεδομένα «κοντά»</li>
+      <li><strong>prefetching</strong>: φέρε νωρίτερα ό,τι θα χρειαστεί</li>
+      <li><strong>logs στον δίσκο</strong> για αλλαγές που πρόκειται να γίνουν — <strong>WAL</strong> (Write-Ahead Log)</li></ul></div>
+  </div>
+  <div class="section-quiz" data-topic="topic1" data-section="hdd"></div>
+</section>
+
+<section id="placement">
+  <div class="sh"><div class="sh-icon" style="background:var(--bdim)">📍</div><h2>4. Τοποθέτηση Δεδομένων στον Δίσκο</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Τα I/O κυριαρχούν → τοποθέτησε «σχετικές εγγραφές» κοντά, ιδανικά στο <strong>ίδιο μπλοκ</strong>: φέρνονται μαζί, αλλάζουν στη μνήμη και γράφονται πίσω στο ίδιο μπλοκ. Αν απλώνονται σε πολλά μπλοκ → «κοντά», ιδανικά στον <strong>ίδιο κύλινδρο</strong>. Η «εγγύτητα» = τοποθέτηση με <em>βέλτιστο περιστροφικό τρόπο</em> → έννοια <strong>επόμενου/προηγούμενου μπλοκ</strong>.</p>
+  <div class="card"><div class="card-title">Πίνακας διάλεξης: σειρά προτίμησης για τα διαδοχικά μπλοκ ενός αρχείου σε πακέτο δίσκων</div>
+    <div class="dg-row">
+      <div class="dg-box" style="border-color:var(--green)"><div class="t" style="color:var(--green)">1</div><div class="s">συνεχόμενα στην <strong>ίδια τροχιά</strong> → καθόλου seek, μόνο περιστροφή</div></div><div class="dg-arrow">→</div>
+      <div class="dg-box" style="border-color:var(--yellow)"><div class="t" style="color:var(--yellow)">2</div><div class="s">σε τροχιά του <strong>ίδιου κυλίνδρου</strong> (άλλη επιφάνεια) → αλλαγή κεφαλής, χωρίς seek</div></div><div class="dg-arrow">→</div>
+      <div class="dg-box" style="border-color:var(--orange)"><div class="t" style="color:var(--orange)">3</div><div class="s">σε <strong>διπλανή τροχιά</strong>, με το μπλοκ έναρξης μετατοπισμένο ώστε να «προλάβει» η κεφαλή</div></div></div></div>
+  <div class="section-quiz" data-topic="topic1" data-section="placement"></div>
+</section>
+
+<section id="ssd">
+  <div class="sh"><div class="sh-icon" style="background:var(--bdim)">⚡</div><h2>5. Flash & SSD</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px"><strong>NAND-flash</strong> (SSDs) & EEPROM: τα δεδομένα επιβιώνουν διακοπές ρεύματος. Μια θέση γράφεται <strong>μία φορά</strong> — πρέπει πρώτα να <strong>σβηστεί</strong> για να ξαναγραφτεί· οι κύκλοι erase/write είναι πολλοί αλλά <strong>πεπερασμένοι</strong>· η εγγραφή παίρνει µs, η διαγραφή είναι πιο αργή. Πίνακας διάλεξης: <em>NAND (Not AND) ≡ μνήμη flash, 2Δ ή 3Δ, εξτρά DRAM</em>.</p>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th></th><th>EEPROM</th><th>NAND-flash</th></tr></thead><tbody>
+    <tr><td>Κελί</td><td>2 τρανζίστορ/κελί</td><td>1 τρανζίστορ/κελί</td></tr>
+    <tr><td>Granularity διαγραφής</td><td>byte-byte</td><td><strong>μεγάλα blocks</strong> (π.χ. 4–8 MB) με ένα «flash» τάσης — εξ ου το όνομα</td></tr>
+    <tr><td>Granularity εγγραφής</td><td>byte-byte</td><td><strong>σελίδες</strong> (4–64 KB)</td></tr>
+    <tr><td>Αρχιτεκτονική</td><td>παράλληλο πλέγμα</td><td>σειριακές αλυσίδες (σχήμα NAND πύλης)</td></tr>
+    <tr><td>Πυκνότητα/κόστος</td><td>χαμηλή πυκνότητα, υψηλό κόστος/bit</td><td>πολύ υψηλή πυκνότητα, χαμηλό κόστος/bit</td></tr></tbody></table></div>
+  <div class="retval-row">
+    <div class="retval"><div class="retval-num" style="color:var(--green)">25–50 µs</div><div class="retval-desc">Read: «αισθάνεται» την τάση του κελιού</div></div>
+    <div class="retval"><div class="retval-num" style="color:var(--yellow)">200–500 µs</div><div class="retval-desc">Write: ~10× πιο αργό</div></div>
+    <div class="retval"><div class="retval-num" style="color:var(--red)">2–5 ms</div><div class="retval-desc">Block erase: ~100× πιο αργό, πολλές σελίδες μαζί</div></div></div>
+  <div class="card"><div class="card-title">Write Amplification (WAF)</div>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace">WAF = Physical Data Written to NAND / Logical Data Written by host OS</p>
+    <ol style="font-size:.9rem"><li>Το ΛΣ στέλνει <code>write()</code> μιας σελίδας 4 KB.</li><li>Το SSD γράφει τα 4 KB σε <strong>νέα</strong> σελίδα και σημειώνει την παλιά ως <strong>άκυρη</strong> (out-of-place).</li><li>Ο <strong>garbage collector</strong> για να ανακτήσει το block με την άκυρη σελίδα πρέπει να αντιγράψει <strong>όλες τις έγκυρες σελίδες</strong> (1–4 MB) σε καινούργιο block.</li><li>Αποτέλεσμα: η εγγραφή 4 KB οδήγησε σε εγγραφή πολλών MB. Οι συνεχείς εγγραφές <strong>φθείρουν τα κελιά</strong>.</li></ol>
+    <p style="font-size:.88rem;color:var(--muted);margin:0">Το <strong>FTL (Flash Translation Layer)</strong> μετακινεί παλιές σελίδες «από τη μέση» για να σβήσει ένα block → write amplification.</p></div>
+  <div class="grid2">
+    <div><div class="card-title">Packaging</div><div class="dg-col">
+      <div class="dg-box"><div class="t">SSD</div><div class="s">2–16 dies (φέτες πυριτίου)</div></div>
+      <div class="dg-box"><div class="t">Die</div><div class="s">2–6 planes, παράλληλα</div></div>
+      <div class="dg-box"><div class="t">Plane</div><div class="s">1.024–2.048 SSD-blocks</div></div>
+      <div class="dg-box" style="border-color:var(--red)"><div class="t">SSD-block (≈4 MB)</div><div class="s">ελάχιστη μονάδα <b>διαγραφής</b> · 256–1.024+ σελίδες</div></div>
+      <div class="dg-box" style="border-color:var(--green)"><div class="t">NAND-page</div><div class="s">ελάχιστη μονάδα <b>ανάγνωσης/εγγραφής</b></div></div></div>
+      <p style="font-size:.85rem;color:var(--muted);margin-top:6px">Micron 128GB 3D-TLC: 4 planes × 32 GB, 2.048 blocks × 16 MB/plane, 1.024 σελίδες × 16 KB/block.</p></div>
+    <div><div class="card-title">LBA (4 KB) vs NAND-page (16 KB)</div>
+      <p style="font-size:.88rem">Το ΛΣ ζητά <strong>λογικά μπλοκ (LBA)</strong> 4/8 KB· οι NAND σελίδες είναι συχνά 16 KB. Ο controller:</p>
+      <ul style="font-size:.88rem"><li>k = 4 λογικά μπλοκ διαθέσιμα → γράφονται μαζί σε μία σελίδα 16 KB.</li><li>k &lt; 4 → κρατιούνται στην <strong>SSD-cache</strong> για να μαζευτούν με επόμενες εγγραφές.</li><li>k = 1 με <code>fsync()</code> → γράφεται αμέσως, το υπόλοιπο της σελίδας <strong>zero-padding</strong>.</li><li>Πάντα + meta-data & ECC.</li></ul>
+      <div class="cells" style="flex-direction:column;align-items:stretch;gap:2px;font-size:.7rem">
+        <div class="cells"><span class="h">Page 000</span><span>#1212 (old)</span><span>#2312</span><span>#3233</span><span>#2334</span></div>
+        <div class="cells"><span class="h">Page 001</span><span>#4401</span><span>#4402</span><span>#4403</span><span>#4404</span></div>
+        <div class="cells"><span class="h">Page 002</span><span class="y">#1212 (new) + padding</span></div>
+        <div class="cells"><span class="h">Page 003</span><span class="e">κενή — η επόμενη εγγραφή εδώ</span></div></div>
+      <p style="font-size:.8rem;color:var(--muted)">NAND-Block #042 (8 MB, 512 σελίδες): η ενημέρωση του #1212 γίνεται <strong>εκτός θέσης</strong>.</p></div>
+  </div>
+  <div class="card"><div class="card-title">Διαδρομές εγγραφής & ανάγνωσης</div>
+    <p style="font-size:.88rem"><strong>Flush βρώμικης σελίδας</strong> (λόγω <code>fsync()</code>, <code>msync()</code> ή background daemon pdflush/wb): FS &amp; block layer (~1–5 µs) → host driver, doorbell &amp; PCIe DMA (~1–3 µs) → SSD DRAM buffer, FTL mapping (~0,3–2 µs) → NAND data registers → <strong>physical NAND program (~100–1.500 µs)</strong> → interrupt (~1–2 µs). Το φυσικό γράψιμο κυριαρχεί.</p>
+    <p style="font-size:.88rem;margin:0"><strong>read()</strong>: NVMe driver → controller &amp; FTL (DMA, εύρεση σελίδας) → φόρτωση <strong>ολόκληρης</strong> 16 KB σελίδας στους registers → επιλογή μόνο των ζητούμενων 4 KB με offset → ECC &amp; DMA στη RAM → completion interrupt.</p></div>
+  <div class="ibox"><div class="lbl" style="color:var(--blue)">Λυμένο: Samsung 870 EVO (SATA3 ≈ 600 MB/s)</div>1.000 μπλοκ των 4 KB = 3,906 MB. Χωρίς seek/περιστροφή: t<sub>seq</sub> = 1000·4KB / 600MB/s = <strong>6,51 ms</strong> (τυχαία λίγο παραπάνω). Σύγκρινε με 38 ms σειριακά / 16 s τυχαία στον HDD.</div>
+  <div class="section-quiz" data-topic="topic1" data-section="ssd"></div>
+</section>
+
+<section id="controller">
+  <div class="sh"><div class="sh-icon" style="background:var(--bdim)">🔌</div><h2>6. Υποσύστημα Δίσκων & Controller</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Ο controller «γεφυρώνει» CPU/RAM με τα μέσα. Διεπαφές: SCSI, SATA-2/3 (καταναλωτικά), 12/24 Gbps SAS και iSCSI (enterprise), NVMe (και τα δύο).</p>
+  <table class="vtbl"><thead><tr><th>Λειτουργία</th><th>Τι σημαίνει</th></tr></thead><tbody>
+    <tr><td><strong>Command translation</strong></td><td>LBA του ΛΣ → τροχιές/τομείς HDD ή σελίδες SSD · μεταφράζει πρωτόκολλα PCIe/SATA3/SAS σε εσωτερικές εντολές</td></tr>
+    <tr><td><strong>Traffic control</strong></td><td>ροές bytes, DMA engines, serialization/deserialization</td></tr>
+    <tr><td><strong>Scheduling & cache</strong></td><td>NCQ, multiqueues για NVMe, read prefetching, write buffering</td></tr>
+    <tr><td><strong>Αξιοπιστία</strong></td><td>ECC on the fly, bad block remapping, S.M.A.R.T.</td></tr>
+    <tr><td><strong>RAID controllers</strong></td><td>υπολογισμός parity, logical volumes</td></tr>
+    <tr><td><strong>Ασφάλεια & ενέργεια</strong></td><td>AES-256 για self-encrypting drives, power states</td></tr></tbody></table>
+  <div class="section-quiz" data-topic="topic1" data-section="controller"></div>
+</section>
+
+<section id="tertiary">
+  <div class="sh"><div class="sh-icon" style="background:var(--bdim)">📼</div><h2>7. Τριτογενής Αποθήκευση</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Χαμηλότερα στην ιεραρχία, μη πτητική, αργή, για <strong>ανάκαμψη/αρχειοθέτηση</strong>. Οπτικοί δίσκοι (αρχικά <strong>WORM</strong> — Write Once Read Many· από τα '00s επανεγγράψιμοι CD-RW, DVD+RW, DVD-RAM) και μαγνητικές ταινίες.</p>
+  <div class="grid2">
+    <div><table class="vtbl"><thead><tr><th></th><th>CD-R/DVD-R</th><th>CD-RW / DVD+RW</th></tr></thead><tbody>
+      <tr><td>Αλλαγή</td><td>μόνιμη</td><td>επανεγγράψιμα</td></tr><tr><td>Χωρητικότητα</td><td>700 MB / 4,7 GB</td><td>~700 MB / ~4,7 GB</td></tr>
+      <tr><td>Κύκλοι εγγραφής</td><td>1</td><td>~1.000</td></tr><tr><td>Tampering</td><td>πολύ χαμηλό</td><td>υψηλό</td></tr><tr><td>Τεχνολογία</td><td>organic dye</td><td>phase-change alloy</td></tr></tbody></table></div>
+    <div><div class="card-title">Ταινίες</div><ul style="font-size:.9rem"><li>Σειριακές, κρατούν δεδομένα <strong>30+ χρόνια</strong>· κόστος/TB ~1/3–1/5 των enterprise HDD.</li><li>Συμπίεση on the fly — χωρητικότητα native & compressed (~2,5:1).</li><li>LTO-9: 18/45 TB · LTO-10: 40/75 TB · IBM TS1170: 50/150 TB.</li></ul>
+      <div class="card-title">Soft-WORM σε HDD</div><p style="font-size:.88rem">Αμεταβλητότητα (immutability) με πολιτικές λογισμικού για ορισμένο χρόνο — προστασία backups από ransomware· tiered retention: ΣΔΒΔ 90 ημ., audit logs 3 έτη, οικονομικά 7, ιατρικά 10.</p></div>
+  </div>
+  <table class="vtbl"><thead><tr><th>Μέσο</th><th>Χρόνος ως το 1ο byte</th><th>Σειριακό transfer</th><th>Καλύτερο για</th></tr></thead><tbody>
+    <tr><td>SSD (NVMe/SATA3)</td><td>~0,02–0,1 ms</td><td>500–14.000+ MB/s</td><td>πολύ γρήγορη πρόσβαση σε ενεργά δεδομένα</td></tr>
+    <tr><td>HDD</td><td>4–10 ms</td><td>150–280 MB/s</td><td>ενεργά δεδομένα</td></tr>
+    <tr><td>Soft-WORM σε HDD</td><td>4–10 ms</td><td>150–280 MB/s</td><td>αρχεία άμεσης πρόσβασης</td></tr>
+    <tr><td>CD/DVD/Bluray</td><td>100–300 ms</td><td>10–54 MB/s</td><td>μικρά incremental archives</td></tr>
+    <tr><td>Ταινία LTO</td><td>30–120+ s</td><td>400–1.000 MB/s</td><td>μαζική συνεχή ροή δεδομένων</td></tr></tbody></table>
+  <div class="section-quiz" data-topic="topic1" data-section="tertiary"></div>
+</section>
+
+<section id="raid">
+  <div class="sh"><div class="sh-icon" style="background:var(--bdim)">🗄️</div><h2>8. RAID — Redundant Arrays of Inexpensive Disks</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Οι καθυστερήσεις του HDD δεν αποφεύγονται — αλλά το <strong>throughput</strong> βελτιώνεται με <strong>παραλληλισμό</strong>: πολλοί δίσκοι ταυτόχρονα «κρύβουν» το latency (ευκολότερο: αντίγραφα σε πολλούς δίσκους· ενισχύθηκε από τη μείωση κόστους των HDD).</p>
+  <div class="grid2">
+    <div><div class="card-title">Data striping</div><p style="font-size:.9rem">Stripe unit = byte, bit ή μπλοκ. Ο πίνακας (αρχείο) = λογική σειρά stripes, κατανεμημένα round-robin:</p>
+      <div class="cells"><span class="h">D0</span><span>0</span><span>4</span><span>8</span><span>12</span></div>
+      <div class="cells"><span class="h">D1</span><span>1</span><span>5</span><span>9</span><span>13</span></div>
+      <div class="cells"><span class="h">D2</span><span>2</span><span>6</span><span>10</span><span>14</span></div>
+      <div class="cells"><span class="h">D3</span><span>3</span><span>7</span><span>11</span><span>15</span></div>
+      <p style="font-size:.85rem;color:var(--muted);margin-top:6px">Ο RAID ανακτά D μπλοκ τη φορά (D=4).</p></div>
+    <div><div class="card-title">Αξιοπιστία</div><p style="font-size:.9rem">Ανεξάρτητες βλάβες: MTTF δίσκου 50.000 h (~6 χρόνια) → πίνακας 100 δίσκων: <strong>50.000/100 = 500 h</strong>! Λύση: <strong>check disks</strong> με πληροφορία υγείας για τους D δίσκους.</p>
+      <p style="font-size:.9rem"><strong>Parity</strong> με 1 check disk: για κάθε θέση bit, μέτρα πόσα 1 έχουν οι D μονάδες· η διαφάνεια ορίζει: i περιττό → 0, αλλιώς → 1. Με μία βλάβη, ο check disk επιτρέπει <strong>ανακατασκευή</strong> του χαμένου (το bit που λείπει είναι αυτό που «διορθώνει» την ισοτιμία). Γενίκευση: <strong>reliability groups</strong>.</p></div>
+  </div>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th>Επίπεδο</th><th>Ιδέα</th><th>Check disks (D=4)</th><th>Αξιοποίηση</th><th>Σχόλια</th></tr></thead><tbody>
+    <tr><td><strong>0</strong></td><td>block striping</td><td>0</td><td>100%</td><td>καλύτερη ανάγνωση, <strong>καμία αξιοπιστία</strong></td></tr>
+    <tr><td><strong>1</strong></td><td>mirroring, χωρίς striping</td><td>4</td><td>50%</td><td>πολύ ακριβό· εγγραφή πρώτα στο ένα αντίγραφο μετά στο άλλο· 2 παράλληλες αναγνώσεις, στον δίσκο με μικρότερο αναμενόμενο χρόνο</td></tr>
+    <tr><td><strong>0+1</strong></td><td>striping + mirroring</td><td>4</td><td>50%</td><td>εγγραφές όπως RAID-1, συνεχόμενες αναγνώσεις με aggregate bandwidth</td></tr>
+    <tr><td><strong>2</strong></td><td>bit striping + Hamming ECC</td><td>3 (∝ log D)</td><td>57%</td><td>βρίσκει και ποιος δίσκος χάλασε· εγγραφή: διάβασε D+C, γράψε D+C</td></tr>
+    <tr><td><strong>3</strong></td><td>bit-interleaved parity</td><td>1</td><td>80%</td><td>τον χαλασμένο τον ξέρει ο controller· 1 I/O τη φορά· read-modify-write</td></tr>
+    <tr><td><strong>4</strong></td><td>block-interleaved parity</td><td>1</td><td>80%</td><td>μεγάλες αναγνώσεις με D δίσκους· ο check disk = σημείο συμφόρησης εγγραφών</td></tr>
+    <tr><td><strong>5</strong></td><td>block-interleaved, <strong>κατανεμημένη parity</strong> (round-robin σε D+1)</td><td>1</td><td>80%</td><td>πολλές εγγραφές ταυτόχρονα· μικρές εγγραφές θέλουν read-modify-write (χειρότερο από RAID-1)</td></tr>
+    <tr><td><strong>6</strong></td><td>P+Q (Reed-Solomon)</td><td>2</td><td>66%</td><td>αντέχει <strong>2</strong> βλάβες· μικρή εγγραφή = <strong>6 I/O</strong></td></tr></tbody></table></div>
+  <div class="keyfact"><strong>Ενημέρωση parity σε RAID-4/5 χωρίς ανάγνωση όλων των D μπλοκ:</strong><br><span style="font-family:'JetBrains Mono',monospace">NewParity = (OldData ⊕ NewData) ⊕ OldParity</span><br>→ μικρή εγγραφή = διάβασε παλιά δεδομένα + παλιά parity, γράψε νέα δεδομένα + νέα parity = <strong>4 I/O</strong>.</div>
+  <div class="gbox"><div class="lbl" style="color:var(--green)">Take-away (διαφάνεια 58)</div>Το επίπεδο εξαρτάται από τον φόρτο: RAID-0 βελτιώνει χωρίς κόστος αν η αξιοπιστία δεν μετρά · RAID-0+1 καλύτερο από RAID-1 με πολλές εγγραφές · RAID-2/3 δεν χρησιμοποιούνται (τα καλύπτουν τα 4/5) · RAID-5 &gt; RAID-4 · για 2 ταυτόχρονες βλάβες → RAID-6.</div>
+  <div id="raid-sim"></div>
+  <div class="section-quiz" data-topic="topic1" data-section="raid"></div>
+</section>
+
+<section id="cards">
+  <div class="sh"><div class="sh-icon" style="background:var(--bdim)">🗂️</div><h2>9. Flashcards κεφαλαίου</h2></div>
+  <div data-fc-deck="topic1"></div>
+  <div class="section-quiz" data-topic="topic1" data-section="cards"></div>
+</section>
+
+</div>
+<div class="footer">ΥΣΒΔ (k18) · ΕΚΠΑ · Topic 1: ΣΔΒΔ, Ιεραρχία Μνήμης, Δίσκοι & RAID</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  SimUI.hdd(document.getElementById('hdd-sim'));
+  SimUI.raid(document.getElementById('raid-sim'));
+});
+</script>
+</body>
+</html>

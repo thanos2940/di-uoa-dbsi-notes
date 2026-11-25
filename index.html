@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΥΣΒΔ · Πρόοδος — Διαδραστικές Σημειώσεις</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/base.css">
+    <style>
+        :root {
+            --bg:#05070a; --surf:#0c0f16; --surf2:#141822; --border:#1e2433;
+            --green:#4ade80; --green-rgb:74,222,128;
+            --blue:#60a5fa;  --purple:#c084fc;
+            --orange:#fb923c; --orange-rgb:251,146,60;
+            --txt:#f1f5f9; --muted:#94a3b8; --dim:#475569;
+        }
+        .hub-hero {
+            padding: 140px 40px 80px;
+            text-align: center;
+            background: radial-gradient(circle at 50% 0%, rgba(74,222,128,0.05) 0%, transparent 70%);
+        }
+        .hub-hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 800;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+            background: linear-gradient(to bottom, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hub-hero p {
+            font-size: 1.25rem; color: var(--muted);
+            max-width: 700px; margin: 0 auto 40px;
+        }
+        .search-container { max-width: 500px; margin: 0 auto; position: relative; }
+        .search-container input {
+            width: 100%;
+            background: var(--surf); border: 1px solid var(--border);
+            padding: 1.125rem 1.75rem; border-radius: 6.25rem;
+            color: var(--txt); font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem; outline: none;
+            transition: var(--transition);
+        }
+        .search-container input:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 20px rgba(74,222,128,0.1);
+        }
+        .topics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px; padding: 40px;
+            max-width: 1240px; margin: 0 auto;
+        }
+        .topic-card {
+            background: var(--surf); border: 1px solid var(--border);
+            border-radius: 20px; padding: 32px;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .topic-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--green); background: var(--surf2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .topic-card::before {
+            content: ''; position: absolute; top: 0; right: 0;
+            width: 100px; height: 100px;
+            background: linear-gradient(135deg, transparent, rgba(var(--green-rgb), 0.05));
+            border-radius: 0 0 0 100%;
+            transition: var(--transition);
+        }
+        .topic-card:hover::before {
+            width: 150px; height: 150px;
+            background: linear-gradient(135deg, transparent, rgba(var(--green-rgb), 0.1));
+        }
+        .topic-num {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--green); font-size: 0.875rem;
+            font-weight: 700; letter-spacing: 2px;
+        }
+        .topic-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem; color: var(--txt); font-weight: 700;
+        }
+        .topic-card p { color: var(--muted); font-size: 1rem; line-height: 1.7; }
+        .topic-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+        .tag {
+            font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;
+            color: var(--dim); background: rgba(255,255,255,0.03);
+            padding: 0.1875rem 0.625rem; border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+        html, body { overflow-x: hidden; }
+        @media (max-width: 640px) {
+            .topics-grid { grid-template-columns: 1fr; padding: 20px 16px; }
+            .hub-hero { padding: 110px 16px 40px; }
+            .topic-card { padding: 22px; }
+        }
+    </style>
+    <script src="js/nav.js" defer></script>
+</head>
+<body>
+    <div id="site-nav"></div>
+
+    <div class="hub-hero">
+        <div class="hero-label">ΥΣΒΔ k18 · ΕΚΠΑ · Ύλη προόδου: διαφάνειες 001–005</div>
+        <h1>ΥΣΒΔ · Πρόοδος</h1>
+        <p><strong>Υλοποίηση Συστημάτων Βάσεων Δεδομένων</strong> — διαδραστικές σημειώσεις για την πρόοδο: δίσκοι, buffer, οργάνωση αρχείων, ευρετήρια, B+ δέντρα, εξωτερική ταξινόμηση. Λίγος χρόνος μέχρι την πρόοδο; <a href="exam_prep.html">Ξεκίνα από το 🎯 Exam Prep</a>.</p>
+        <div class="search-container">
+            <input type="text" id="topic-search" placeholder="Αναζήτηση θέματος… (π.χ. LRU, B+, RAID)">
+        </div>
+    </div>
+
+    <div class="topics-grid">
+        <a href="exam_prep.html" class="topic-card" style="grid-column:1/-1; border-color: var(--green); background: linear-gradient(135deg, var(--surf), rgba(74,222,128,0.10)); flex-direction: row; align-items: center; gap: 24px; flex-wrap: wrap;">
+            <div style="font-size:3rem; line-height:1;">🎯</div>
+            <div style="flex:1; min-width:240px;">
+                <div class="topic-num" style="color: var(--green);">ΞΕΚΙΝΑ ΑΠΟ ΕΔΩ · ΠΡΟΟΔΟΣ ΑΥΡΙΟ</div>
+                <h3 style="margin:4px 0;">Exam Prep — τι πέφτει & πώς λύνεται</h3>
+                <p style="margin:0;">Το διαγώνισμα 2024 λυμένο με διαδραστικούς λύτες (βάλε το ΑΜ σου): B+ «νέα ρίζα» (24 μον.), ζεύξη με LRU, επεκτατός κατακερματισμός. Τυπολόγιο, συνταγές ταξινόμησης/RAID/HDD, <strong>πρότυπες απαντήσεις θεωρίας</strong> και drills Σ/Λ.</p>
+            </div>
+            <div class="topic-tags" style="margin:0;"><span class="tag" style="border-color:rgba(74,222,128,0.4); color:var(--green);">λυμένα θέματα</span><span class="tag">τυπολόγιο</span><span class="tag">Σ/Λ</span></div>
+        </a>
+        <div class="grid-group" style="grid-column:1/-1; display:flex; align-items:center; gap:14px; margin:22px 0 -6px;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:0.85rem; letter-spacing:3px; color:var(--blue); text-transform:uppercase;">① Αποθήκευση & Μνήμη</span>
+            <span style="flex:1; height:1px; background:var(--border);"></span>
+        </div>
+        <a href="topic1_storage.html" class="topic-card">
+            <div class="topic-num">TOPIC 01 · 001-intro</div>
+            <h3>ΣΔΒΔ, Δίσκοι, SSD & RAID</h3>
+            <p>Ιεραρχία μνήμης, χρόνος I/O του HDD (seek + περιστροφή + μεταφορά), NAND/SSD και write amplification, τριτογενής αποθήκευση, RAID 0–6 με parity.</p>
+            <div class="topic-tags"><span class="tag">HDD timing</span><span class="tag">SSD</span><span class="tag">RAID</span><span class="tag">simulator</span></div>
+        </a>
+        <a href="topic2_buffer.html" class="topic-card">
+            <div class="topic-num">TOPIC 02 · 002 (α)</div>
+            <h3>Disk Space & Buffer Manager</h3>
+            <p>Bitmap ελεύθερων μπλοκ, buffer pool, pin/dirty, αλγόριθμος αίτησης σελίδας, LRU/MRU/CLOCK/LRU-2, sequential flooding και εμφωλιασμένοι βρόχοι.</p>
+            <div class="topic-tags"><span class="tag">LRU vs MRU</span><span class="tag">CLOCK</span><span class="tag">LRU-2</span><span class="tag">simulator</span></div>
+        </a>
+        <a href="topic3_files.html" class="topic-card">
+            <div class="topic-num">TOPIC 03 · 002 (β)</div>
+            <h3>Αρχεία, Σελίδες & Εγγραφές</h3>
+            <p>Heap files, page directory, RID, πολιτικές ελεύθερου χώρου, packed/bitmap/slotted σελίδες, πεδία, row vs column, Parquet & ORC.</p>
+            <div class="topic-tags"><span class="tag">heap file</span><span class="tag">slotted</span><span class="tag">RID</span><span class="tag">Parquet</span></div>
+        </a>
+        <div class="grid-group" style="grid-column:1/-1; display:flex; align-items:center; gap:14px; margin:22px 0 -6px;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:0.85rem; letter-spacing:3px; color:var(--green); text-transform:uppercase;">② Ευρετήρια & Ταξινόμηση</span>
+            <span style="flex:1; height:1px; background:var(--border);"></span>
+        </div>
+        <a href="topic4_indexing.html" class="topic-card">
+            <div class="topic-num">TOPIC 04 · 003</div>
+            <h3>Ευρετήρια & Μοντέλο Κόστους</h3>
+            <p>A1/A2/A3, clustered vs unclustered, primary vs secondary, στατικός & επεκτατός κατακερματισμός, κόστος heap vs sorted, σύνθετα κλειδιά.</p>
+            <div class="topic-tags"><span class="tag">A1/A2/A3</span><span class="tag">hashing</span><span class="tag">cost model</span><span class="tag">simulator</span></div>
+        </a>
+        <a href="topic5_bplus.html" class="topic-card">
+            <div class="topic-num">TOPIC 05 · 004</div>
+            <h3>ISAM & B+ Δέντρα</h3>
+            <p>Dense/sparse, πολυεπίπεδα, ISAM, B+ εισαγωγή (copy-up/push-up) και διαγραφή (δανεισμός/συγχώνευση), bulk loading — με ζωντανό simulator.</p>
+            <div class="topic-tags"><span class="tag">B+ insert</span><span class="tag">B+ delete</span><span class="tag">ISAM</span><span class="tag">simulator</span></div>
+        </a>
+        <a href="topic6_extsort.html" class="topic-card">
+            <div class="topic-num">TOPIC 06 · 005</div>
+            <h3>Εξωτερική Ταξινόμηση</h3>
+            <p>2-way και B-way merge sort, πλήθος περασμάτων και κόστος, double buffering, replacement sort (runs ≈ 2B), ταξινόμηση με B+.</p>
+            <div class="topic-tags"><span class="tag">#passes</span><span class="tag">2N·passes</span><span class="tag">replacement sort</span><span class="tag">simulator</span></div>
+        </a>
+        <div class="grid-group" style="grid-column:1/-1; display:flex; align-items:center; gap:14px; margin:22px 0 -6px;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:0.85rem; letter-spacing:3px; color:var(--purple); text-transform:uppercase;">③ Εξάσκηση</span>
+            <span style="flex:1; height:1px; background:var(--border);"></span>
+        </div>
+        <a href="cram_sheet.html" class="topic-card" style="border-color: var(--yellow);">
+            <div class="topic-num" style="color: var(--yellow);">CRAM SHEET</div>
+            <h3>🖨️ Cram Sheet</h3>
+            <p>Μία σελίδα για εκτύπωση: όλοι οι τύποι, τα «θυμήσου» κάθε κεφαλαίου και checklist ετοιμότητας.</p>
+            <div class="topic-tags"><span class="tag">print</span><span class="tag">τύποι</span><span class="tag">checklist</span></div>
+        </a>
+        <a href="flashcards.html" class="topic-card" style="border-color: var(--purple); background: linear-gradient(135deg, var(--surf), rgba(192, 132, 252, 0.05));">
+            <div class="topic-num" style="color: var(--purple);">FLASHCARDS</div>
+            <h3>Flashcards Test 🗂️</h3>
+            <p>Κάρτες θεωρίας με υποδείξεις από όλα τα κεφάλαια — πέρνα τες σαν τεστ.</p>
+            <div class="topic-tags"><span class="tag">theory</span><span class="tag">flip cards</span><span class="tag">self-test</span></div>
+        </a>
+        <a href="interactive_quiz.html" class="topic-card" style="border-color: var(--purple); background: linear-gradient(135deg, var(--surf), rgba(192, 132, 252, 0.05));">
+            <div class="topic-num" style="color: var(--purple);">PRACTICE</div>
+            <h3>Interactive Quiz</h3>
+            <p>Τεστ πολλαπλών επιλογών με εξηγήσεις για κάθε επιλογή, από όλα τα κεφάλαια και το exam prep.</p>
+            <div class="topic-tags"><span class="tag">interactive</span><span class="tag">test</span><span class="tag">practice</span></div>
+        </a>
+        <div class="grid-group" style="grid-column:1/-1; display:flex; align-items:center; gap:14px; margin:22px 0 -6px;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:0.85rem; letter-spacing:3px; color:var(--dim); text-transform:uppercase;">④ Υπόλοιπη ύλη (εκτός προόδου — για το τελικό)</span>
+            <span style="flex:1; height:1px; background:var(--border);"></span>
+        </div>
+        <a href="old_index.html" class="topic-card" style="border-color: var(--border); opacity:.85;">
+            <div class="topic-num" style="color: var(--dim);">ΑΡΧΕΙΟ</div>
+            <h3>Παλιές σημειώσεις & simulators</h3>
+            <p>Οι προηγούμενες σελίδες: ζεύξεις, βελτιστοποίηση, σειριοποιησιμότητα & 2PL, lock manager, conflict graph, παλιό τυπολόγιο.</p>
+            <div class="topic-tags"><span class="tag">joins</span><span class="tag">2PL</span><span class="tag">serializability</span></div>
+        </a>
+
+    </div>
+
+    <div class="footer">ΥΣΒΔ k18 · ΕΚΠΑ · Course Notes</div>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 6 · Εξωτερική Ταξινόμηση</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/chapter.css">
+<link rel="stylesheet" href="styles/sims.css">
+<style>
+.hero{background:linear-gradient(150deg,var(--bg) 0%,var(--rdim) 55%,var(--bg) 100%)}
+.hero::after{content:'2N · (1 + ⌈log_{B−1}⌈N/B⌉⌉)';color:rgba(248,81,73,.07)}
+</style>
+<script src="js/nav.js" defer></script>
+<script src="data/questions.js" defer></script>
+<script src="js/quiz-loader.js" defer></script>
+<script src="data/flashcards.js" defer></script>
+<script src="js/flashcards.js" defer></script>
+<script src="js/sims/extsort.js" defer></script>
+<script src="js/sims/widgets.js" defer></script>
+</head>
+<body>
+<div id="site-nav"></div>
+
+<div class="hero">
+  <div class="hero-label">ΥΣΒΔ k18 · Topic 6 · διαφάνειες 005-ExternalSorting</div>
+  <h1>Εξωτερική <em>Ταξινόμηση</em></h1>
+  <p>Πώς ταξινομείς ένα αρχείο N σελίδων με μόνο B πλαίσια μνήμης: runs, συγχωνεύσεις B−1 δρόμων, ο τύπος του κόστους, double buffering, replacement sort (runs ≈ 2B) και πότε ένα B+ δέντρο κάνει τη δουλειά για σένα.</p>
+  <div class="chips"><span class="chip">runs</span><span class="chip">2-way merge</span><span class="chip">B−1 way merge</span><span class="chip">#passes</span><span class="chip">replacement sort</span><span class="chip">B+ sorting</span></div>
+</div>
+
+<nav class="toc">
+  <a href="#essence">🎯 Η Ουσία</a>
+  <a href="#why">Γιατί</a>
+  <a href="#twoway">2-way</a>
+  <a href="#general">B-way</a>
+  <a href="#table">Πίνακας</a>
+  <a href="#double">Double buffering</a>
+  <a href="#replacement">Replacement sort</a>
+  <a href="#bplussort">Με B+</a>
+  <a href="#cards6">Flashcards</a>
+</nav>
+
+<div class="wrap">
+
+<section id="essence">
+  <div class="sh"><div class="sh-icon" style="background:var(--gdim)">🎯</div><h2>Η Ουσία σε 60 δευτερόλεπτα</h2></div>
+  <div class="gbox"><div class="lbl" style="color:var(--green)">ΤΙ ΚΑΝΕΙ</div>Όταν τα δεδομένα δεν χωράνε στη μνήμη: (1) <strong>κόψε</strong> το αρχείο σε κομμάτια που χωράνε, ταξινόμησέ τα στη μνήμη και γράψ' τα πίσω ως ταξινομημένα <strong>runs</strong>· (2) <strong>συγχώνευσε</strong> πολλά runs ταυτόχρονα (όσα επιτρέπουν τα πλαίσια) σε μεγαλύτερα, ξανά και ξανά, μέχρι να μείνει ένα. Κάθε πέρασμα διαβάζει και γράφει όλο το αρχείο: <strong>2N I/O ανά πέρασμα</strong>.</div>
+  <p style="margin-bottom:14px"><strong>Διαίσθηση:</strong> ταξινόμηση 1.000 γραπτών με γραφείο που χωρά 10: φτιάχνεις 100 ταξινομημένες στοίβες των 10· μετά παίρνεις 9 στοίβες μαζί, κοιτάς τα «πάνω» γραπτά και βγάζεις κάθε φορά το μικρότερο σε νέα στοίβα (το 10ο σημείο του γραφείου είναι η έξοδος). Όσο μεγαλύτερο γραφείο, τόσο λιγότερα «γύρα».</p>
+  <div class="compare">
+    <div class="good-side"><div class="side-label" style="color:var(--green)">✅ Λιγότερα περάσματα όταν…</div><ul style="font-size:0.86rem;padding-left:18px;line-height:1.7;margin:0"><li>μεγαλώνει το B (λογαριθμική βάση B−1)</li><li>τα αρχικά runs είναι μακρύτερα (replacement sort ≈ 2B)</li><li>υπάρχει clustered B+ στο κλειδί</li></ul></div>
+    <div class="bad-side"><div class="side-label" style="color:var(--red)">❌ Ακριβό όταν…</div><ul style="font-size:0.86rem;padding-left:18px;line-height:1.7;margin:0"><li>B = 3 (2-way) σε τεράστιο N</li><li>χρησιμοποιείς <strong>unclustered</strong> B+ για ταξινόμηση (ίδιο μπλοκ ξανά και ξανά)</li><li>αφήνεις την εικονική μνήμη να κάνει «εσωτερική» ταξινόμηση</li></ul></div>
+  </div>
+  <div class="tip"><div class="tip-icon">📝</div><div class="tip-text"><strong>Για τις εξετάσεις θυμήσου:</strong> (1) Πέρασμα 0: <strong>⌈N/B⌉</strong> runs των B σελίδων. (2) Κάθε επόμενο πέρασμα συγχωνεύει <strong>B−1</strong> runs (1 πλαίσιο έξοδος). (3) <strong>#περάσματα = 1 + ⌈log<sub>B−1</sub>⌈N/B⌉⌉</strong>, <strong>κόστος = 2N · #περάσματα</strong>. (4) Replacement sort: B−2 current set, 1 input, 1 output, μέσο μήκος run ≈ <strong>2B</strong>.</div></div>
+</section>
+
+<section id="why">
+  <div class="sh"><div class="sh-icon" style="background:var(--rdim)">❓</div><h2>1. Γιατί Ταξινόμηση;</h2></div>
+  <div class="grid2">
+    <div><ul style="font-size:.92rem"><li>Δεδομένα ζητούνται <strong>σε σειρά</strong> (ORDER BY).</li><li><strong>Bulk loading</strong> ευρετηρίων (B+) — <a href="topic5_bplus.html#bulk">Topic 5</a>.</li><li><strong>Απαλοιφή διπλοτύπων</strong>.</li><li><strong>GROUP BY</strong>.</li><li>Απαραίτητη για τη <strong>Sort-Merge ζεύξη</strong>.</li></ul></div>
+    <div><div class="card-title">Το βασικό ερώτημα</div><p style="font-size:.92rem">Τι γίνεται αν τα δεδομένα <strong>δεν χωράνε</strong> στη μνήμη; Να αφήσουμε την εικονική μνήμη να κάνει μια «εσωτερική» ταξινόμηση (π.χ. heap-sort); Όχι — οι τυχαίες προσπελάσεις θα γίνουν page faults/I/O. Χρησιμοποιούμε <strong>διαίρει και βασίλευε</strong> με «runs» σε φάσεις, με τα διαθέσιμα buffers.</p></div></div>
+  <div class="section-quiz" data-topic="topic6" data-section="why"></div>
+</section>
+
+<section id="twoway">
+  <div class="sh"><div class="sh-icon" style="background:var(--rdim)">✌️</div><h2>2. 2-Way Merge Sort</h2></div>
+  <div class="grid2">
+    <div><ul style="font-size:.92rem">
+      <li><strong>Φάση 0</strong> με <strong>1 buffer</strong>: κάθε μπλοκ διαβάζεται, ταξινομείται, γράφεται πίσω → κάθε σελίδα γίνεται ένα <strong>run</strong>.</li>
+      <li><strong>Φάση 1, 2, …</strong> με <strong>τουλάχιστον 3 buffers</strong>: 2 για είσοδο (ένα από κάθε run) + 1 για έξοδο· συγχωνεύονται ζεύγη runs → runs διπλάσιου μεγέθους.</li>
+      <li>Κάθε φάση: 1 πλήρης ανάγνωση + 1 πλήρης εγγραφή = <strong>2N I/O</strong>.</li></ul></div>
+    <div class="dg" style="margin:0"><div class="dg-row" style="align-items:center">
+      <div class="dg-col" style="flex:0 0 120px"><div class="dg-box" style="border-color:var(--blue)"><div class="t">input1 (run)</div></div><div class="dg-box" style="border-color:var(--green)"><div class="t">input2 (run)</div></div></div>
+      <div class="dg-arrow">→</div><div class="dg-box" style="flex:0 0 110px;border-color:var(--orange)"><div class="t">output buffer</div><div class="s">→ νέο run στον δίσκο</div></div></div>
+      <div style="font-size:.78rem;color:var(--muted);text-align:center;margin-top:6px">3 buffers στη μνήμη</div></div></div>
+  <div class="card"><div class="card-title">Παράδειγμα διαφάνειας: 7 σελίδες των 2 εγγραφών</div>
+    <div class="strip"><span class="lbl">αρχείο</span><span class="blk">3,4</span><span class="blk">6,2</span><span class="blk">9,4</span><span class="blk">8,7</span><span class="blk">5,6</span><span class="blk">3,1</span><span class="blk">2</span></div>
+    <div class="strip"><span class="lbl">PASS 0</span><span class="blk run0">3,4</span><span class="blk run1">2,6</span><span class="blk run2">4,9</span><span class="blk run3">7,8</span><span class="blk run4">5,6</span><span class="blk run5">1,3</span><span class="blk run0">2</span><span style="font-size:.72rem;color:var(--muted);align-self:center">1-page runs</span></div>
+    <div class="strip"><span class="lbl">PASS 1</span><span class="blk run0">2,3 4,6</span><span class="blk run1">4,7 8,9</span><span class="blk run2">1,3 5,6</span><span class="blk run3">2</span><span style="font-size:.72rem;color:var(--muted);align-self:center">2-page runs</span></div>
+    <div class="strip"><span class="lbl">PASS 2</span><span class="blk run0">2,3 4,4 6,7 8,9</span><span class="blk run1">1,2 3,5 6</span><span style="font-size:.72rem;color:var(--muted);align-self:center">4-page runs</span></div>
+    <div class="strip"><span class="lbl">PASS 3</span><span class="blk run2">1,2 2,3 3,4 4,5 6,6 7,8 9</span><span style="font-size:.72rem;color:var(--muted);align-self:center">8-page run</span></div>
+    <p style="font-size:.9rem;margin:8px 0 0">N = 7 → <strong>4 περάσματα</strong> (PASS 0–3) = <strong>1 + ⌈log₂7⌉</strong>, κόστος 2·7·4 = <strong>56 I/O</strong>.</p></div>
+  <div class="wbox"><div class="lbl" style="color:var(--yellow)">⚠️ Προσοχή στον τύπο της διαφάνειας</div>Η διαφάνεια γράφει «#περάσματα = ⌈log₂(N/2)⌉» και «κόστος 2N·⌈log₂(N/2)⌉». Το δικό της σχήμα όμως (N=7) έχει 4 περάσματα, που δίνει ο κλασικός τύπος <strong>1 + ⌈log₂N⌉</strong> (πέρασμα 0 + ⌈log₂N⌉ συγχωνεύσεις). Στο γραπτό γράψε τον κλασικό τύπο και εξήγησε τι μετράς (π.χ. «πέρασμα 0 + 3 φάσεις συγχώνευσης»).</div>
+  <div id="merge-viz"></div>
+  <div class="section-quiz" data-topic="topic6" data-section="twoway"></div>
+</section>
+
+<section id="general">
+  <div class="sh"><div class="sh-icon" style="background:var(--rdim)">🧮</div><h2>3. Γενικευμένη External Merge Sort (B πλαίσια)</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Γενίκευση: αν έχουμε B−1 buffers για είσοδο και 1 για έξοδο, συγχωνεύουμε B−1 runs μαζί.</p>
+  <div class="grid2">
+    <div><ul style="font-size:.92rem">
+      <li><strong>Πέρασμα 0</strong>: με <strong>όλα τα B</strong> buffers κάθε φορά → ⌈N/B⌉ αρχικά ταξινομημένα runs (μήκους B σελίδων).</li>
+      <li><strong>Περάσματα 1, 2, …</strong>: B−1 είσοδοι + 1 έξοδος → συγχώνευση <strong>B−1 runs</strong>.</li></ul>
+      <div class="keyfact" style="font-family:'JetBrains Mono',monospace;font-size:.9rem">#περάσματα = 1 + ⌈log<sub>B−1</sub>⌈N/B⌉⌉<br>κόστος = 2·N·(#περάσματα)</div>
+      <p style="font-size:.82rem;color:var(--muted)">Η διαφάνεια γράφει ⌈N/(B−1)⌉ για τα runs του περάσματος 0· ο πίνακας της επόμενης διαφάνειας όμως ταιριάζει ακριβώς με ⌈N/B⌉ (π.χ. N=10.000, B=3 → 13). Συνήθως βγαίνει το ίδιο αποτέλεσμα· ο simulator δείχνει και τα δύο.</p></div>
+    <div class="dg" style="margin:0"><div class="dg-row" style="align-items:center">
+      <div class="dg-col" style="flex:0 0 110px"><div class="dg-box"><div class="t">input 0</div></div><div class="dg-box"><div class="t">input 1</div></div><div class="dg-box" style="border-style:dashed"><div class="t">…</div></div><div class="dg-box"><div class="t">input B−2</div></div></div>
+      <div class="dg-arrow">→</div><div class="dg-box" style="flex:0 0 110px;border-color:var(--orange)"><div class="t">output</div><div class="s">νέο run</div></div></div>
+      <div style="font-size:.78rem;color:var(--muted);text-align:center;margin-top:6px">B buffers: B−1 είσοδοι + 1 έξοδος</div></div></div>
+  <div class="card"><div class="card-title">Λυμένο παράδειγμα: N = 108 σελίδες, B = 5</div>
+    <div class="thread-diagram"><span style="color:var(--yellow)">Πέρασμα 0:</span> ⌈108/5⌉ = <b>22</b> runs των 5 σελίδων (το τελευταίο 3)<br><span style="color:var(--yellow)">Πέρασμα 1:</span> ⌈22/4⌉ = <b>6</b> runs των 20 σελίδων<br><span style="color:var(--yellow)">Πέρασμα 2:</span> ⌈6/4⌉ = <b>2</b> runs των 80 σελίδων<br><span style="color:var(--yellow)">Πέρασμα 3:</span> ⌈2/4⌉ = <b>1</b> run = ταξινομημένο αρχείο<br><span style="color:var(--green);font-weight:700">Σύνολο:</span> 4 περάσματα = 1 + ⌈log₄22⌉ → κόστος 2·108·4 = <b>864 I/O</b></div></div>
+  <div class="card"><div class="card-title">Παράδειγμα διαφάνειας: m-way, Pass 0 με 5 buffers</div><p style="font-size:.9rem;margin:0">Κάθε μπλοκ έχει έως 2 εγγραφές· 1 buffer κρατιέται για τα ενδιάμεσα αποτελέσματα (έξοδο). Καθώς τα μπλοκ είναι στη μνήμη, επιλέγεται κάθε φορά το <strong>μικρότερο κλειδί</strong> για τη δημιουργία των runs. Ο αριθμός B των πλαισίων είναι <strong>κρίσιμος</strong>: όσο αυξάνει, τόσο μεγαλύτερα τα οφέλη.</p></div>
+  <div id="sort-calc"></div>
+  <div class="tip"><div class="tip-icon">🎯</div><div><div class="tip-title">Exam Focus — «Πόσα περάσματα / πόσα I/O;»</div><div class="tip-text">Γράψε πάντα τα βήματα: runs του περάσματος 0 → διαίρεση με B−1 σε κάθε πέρασμα (στρογγυλοποίηση προς τα πάνω) → πλήθος περασμάτων → ×2N. Το συνηθισμένο λάθος: διαίρεση με B αντί B−1 στη συγχώνευση. <a href="exam_prep.html#sorting">Exam Prep → Ταξινόμηση</a>.</div></div></div>
+  <div class="section-quiz" data-topic="topic6" data-section="general"></div>
+</section>
+
+<section id="table">
+  <div class="sh"><div class="sh-icon" style="background:var(--rdim)">📊</div><h2>4. Περάσματα συναρτήσει N και B</h2></div>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th>N</th><th>B=3</th><th>B=5</th><th>B=9</th><th>B=17</th><th>B=129</th><th>B=257</th></tr></thead><tbody>
+    <tr><td>100</td><td>7</td><td>4</td><td>3</td><td>2</td><td>1</td><td>1</td></tr>
+    <tr><td>1.000</td><td>10</td><td>5</td><td>4</td><td>3</td><td>2</td><td>2</td></tr>
+    <tr><td>10.000</td><td>13</td><td>7</td><td>5</td><td>4</td><td>2</td><td>2</td></tr>
+    <tr><td>100.000</td><td>17</td><td>9</td><td>6</td><td>5</td><td>3</td><td>3</td></tr>
+    <tr><td>1.000.000</td><td>20</td><td>10</td><td>7</td><td>5</td><td>3</td><td>3</td></tr>
+    <tr><td>10.000.000</td><td>23</td><td>12</td><td>8</td><td>6</td><td>4</td><td>3</td></tr>
+    <tr><td>100.000.000</td><td>26</td><td>14</td><td>9</td><td>7</td><td>4</td><td>4</td></tr>
+    <tr><td>1.000.000.000</td><td>30</td><td>15</td><td>10</td><td>8</td><td>5</td><td>4</td></tr></tbody></table></div>
+  <p style="font-size:.92rem">Παρά το τεράστιο N, <strong>μέτριες αυξήσεις του B</strong> δίνουν σημαντικά λιγότερα περάσματα. Με B=257 ταξινομείς 1 δισ. σελίδες σε 4 περάσματα.</p>
+  <div class="section-quiz" data-topic="topic6" data-section="table"></div>
+</section>
+
+<section id="double">
+  <div class="sh"><div class="sh-icon" style="background:var(--rdim)">🪞</div><h2>5. Double Buffering</h2></div>
+  <p>Ιδέα: δέσμευσε <strong>«σκιώδη» (shadow) input/output buffers</strong>. Ενώ η CPU συγχωνεύει από το ένα σετ buffers, ο δίσκος γεμίζει/αδειάζει το άλλο → <strong>πολυπλεξία CPU και I/O</strong> και μικρότερος συνολικός χρόνος απόκρισης (turnaround). Κόστος: διπλάσιος χώρος ανά ρεύμα → λιγότερα runs συγχωνεύονται ανά πέρασμα (μικρότερο fan-in), αλλά δεν περιμένουμε ποτέ τον δίσκο.</p>
+  <div class="dg"><div class="dg-row"><div class="dg-box" style="border-color:var(--green)"><div class="t">buffer A</div><div class="s">η CPU επεξεργάζεται</div></div><div class="dg-arrow">⇄</div><div class="dg-box" style="border-color:var(--blue)"><div class="t">buffer A′ (shadow)</div><div class="s">ο δίσκος γεμίζει παράλληλα</div></div></div></div>
+  <div class="section-quiz" data-topic="topic6" data-section="double"></div>
+</section>
+
+<section id="replacement">
+  <div class="sh"><div class="sh-icon" style="background:var(--rdim)">♻️</div><h2>6. Replacement Sort — Μακρύτερα Runs</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Στόχος: <strong>μεγαλύτερα</strong> αρχικά runs → λιγότερα runs → λιγότερες φάσεις συγχώνευσης. Το Πέρασμα 0 είναι εντελώς διαφορετικό από το κλασικό.</p>
+  <div class="grid2">
+    <div><div class="card-title">Κατανομή των B buffers</div><ol style="font-size:.92rem"><li><strong>B−2</strong> = current set (κρατά R εγγραφές)</li><li><strong>1</strong> input buffer</li><li><strong>1</strong> output buffer</li></ol><p style="font-size:.88rem">Αρχικά φορτώνονται τα πρώτα B−2 μπλοκ στο current set και το επόμενο στο input.</p></div>
+    <div><div class="card-title">Αλγόριθμος</div><ol style="font-size:.9rem"><li>Οι εγγραφές του input μπαίνουν στις θέσεις του current set που άδειασαν (έφυγαν προς την έξοδο).</li><li>Όταν το input αδειάσει, διαβάζεται το επόμενο μπλοκ.</li><li>Μια εγγραφή μπαίνει στο output μόνο αν το κλειδί της είναι <strong>≥ l</strong>, το μεγαλύτερο κλειδί που έχει βγει ως τώρα (συνθήκη).</li><li>Το run τελειώνει όταν <strong>κανένα</strong> κλειδί του current set δεν πληροί τη συνθήκη.</li></ol></div></div>
+  <div class="card"><div class="card-title">Παράδειγμα διαφάνειας (M = 7: 1 input, 1 output, 5 current set, 2 εγγραφές/μπλοκ)</div><p style="font-size:.9rem;margin:0">Το run που σχηματίζεται έχει ήδη γράψει τα μπλοκ <strong>[14,16], [17,20], [21,22]</strong> με l = 22, και συνεχίζει με <strong>[23,25]</strong> (l = 25) … Κλειδιά μικρότερα από l που μπαίνουν από το input (π.χ. 12, 13, 17, 18, 19) «περιμένουν» για το επόμενο run.</p></div>
+  <table class="vtbl"><thead><tr><th>Περίπτωση</th><th>Μήκος runs του Περάσματος 0</th></tr></thead><tbody>
+    <tr><td>Χειρότερη (φθίνουσα είσοδος)</td><td>1 μπλοκ… (κάθε νέο κλειδί &lt; l)</td></tr>
+    <tr><td>Καλύτερη (ήδη ταξινομημένη)</td><td>ένα run με όλα τα N μπλοκ σε ένα πέρασμα</td></tr>
+    <tr><td>Τυχαία κλειδιά</td><td>μέσο μήκος <strong>≈ 2·B</strong> ⇒ ελάχιστες φάσεις συγχώνευσης</td></tr></tbody></table>
+  <div id="repl-sim"></div>
+  <div class="section-quiz" data-topic="topic6" data-section="replacement"></div>
+</section>
+
+<section id="bplussort">
+  <div class="sh"><div class="sh-icon" style="background:var(--rdim)">🌳</div><h2>7. Ταξινόμηση με B+ Δέντρο</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Αν ο πίνακας έχει ήδη B+ ευρετήριο στις στήλες ταξινόμησης: γιατί να μη διασχίσουμε τα φύλλα με τη σειρά;</p>
+  <div class="compare">
+    <div class="good-side"><div class="side-label" style="color:var(--green)">Case I: Clustered → δουλεύει καλά</div><ul style="font-size:.86rem;margin:0"><li><strong>A1</strong>: ρίζα → αριστερότερο φύλλο, μετά διάσχιση όλων των φύλλων (οι εγγραφές είναι εκεί).</li><li><strong>A2</strong>: ίδια διάσχιση, αλλά για κάθε μπλοκ δεδομένων ένα I/O — επειδή είναι clustered, κάθε μπλοκ διαβάζεται περίπου μία φορά.</li></ul></div>
+    <div class="bad-side"><div class="side-label" style="color:var(--red)">Case II: Unclustered (A3) → όχι καλά</div><ul style="font-size:.86rem;margin:0"><li>Τα φύλλα έχουν κλειδιά + recIDs σε σκόρπια μπλοκ.</li><li>Διασχίζοντας με αύξουσα σειρά, το <strong>ίδιο μπλοκ</strong> μπορεί να ζητηθεί <strong>πολλές φορές</strong> → έως ένα I/O ανά εγγραφή → συχνά χειρότερο από external sort.</li></ul></div></div>
+  <div class="section-quiz" data-topic="topic6" data-section="bplussort"></div>
+</section>
+
+<section id="cards6">
+  <div class="sh"><div class="sh-icon" style="background:var(--rdim)">🗂️</div><h2>8. Flashcards κεφαλαίου</h2></div>
+  <div data-fc-deck="topic6"></div>
+  <div class="section-quiz" data-topic="topic6" data-section="cards6"></div>
+</section>
+
+</div>
+<div class="footer">ΥΣΒΔ (k18) · ΕΚΠΑ · Topic 6: Εξωτερική Ταξινόμηση</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  SimUI.mergeViz(document.getElementById('merge-viz'));
+  SimUI.extSortCalc(document.getElementById('sort-calc'));
+  SimUI.replSel(document.getElementById('repl-sim'));
+});
+</script>
+</body>
+</html>

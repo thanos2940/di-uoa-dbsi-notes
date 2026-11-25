@@ -231,7 +231,7 @@
     el.classList.add('sim');
     el.innerHTML = `<div class="sim-title">🧩 Βήμα-βήμα: runs ανά πέρασμα</div>
       <div class="sim-controls"><label style="flex:1;min-width:220px">κλειδιά <input type="text" class="wide k" value="3 4 6 2 9 4 8 7 5 6 3 1 2"></label></div>
-      <div class="sim-controls"><label>εγγραφές/σελίδα <input type="number" class="r" min="1" max="4" value="2"></label><label>B πλαίσια <input type="number" class="b" min="3" max="9" value="3"></label><button class="sim-btn rnd">🎲 τυχαία</button></div>
+      <div class="sim-controls"><label>εγγραφές/σελίδα <input type="number" class="r" min="1" max="4" value="2"></label><label>B πλαίσια <input type="number" class="b" min="3" max="9" value="3"></label><label><input type="checkbox" class="one" checked> πέρασμα 0 ανά σελίδα (2-way διαφάνειας)</label><button class="sim-btn rnd">🎲 τυχαία</button></div>
       <div class="o"></div>`;
     function pages(arr, r) { const p = []; for (let i = 0; i < arr.length; i += r) p.push(arr.slice(i, i + r)); return p; }
     function run() {
@@ -240,14 +240,15 @@
       const pg = pages(keys, r); let html = '';
       const strip = (label, runs) => `<div class="strip"><span class="lbl">${label}</span>${runs.map((run, ri) => pages(run, r).map(p => `<span class="blk run${ri % 6}">${p.join(',')}</span>`).join('')).join('<span style="width:10px"></span>')}</div>`;
       html += strip('αρχείο', [keys]);
-      let runs = []; for (let i = 0; i < pg.length; i += B) runs.push(pg.slice(i, i + B).flat().sort((a, b) => a - b));
+      const p0 = el.querySelector('.one').checked ? 1 : B;
+      let runs = []; for (let i = 0; i < pg.length; i += p0) runs.push(pg.slice(i, i + p0).flat().sort((a, b) => a - b));
       html += strip('πέρασμα 0', runs);
       let pass = 1, io = 2 * pg.length;
       while (runs.length > 1) {
         const nr = []; for (let i = 0; i < runs.length; i += B - 1) nr.push(runs.slice(i, i + B - 1).flat().sort((a, b) => a - b));
         runs = nr; html += strip('πέρασμα ' + pass, runs); pass++; io += 2 * pg.length;
       }
-      html += `<div class="sim-note">N = ${pg.length} σελίδες, ${pass} περάσματα, κόστος 2·N·περάσματα = <b>${io}</b> I/O. Κάθε χρώμα = ένα run. Πέρασμα 0: γεμίζουμε τα B πλαίσια, ταξινομούμε στη μνήμη· μετά συγχωνεύουμε B−1 runs τη φορά (1 πλαίσιο για έξοδο).</div>`;
+      html += `<div class="sim-note">N = ${pg.length} σελίδες, ${pass} περάσματα, κόστος 2·N·περάσματα = <b>${io}</b> I/O. Κάθε χρώμα = ένα run. Πέρασμα 0: κάθε σελίδα (2-way) ή κάθε γέμισμα των B πλαισίων ταξινομείται στη μνήμη· μετά συγχωνεύουμε B−1 runs τη φορά (1 πλαίσιο για έξοδο).</div>`;
       el.querySelector('.o').innerHTML = html;
     }
     el.querySelector('.rnd').onclick = () => { el.querySelector('.k').value = Array.from({ length: 16 }, () => Math.floor(Math.random() * 40)).join(' '); run(); };

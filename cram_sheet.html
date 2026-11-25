@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cram Sheet · ΥΣΒΔ Πρόοδος</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/chapter.css">
+<style>
+.hero{background:linear-gradient(150deg,var(--bg) 0%,var(--ydim) 55%,var(--bg) 100%);padding-bottom:30px}
+.cram{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:800px){.cram{grid-template-columns:1fr}}
+.cram .card{margin:0;padding:12px 14px}
+.cram .card-title{font-size:.9rem}
+.cram ul,.cram ol{font-size:.84rem;line-height:1.55;margin:0}
+.cram td,.cram th{font-size:.8rem;padding:4px 6px}
+.chk li{list-style:none;margin-left:-1rem}
+.chk li::before{content:'☐ ';color:var(--yellow)}
+@media print{
+  body{background:#fff;color:#000;font-size:11px}
+  .no-print,#site-nav,.hero,.footer,.theme-toggle{display:none!important}
+  .vtbl,.card{border-color:#999;box-shadow:none;break-inside:avoid;background:#fff}
+  .cram{grid-template-columns:1fr 1fr}
+  a{color:#000;text-decoration:none}
+  section{border:none;padding:0;margin:0;background:#fff}
+  *{color:#000!important}
+}
+</style>
+<script src="js/nav.js" defer></script>
+</head>
+<body>
+<div id="site-nav"></div>
+<div class="hero no-print">
+  <div class="hero-label">ΥΣΒΔ k18 · Cram Sheet</div>
+  <h1>Μία σελίδα <em>για την πρόοδο</em></h1>
+  <p>Πάτα Ctrl/Cmd+P για εκτύπωση (2 στήλες, χωρίς χρώματα). Το τελευταίο πράγμα που διαβάζεις πριν μπεις.</p>
+</div>
+<div class="wrap">
+<section id="cram" style="padding:16px">
+<div class="cram">
+  <div class="card"><div class="card-title">💽 Δίσκοι & RAID</div><ul>
+    <li>t = t<sub>s</sub> + t<sub>r</sub> + t<sub>tr</sub>· t<sub>r</sub> = ½·60.000/RPM ms· seek κυριαρχεί</li>
+    <li>τυχαία N·(…)· σειριακά t<sub>s</sub>+t<sub>r</sub>+N·t<sub>tr</sub> (16 s vs 38 ms για 1.000 μπλοκ)</li>
+    <li>SSD: read 25–50µs, write 200–500µs (10×), erase 2–5ms (100×)· WAF = φυσικά/λογικά</li>
+    <li>RAID χώρος D/(D+C): 0→100%, 1/0+1→50%, 2 (D=4,C=3)→57%, 3/4/5→80%, 6→66%</li>
+    <li>MTTF πίνακα = MTTF/N · parity′ = (old⊕new)⊕parity · RAID-5 parity κατανεμημένη · RAID-6 αντέχει 2 βλάβες</li></ul></div>
+  <div class="card"><div class="card-title">🧠 Buffer manager</div><ul>
+    <li>ανά frame: BlockID, dirty, pin/rd-count, timestamp· pinned → όχι θύμα· dirty → γράψιμο πριν</li>
+    <li>LRU: παλαιότερο· CLOCK ≈ LRU με ref bit· MRU: πιο πρόσφατα unpinned· LRU-2: max(t−t2), t2=−∞ ⇒ ∞, ισοπαλία → νωρίτερο t1</li>
+    <li>Nested loop, R εξωτ., LRU, κοινή M: <b>M ≥ p(S)+1 → p(R)+p(S)</b>, αλλιώς <b>p(R)+p(R)p(S)</b></li>
+    <li>Πίνακας διάλεξης: R={A,B}, S={Γ,Δ,Ε,Ζ}, 2+2 πλαίσια → LRU 10, MRU 8, S εξωτ. 6</li>
+    <li>ΣΔΒΔ &gt; ΛΣ: προβλέπει, prefetch, force-out, WAL, όχι διπλό buffering</li></ul></div>
+  <div class="card"><div class="card-title">📁 Αρχεία & σελίδες</div><ul>
+    <li>RID = &lt;page, slot&gt;· heap: λίστες full/free ή page directory (4096/8 = 512 entries)</li>
+    <li>First / Best / Next-Fit / Append-only</li>
+    <li>διεύθυνση i = A+(i−1)μ· εγγραφές/μπλοκ = ⌊(M−hdr)/(μ+1bit)⌋</li>
+    <li>packed (συμπίεση αλλάζει RIDs) vs bitmap vs slotted &lt;offset,len&gt;, διαγραφή −1</li>
+    <li>Parquet: row-groups → column chunks → pages, footer min/max → predicate & projection pushdown</li></ul></div>
+  <div class="card"><div class="card-title">🔎 Ευρετήρια & κόστος</div><ul>
+    <li>A1 εγγραφή · A2 &lt;k,rid&gt; · A3 &lt;k,rid-list&gt;· ≤1 clustered/πρωτεύον, πολλά δευτερεύοντα (πυκνά)</li>
+    <li>dense = όλες οι τιμές· sparse = μέρος, θέλει ταξινομημένο αρχείο, ψάξε μεγαλύτερο ≤ k</li>
+    <li>Heap: scan B(D+RC), ισότ. 0.5B(D+RC), ins 2D+C, del C+D</li>
+    <li>Sorted: ισότ. D·log₂B+C·log₂R, ins/del B(D+RC)</li>
+    <li>hash μόνο ισότητα· σύνθετο: η σειρά μετράει (&lt;age,sal&gt; για age=25 AND sal εύρος)</li>
+    <li>Επεκτατός: d′=D → διπλασιασμός, d′&lt;D → μόνο split· κελιά ανά κάδο 2<sup>D−d′</sup></li></ul></div>
+  <div class="card"><div class="card-title">🌳 B+ δέντρα</div><ul>
+    <li>δείκτης δεξιά του K → τιμές ≥ K· όλα τα φύλλα ίδιο βάθος· κόμβοι ≥ 50%</li>
+    <li>εσωτερικός ⌈n/2⌉…n παιδιά, ≤ 2d κλειδιά· ρίζα ≥ 2 παιδιά</li>
+    <li>split φύλλου → <b>COPY-UP</b>· split εσωτερικού → <b>PUSH-UP</b>· σπάει ρίζα → ύψος +1</li>
+    <li>διαγραφή: δανεισμός (ενημέρωσε διαχωριστή) → αλλιώς συγχώνευση, διαχωριστής κατεβαίνει· άδεια ρίζα → ύψος −1</li>
+    <li>3 δείκτες/2 τιμές, φύλλο 3 → min φύλλο 2, min εσωτ. 1 κλειδί</li>
+    <li>d: n·p+(n−1)k ≤ σελίδα (4096,12,8 → n=205, d=102)· h = ⌈log<sub>F</sub>N⌉</li>
+    <li>ISAM: στατικό, overflow pages, skew</li></ul></div>
+  <div class="card"><div class="card-title">📊 Εξωτερική ταξινόμηση</div><ul>
+    <li>πέρασμα 0: ⌈N/B⌉ runs· merge B−1· <b>#π = 1+⌈log<sub>B−1</sub>⌈N/B⌉⌉</b>· κόστος 2N·#π</li>
+    <li>2-way: 1+⌈log₂N⌉ (N=7 → 4)</li>
+    <li>N=108, B=5 → 22 → 6 → 2 → 1: 4 περάσματα, 864 I/O</li>
+    <li>2 περάσματα αν B(B−1) ≥ N</li>
+    <li>replacement: B−2 set + in + out, runs ≈ 2B</li>
+    <li>B+ clustered → σάρωση φύλλων ✓· unclustered → ✗</li></ul></div>
+</div>
+<div class="card" style="margin-top:14px"><div class="card-title">✅ Checklist ετοιμότητας (Tier 1)</div><ul class="chk" style="font-size:.88rem">
+  <li>λύνω B+ «νέα ρίζα» εισαγωγής στο χαρτί</li><li>λύνω B+ «νέα ρίζα» διαγραφής (συγχωνεύσεις ως τη ρίζα)</li><li>υπολογίζω κόστος εμφωλιασμένων βρόχων με LRU για 4 τιμές του M</li><li>υπολογίζω runs/περάσματα/κόστος ταξινόμησης</li><li>συμπληρώνω πίνακα επεκτατού κατακερματισμού (D, μέγεθος, d′, περιεχόμενα)</li><li>γράφω από μνήμης: dense vs sparse, A1–A3, clustered, ISAM vs B+, LRU-2, RAID-4 vs 5</li></ul></div>
+</section>
+</div>
+<div class="footer no-print">ΥΣΒΔ (k18) · Cram Sheet</div>
+</body>
+</html>

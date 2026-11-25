@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 3 · Οργάνωση Αρχείων, Σελίδων & Εγγραφών</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/chapter.css">
+<link rel="stylesheet" href="styles/sims.css">
+<style>
+.hero{background:linear-gradient(150deg,var(--bg) 0%,var(--ydim) 55%,var(--bg) 100%)}
+.hero::after{content:'RID = (page, slot)';color:rgba(227,179,65,.07)}
+</style>
+<script src="js/nav.js" defer></script>
+<script src="data/questions.js" defer></script>
+<script src="js/quiz-loader.js" defer></script>
+<script src="data/flashcards.js" defer></script>
+<script src="js/flashcards.js" defer></script>
+</head>
+<body>
+<div id="site-nav"></div>
+
+<div class="hero">
+  <div class="hero-label">ΥΣΒΔ k18 · Topic 3 · διαφάνειες 002 (μέρος 2) + πίνακας διάλεξης «Φυσική οργάνωση δεδομένων σε μπλοκ»</div>
+  <h1>Αρχεία, Σελίδες & <em>Εγγραφές</em></h1>
+  <p>Πώς ένα «αρχείο» του ΣΔΒΔ γίνεται μπλοκ στον δίσκο: heap files (συνδεδεμένες λίστες vs κατάλογος σελίδων), RID, πολιτικές ελεύθερου χώρου, εγγραφές σταθερού/μεταβλητού μήκους μέσα στη σελίδα (packed, bitmap, slotted), πεδία μέσα στην εγγραφή, και η στηλοειδής αποθήκευση (ORC, Parquet).</p>
+  <div class="chips"><span class="chip">heap file</span><span class="chip">page directory</span><span class="chip">RID</span><span class="chip">slotted page</span><span class="chip">row vs column</span><span class="chip">Parquet</span></div>
+</div>
+
+<nav class="toc">
+  <a href="#essence">🎯 Η Ουσία</a>
+  <a href="#heap">Heap files</a>
+  <a href="#rid">RID</a>
+  <a href="#directory">Page directory</a>
+  <a href="#freespace">Ελεύθερος χώρος</a>
+  <a href="#fixed">Σταθερές εγγραφές</a>
+  <a href="#slotted">Slotted page</a>
+  <a href="#fields">Πεδία</a>
+  <a href="#columnar">Στηλοειδή</a>
+  <a href="#api">Heap API</a>
+</nav>
+
+<div class="wrap">
+
+<section id="essence">
+  <div class="sh"><div class="sh-icon" style="background:var(--gdim)">🎯</div><h2>Η Ουσία σε 60 δευτερόλεπτα</h2></div>
+  <div class="gbox"><div class="lbl" style="color:var(--green)">ΤΙ ΚΑΝΕΙ</div>Τα ανώτερα επίπεδα του ΣΔΒΔ βλέπουν μόνο <strong>εγγραφές</strong>. Από κάτω, οι εγγραφές μπαίνουν σε <strong>σελίδες (μπλοκ)</strong>, οι σελίδες συνθέτουν <strong>αρχεία</strong>. Χρειάζεται: (α) να ξέρεις ποιες σελίδες έχει ένα αρχείο και πού έχει χώρο, (β) να βρίσκεις μια εγγραφή μέσα στη σελίδα, (γ) να βρίσκεις τα πεδία μέσα στην εγγραφή. Η «διεύθυνση» μιας εγγραφής είναι το <strong>RID = (σελίδα, slot)</strong>.</div>
+  <p style="margin-bottom:14px"><strong>Διαίσθηση:</strong> σκέψου μια πολυκατοικία (αρχείο) με διαμερίσματα (σελίδες) και ενοίκους (εγγραφές). Ο θυρωρός κρατά έναν <em>κατάλογο</em> «ποιο διαμέρισμα έχει άδειο δωμάτιο» (page directory). Μέσα σε κάθε διαμέρισμα, στην πόρτα υπάρχει πίνακας «ένοικος #3 → δωμάτιο στο βάθος αριστερά» (slot directory) — έτσι μπορείς να μετακινείς ενοίκους μέσα στο διαμέρισμα χωρίς να αλλάξει η διεύθυνσή τους (RID).</p>
+  <div class="compare">
+    <div class="good-side"><div class="side-label" style="color:var(--green)">✅ Slotted page / directory κερδίζει όταν…</div><ul style="font-size:0.86rem;padding-left:18px;line-height:1.7;margin:0"><li>έχεις εγγραφές μεταβλητού μήκους</li><li>θες σταθερά RIDs ενώ οι εγγραφές μετακινούνται (compaction)</li><li>θες γρήγορα σελίδα με αρκετό ελεύθερο χώρο</li></ul></div>
+    <div class="bad-side"><div class="side-label" style="color:var(--red)">❌ Συνδεδεμένες λίστες / packed υποφέρουν όταν…</div><ul style="font-size:0.86rem;padding-left:18px;line-height:1.7;margin:0"><li>ψάχνεις συγκεκριμένο μπλοκ (πρέπει να διαβάσεις όλα τα προηγούμενα)</li><li>διαγράφεις και θες να συμπιέσεις (μετακινούνται τα RIDs)</li><li>μια μεγάλη εγγραφή ψάχνει χώρο σε πολλές σελίδες</li></ul></div>
+  </div>
+  <div class="tip"><div class="tip-icon">📝</div><div class="tip-text"><strong>Για τις εξετάσεις θυμήσου:</strong> (1) RID = &lt;page-id, slot-number&gt;. (2) Εγγραφές/μπλοκ (σταθερό μήκος, bitmap) = <strong>⌊(M − κεφαλίδα) / (μ + 1 bit)⌋</strong>· διεύθυνση εγγραφής i = <strong>A + (i−1)·μ</strong>. (3) Slotted: ο κατάλογος slot κρατά &lt;offset, length&gt;, διαγραφή = −1, ο ελεύθερος χώρος είναι ανάμεσα σε εγγραφές και κατάλογο. (4) Page directory με 4B pid + 4B ένδειξη → 4096/8 = <strong>512 entries/σελίδα</strong>.</div></div>
+</section>
+
+<section id="heap">
+  <div class="sh"><div class="sh-icon" style="background:var(--ydim)">📁</div><h2>1. Αρχεία & Heap Files</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Σε υψηλό επίπεδο το ΣΔΒΔ «βλέπει» μόνο εγγραφές· τα μπλοκ είναι ο <strong>περιέκτης</strong> τους. Μια σελίδα χωρά περιορισμένες εγγραφές → ένα αρχείο = <strong>συλλογή μπλοκ</strong> (με κενά «free» ανάμεσα).</p>
+  <div class="card"><div class="card-title">Heap file</div><ul style="font-size:.92rem;margin:0"><li>Ο πιο απλός τρόπος οργάνωσης: <strong>καμία διάταξη</strong>.</li><li>Καθώς μεγαλώνει/μικραίνει, δεσμεύονται/αποδεσμεύονται μπλοκ.</li><li>Για πράξεις σε επίπεδο εγγραφής χρειάζεται: να ξέρουμε <strong>ποια μπλοκ</strong> έχει το αρχείο, να βρίσκουμε <strong>εγγραφές μέσα σε κάθε μπλοκ</strong>, και <strong>πεδία μέσα σε κάθε εγγραφή</strong>.</li></ul></div>
+  <h3>Heap file με συνδεδεμένα μπλοκ</h3>
+  <p style="font-size:.95rem">Το <strong>header block</strong> δεσμεύεται με το <code>CreateFile(name)</code>. Από αυτό ξεκινούν δύο <strong>διπλά συνδεδεμένες λίστες</strong>: γεμάτες σελίδες και σελίδες με ελεύθερο χώρο (αρχικά άδειες). Νέες εγγραφές → το ΣΔΒΔ παίρνει μπλοκ από τον δίσκο.</p>
+  <div class="dg">
+    <div class="dg-row" style="align-items:center">
+      <div class="dg-box" style="flex:0 0 110px;border-color:var(--yellow)"><div class="t">File Header</div></div>
+      <div class="dg-col" style="flex:1">
+        <div class="dg-row" style="justify-content:flex-start"><span style="font-size:.75rem;color:var(--red);min-width:90px;align-self:center">full blocks</span><div class="dg-box" style="flex:0 0 70px;border-color:var(--red)"><div class="t">Data</div></div><div class="dg-arrow">⇄</div><div class="dg-box" style="flex:0 0 70px;border-color:var(--red)"><div class="t">Data</div></div><div class="dg-arrow">⇄</div><div class="dg-box" style="flex:0 0 70px;border-color:var(--red)"><div class="t">Data</div></div></div>
+        <div class="dg-row" style="justify-content:flex-start"><span style="font-size:.75rem;color:var(--green);min-width:90px;align-self:center">free space</span><div class="dg-box" style="flex:0 0 70px;border-color:var(--green)"><div class="t">½</div></div><div class="dg-arrow">⇄</div><div class="dg-box" style="flex:0 0 70px;border-color:var(--green)"><div class="t">¼</div></div><div class="dg-arrow">⇄</div><div class="dg-box" style="flex:0 0 70px;border-color:var(--green)"><div class="t">…</div></div></div></div></div></div>
+  <div class="wbox"><div class="lbl" style="color:var(--yellow)">⚠️ Μειονεκτήματα (διαφάνεια 27)</div>Πιθανό σχεδόν <strong>όλα</strong> τα μπλοκ να καταλήξουν στη λίστα «με λίγο ελεύθερο χώρο» · μεγάλο κόστος να ψάξεις πολλές σελίδες για να χωρέσει μια μεγάλη εγγραφή · γενικά, οι συνδεδεμένες δομές στον δίσκο υποφέρουν όταν θες <strong>συγκεκριμένο μπλοκ</strong>: όλα τα προηγούμενα πρέπει να έρθουν στον buffer.</div>
+  <div class="section-quiz" data-topic="topic3" data-section="heap"></div>
+</section>
+
+<section id="rid">
+  <div class="sh"><div class="sh-icon" style="background:var(--ydim)">🏷️</div><h2>2. API Αρχείου & η φύση του RID</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Κάθε εγγραφή heap file έχει <strong>Record ID (RID)</strong> = διεύθυνση/δείκτης της εγγραφής· η δομή του heap file αντιστοιχίζει RID → σελίδα.</p>
+  <div class="grid2">
+    <div><table class="vtbl"><thead><tr><th>Μέθοδος</th><th>Κλήση</th></tr></thead><tbody>
+      <tr><td>Δημιουργία</td><td><code>fd=CreateFile(name)</code></td></tr><tr><td>Διαγραφή/truncate</td><td><code>DeleteFile(fd)</code></td></tr>
+      <tr><td>Εισαγωγή → RID</td><td><code>RID=InsertRecord(fd, rec)</code></td></tr><tr><td>Ανάγνωση</td><td><code>rec=GetRecord(fd, RID)</code></td></tr>
+      <tr><td>Διαγραφή εγγραφής</td><td><code>DeleteRecord(fd, RID)</code></td></tr><tr><td>Σειριακή σάρωση</td><td><code>ScanAFile(fd)</code></td></tr></tbody></table></div>
+    <div><div class="cb" style="padding:12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:0.8rem;line-height:1.8"><span class="kw">function</span> <span class="fn">InsertRecord</span>(fd, rec):
+    p = σελίδα από τη λίστα free-space
+        με χώρο ≥ |rec|
+    <span class="kw">if</span> p == NULL:
+        ο Disk Manager δεσμεύει νέα σελίδα p
+    γράψε rec στη p      <span class="cm">// |p| ≫ |rec|</span>
+    <span class="kw">return</span> μοναδικό RID</div></div>
+  </div>
+  <div class="keyfact"><strong>RID → (p, d)</strong>: σύνθετο αναγνωριστικό = σελίδα p + μετατόπιση d (θέση, αριθμός slot) της εγγραφής μέσα στο μπλοκ. Στη σελίδα: <strong>RID = &lt;page-id, slot-number&gt;</strong>. Έχουν χρησιμοποιηθεί και μοναδικά surrogate IDs (SRID) αλλά με μεγάλο κόστος διαχείρισης.</div>
+  <div class="section-quiz" data-topic="topic3" data-section="rid"></div>
+</section>
+
+<section id="directory">
+  <div class="sh"><div class="sh-icon" style="background:var(--ydim)">📇</div><h2>3. Heap File με Κατάλογο Σελίδων (Page Directory)</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Βελτίωση: ένα σύνολο <strong>header/directory pages</strong> λειτουργεί ως κατάλογος των data blocks.</p>
+  <div class="grid2">
+    <div><ul style="font-size:.92rem">
+      <li>Οι directory pages κρατούν <strong>διευθύνσεις</strong> των data blocks.</li>
+      <li>Κάθε entry μπορεί να έχει και πόσο «άδειο» είναι το μπλοκ → <strong>space map</strong>.</li>
+      <li>Πολλές directory pages συνδεδεμένες αν χρειαστεί· είναι ελάχιστες σε σχέση με τις σελίδες δεδομένων· ο κατάλογος μεγαλώνει/μικραίνει.</li>
+      <li>Ελεύθερος χώρος από διαγραφές → διαχειρίζεται στον κατάλογο: <strong>τουλάχιστον 1 bit</strong> ανά entry (γεμάτη/όχι)· πιο ακριβής πληροφορία = trade-off χώρου vs ακρίβειας.</li>
+      <li>Κόστος μνήμης σε αντάλλαγμα για <strong>γρηγορότερη πρόσβαση</strong> σε μπλοκ με συγκεκριμένο pid.</li></ul></div>
+    <div class="dg" style="margin:0"><div class="dg-row" style="align-items:flex-start">
+      <div class="dg-col" style="flex:0 0 150px"><div class="dg-box" style="border-color:var(--yellow)"><div class="t">Header page</div>
+        <div class="cells" style="margin-top:6px;justify-content:center"><span class="h">pid</span><span class="g">free</span></div>
+        <div class="cells" style="justify-content:center"><span>17</span><span class="g">3.1KB</span></div>
+        <div class="cells" style="justify-content:center"><span>42</span><span class="r">0</span></div>
+        <div class="cells" style="justify-content:center"><span>43</span><span class="g">0.9KB</span></div>
+        <div class="cells" style="justify-content:center"><span class="e">…</span><span class="e">…</span></div></div></div>
+      <div class="dg-arrow">→</div>
+      <div class="dg-col" style="flex:1"><div class="dg-box" style="border-color:var(--green)"><div class="t">Data block 17</div></div><div class="dg-box" style="border-color:var(--red)"><div class="t">Data block 42</div></div><div class="dg-box" style="border-color:var(--green)"><div class="t">Data block 43</div></div></div></div></div>
+  </div>
+  <div class="card"><div class="card-title">Λυμένο: πόσα entries χωρά μια directory page;</div><p style="font-size:.92rem;margin:0">Με <strong>4 B</strong> για τη διεύθυνση (pid) και <strong>4 B</strong> για την ένδειξη ελεύθερου χώρου → 8 B/entry → σελίδα 4096 B / 8 B = <strong>512 entries</strong>. Ψάχνοντας τον κατάλογο βρίσκουμε σύνολο μπλοκ με επαρκή ελεύθερο χώρο για μία ή πολλές εισαγωγές.</p></div>
+  <div class="section-quiz" data-topic="topic3" data-section="directory"></div>
+</section>
+
+<section id="freespace">
+  <div class="sh"><div class="sh-icon" style="background:var(--ydim)">🧩</div><h2>4. Πολιτικές Επιλογής Σελίδας για Εισαγωγή</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Ερώτηση: ποια σελίδα με ελεύθερο χώρο φιλοξενεί τη νέα εγγραφή;</p>
+  <table class="vtbl"><thead><tr><th>Πολιτική</th><th>Κανόνας</th><th>Παράδειγμα: ελεύθερα [5, 2, 8, 3] KB, εγγραφή 3 KB, cursor στη 2η</th></tr></thead><tbody>
+    <tr><td><strong>First-Fit</strong></td><td>από την αρχή του καταλόγου, η πρώτη που χωρά</td><td>σελίδα 1 (5 KB)</td></tr>
+    <tr><td><strong>Best-Fit</strong></td><td>από όλους τους υποψηφίους, αυτή που αφήνει το <strong>λιγότερο</strong> κενό</td><td>σελίδα 4 (3 KB → 0)</td></tr>
+    <tr><td><strong>Next-Fit</strong></td><td>συνέχισε από το entry που χρησιμοποιήθηκε τελευταία (cursor)</td><td>σελίδα 3 (8 KB)</td></tr>
+    <tr><td><strong>Append-only</strong></td><td>πάντα στο <strong>τελευταίο</strong> μπλοκ· αν δεν χωρά → νέο κενό μπλοκ από τον disk manager</td><td>σελίδα 4 (αν χωρά)</td></tr></tbody></table>
+  <div class="section-quiz" data-topic="topic3" data-section="freespace"></div>
+</section>
+
+<section id="fixed">
+  <div class="sh"><div class="sh-icon" style="background:var(--ydim)">📏</div><h2>5. Εγγραφές Σταθερού Μήκους μέσα σε Μπλοκ</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Δύο μεγάλες επιλογές (πίνακας διάλεξης): <strong>σταθερό πακετάρισμα</strong> (εγγραφές η μία μετά την άλλη, ακόμα και πάνω από όρια μπλοκ) ή <strong>εγγραφές ολόκληρες σε 1 μπλοκ</strong> (με κεφαλίδα και ευρετήριο εγγραφών).</p>
+  <h3>Α. Σταθερό πακετάρισμα (πίνακας διάλεξης)</h3>
+  <div class="cells" style="margin:8px 0"><span class="h">A→</span><span>εγγραφή 1</span><span>εγγραφή 2</span><span>εγγρ. 3</span><span class="r">|όριο μπλοκ|</span><span>…3 (συνέχεια)</span><span>εγγρ. 4</span><span class="r">|όριο|</span><span class="e">…</span></div>
+  <div class="grid2">
+    <div><div class="card-title">Διεύθυνση εγγραφής ε<sub>i</sub></div><ul style="font-size:.92rem"><li>Σταθερό μήκος μ: <strong>A + (i − 1)·μ</strong></li><li>Μεταβλητό μήκος μ<sub>k</sub>: <strong>A + Σ<sub>k=1</sub><sup>i−1</sup> μ<sub>k</sub></strong></li></ul></div>
+    <div><div class="compare" style="grid-template-columns:1fr;margin:0">
+      <div class="good-side"><div class="side-label" style="color:var(--green)">+</div><ul style="font-size:.84rem;margin:0"><li>γρήγορος υπολογισμός θέσης εγγραφής</li><li>πυκνότητα χώρου, καθόλου σπατάλη</li></ul></div>
+      <div class="bad-side"><div class="side-label" style="color:var(--red)">−</div><ul style="font-size:.84rem;margin:0"><li>σχεδόν αδύνατη η διαγραφή εγγραφής (π.χ. χρειάζεται έξτρα bit 0/1)</li><li>εγγραφές «διασχίζουν» μπλοκ: μια λογική προσπέλαση γίνεται &gt;1 φυσικές</li><li>σχεδόν αδύνατη η αλλαγή σχήματος</li><li>πολύ μεγάλη προδέσμευση χώρου για αύξηση αρχείου</li></ul></div></div></div>
+  </div>
+  <h3>Β. Εγγραφές ολόκληρες σε 1 μπλοκ</h3>
+  <div class="grid2">
+    <div><div class="card-title" style="color:var(--yellow)">Packed (διαφάνεια 34)</div>
+      <div class="cells"><span class="h">hdr: n</span><span class="g">slot1</span><span class="g">slot2</span><span class="g">slot3</span><span class="g">… slot n</span><span class="e">κενά slots</span></div>
+      <p style="font-size:.88rem;margin-top:6px">Η κεφαλίδα έχει το πλήθος <strong>n</strong>. Οι εγγραφές ακολουθούν συνεχόμενα, τα κενά slots στο τέλος. Διαγραφή → <strong>συμπίεση</strong> (μετακίνηση της τελευταίας στην «τρύπα»).</p></div>
+    <div><div class="card-title" style="color:var(--green)">Unpacked + bitmap (διαφάνεια 35)</div>
+      <div class="cells"><span class="g">slot1</span><span class="e">κενό</span><span class="g">slot3</span><span class="e">κενό</span><span class="g">slot5</span><span class="h">bitmap 1 0 1 0 1</span><span class="h">n</span></div>
+      <p style="font-size:.88rem;margin-top:6px">Η κεφαλίδα έχει <strong>bitmap</strong>: 1 = slot με εγγραφή, 0 = κενό. Γεμάτα και κενά slots ανακατεμένα. Πίνακας διάλεξης: «bits ύπαρξης» στο τέλος του μπλοκ.</p></div>
+  </div>
+  <div class="ibox"><div class="lbl" style="color:var(--blue)">Packed vs Unpacked+Bitmap — take-away</div>Στο packed ο κενός χώρος πάντα μένει «τρύπα» μέχρι να γίνει compaction. Αν τα <strong>RIDs είναι σταθερά</strong> και τα χρησιμοποιούν ανώτερα modules, η μετακίνηση εγγραφών μέσα στη σελίδα είναι <strong>πρόβλημα</strong> (αλλάζει το slot!). Το bitmap το λύνει: η διαγραφή απλώς μηδενίζει ένα bit.</div>
+  <div class="card"><div class="card-title">Τύπος πίνακα διάλεξης: πόσες εγγραφές χωρά ένα μπλοκ;</div>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:1.05rem">εγγραφές/μπλοκ = ⌊ (M − κεφαλίδα) / (μ + «1 bit») ⌋</p>
+    <p style="font-size:.9rem">M = μήκος μπλοκ, μ = σταθερό μήκος εγγραφής· το «1» είναι το bit ύπαρξης κάθε εγγραφής. <strong>Παράδειγμα:</strong> M = 4096 B, κεφαλίδα 32 B, μ = 100 B → (4064·8 bits)/(801 bits) = 32.512/801 = 40,6 → <strong>40 εγγραφές</strong>. Η <strong>κεφαλίδα</strong> περιέχει: περιγραφή, δείκτη στο επόμενο μπλοκ, δείκτες υπερχείλισης…</p></div>
+  <div class="section-quiz" data-topic="topic3" data-section="fixed"></div>
+</section>
+
+<section id="slotted">
+  <div class="sh"><div class="sh-icon" style="background:var(--ydim)">🗄️</div><h2>6. Slotted Page — Εγγραφές Μεταβλητού Μήκους</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Δουλεύει για <strong>μεταβλητού και σταθερού</strong> μήκους εγγραφές. Πίνακας διάλεξης: «ευρετήριο + κεφαλίδα»· «όπως για τα πεδία μεταβλητού μήκους στις εγγραφές, έτσι και για τις εγγραφές μεταβλητού μήκους σε μπλοκ».</p>
+  <div class="dg">
+    <div class="cells" style="justify-content:center"><span class="h">header</span><span class="g" style="min-width:90px">εγγρ. 1 (60B)</span><span class="g" style="min-width:140px">εγγρ. 2 (100B)</span><span class="r" style="min-width:60px">διαγρ.</span><span class="g" style="min-width:70px">εγγρ. 4</span><span class="e" style="min-width:160px">⟵ ελεύθερος χώρος ⟶</span><span class="y">4:&lt;260,50&gt;</span><span class="y">3:&lt;−1&gt;</span><span class="y">2:&lt;60,100&gt;</span><span class="y">1:&lt;0,60&gt;</span><span class="p">N=4</span></div>
+    <div style="font-size:.78rem;color:var(--muted);text-align:center;margin-top:8px">Οι εγγραφές μεγαλώνουν από αριστερά, ο κατάλογος slots από δεξιά· ο ελεύθερος χώρος είναι στη μέση.</div></div>
+  <ul>
+    <li>Κάθε σελίδα έχει <strong>κατάλογο i = 1..N slots</strong>· το slot i κρατά <strong>&lt;record-offset, record-length&gt;</strong>.</li>
+    <li>Το RID <strong>αποσυνδέεται από τη φυσική θέση</strong>: οι εγγραφές μπορούν να μετακινηθούν μέσα στη σελίδα (compaction) αφού το entry του καταλόγου δεν αλλάζει όσο η εγγραφή είναι ενεργή.</li>
+    <li>Ελεύθερος χώρος = η περιοχή <strong>ανάμεσα στις εγγραφές και τον κατάλογο slots</strong>· αν μια νέα εγγραφή πάρει χώρο από εκεί, ο κατάλογος μπορεί να αποκτήσει νέα slots.</li>
+    <li>Διαγραφή: το entry γίνεται <strong>−1</strong>· τα άδεια slots ξαναχρησιμοποιούνται σε εισαγωγή αν ταιριάζει το μέγεθος.</li></ul>
+  <div class="section-quiz" data-topic="topic3" data-section="slotted"></div>
+</section>
+
+<section id="fields">
+  <div class="sh"><div class="sh-icon" style="background:var(--ydim)">🔤</div><h2>7. Πεδία μέσα στην Εγγραφή</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Ο κατάλογος (catalog) του ΣΔΒΔ ξέρει πόσα πεδία, τι τύπου και με ποια σειρά. Ορισμοί (πίνακας): <strong>Αρχείο</strong> = σύνολο εγγραφών · <strong>Εγγραφή</strong> = διατεταγμένο ή ανοργάνωτο σύνολο πεδίων · <strong>Πεδίο</strong> = ατομικό στοιχείο με συγκεκριμένη τιμή · όλες οι εγγραφές ενός αρχείου έχουν τα ίδια πεδία.</p>
+  <div class="grid2">
+    <div><div class="card-title">Σταθερό μήκος πεδίων</div>
+      <div class="cells"><span class="h">base→</span><span style="min-width:60px">F1 (L1)</span><span style="min-width:90px">F2 (L2)</span><span class="y" style="min-width:60px">F3 (L3)</span><span style="min-width:70px">F4 (L4)</span></div>
+      <p style="font-size:.9rem;margin-top:8px">Διεύθυνση του F3 = <strong>base + L1 + L2</strong>. Γενικά (πίνακας): διεύθυνση Π<sub>i</sub> = <strong>δ + Σ<sub>k=1</sub><sup>i−1</sup> μ<sub>k</sub></strong>. Εναλλακτικά (πίνακας διάλεξης): <strong>ευρετήριο δεικτών</strong> στην αρχή της εγγραφής → τα πεδία μπορούν να είναι σε <em>τυχαία</em> σειρά· διεύθυνση Π<sub>i</sub> = δ + δ<sub>i</sub>.</p></div>
+    <div><div class="card-title">Μεταβλητό μήκος πεδίων</div>
+      <p style="font-size:.88rem;margin-bottom:4px"><strong>(α) Διαχωριστικά</strong> — ειδικό σύμβολο στο τέλος κάθε πεδίου:</p>
+      <div class="cells"><span>F1</span><span class="r">#</span><span>F2</span><span class="r">#</span><span>F3</span><span class="r">#</span><span>F4</span><span class="r">#</span></div>
+      <p style="font-size:.88rem;margin:6px 0 4px"><strong>(β) Μήκος στην αρχή</strong> κάθε πεδίου (πίνακας διάλεξης):</p>
+      <div class="cells"><span class="y">l1</span><span>F1</span><span class="y">l2</span><span>F2</span><span class="y">l3</span><span>F3</span></div>
+      <p style="font-size:.88rem;margin:6px 0 4px"><strong>(γ) Πίνακας ακέραιων offsets</strong> στην αρχή της εγγραφής:</p>
+      <div class="cells"><span class="p">o1</span><span class="p">o2</span><span class="p">o3</span><span class="p">o4</span><span>F1</span><span>F2</span><span>F3</span><span>F4</span></div></div>
+  </div>
+  <div class="wbox"><div class="lbl" style="color:var(--yellow)">⚠️ NULL & προβλήματα των offsets</div>Πώς αναπαριστάς <strong>NULL</strong>; Ο πίνακας offsets επαυξάνεται με το <strong>μήκος</strong> κάθε πεδίου → NULL = μήκος 0. Προβλήματα: τι γίνεται αν ένα πεδίο τροποποιηθεί και χρειάζεται <strong>περισσότερο χώρο</strong>; Χειρότερα, η αλλαγή μπορεί να «ξεχειλίσει» σε <strong>νέο μπλοκ</strong> — εγγραφές που απλώνονται σε &gt;1 μπλοκ!</div>
+  <div class="section-quiz" data-topic="topic3" data-section="fields"></div>
+</section>
+
+<section id="columnar">
+  <div class="sh"><div class="sh-icon" style="background:var(--ydim)">🏛️</div><h2>8. Γραμμοειδής vs Στηλοειδής Αποθήκευση (ORC, Parquet)</h2></div>
+  <div class="grid2">
+    <div><div class="card-title">Row-wise (κυρίαρχο)</div><p style="font-size:.9rem">Κάθε πλειάδα ολόκληρη μέσα σε ένα μπλοκ, συνήθως slotted. PostgreSQL & DB2 υποθέτουν «λογικό» μήκος εγγραφής που χωρά σε ένα μπλοκ.</p>
+      <div class="cells"><span class="g">a1 b1 c1</span><span class="g">a2 b2 c2</span><span class="g">a3 b3 c3</span></div></div>
+    <div><div class="card-title">Column-wise</div><p style="font-size:.9rem">Κάθε μπλοκ περιέχει <strong>ένα μόνο πεδίο</strong>. Trade-off: φθηνή ανάγνωση λίγων στηλών / συμπίεση, ακριβή ανασύνθεση ολόκληρης πλειάδας.</p>
+      <div class="cells"><span class="h">a1 a2 a3 a4 a5</span><span class="y">b1 … b5</span><span class="p">c1 … c5</span></div></div>
+  </div>
+  <p>Data-science αλγόριθμοι και αναλυτικά ερωτήματα σε δισεκατομμύρια γραμμές θέλουν οργανώσεις για γρήγορη, παράλληλη/κατανεμημένη επεξεργασία: <strong>Apache Parquet</strong> (Pandas, Polars, PyArrow, DuckDB, Spark) και <strong>Apache ORC</strong> (Java περιβάλλοντα).</p>
+  <div class="grid2">
+    <div><div class="card-title">ORC (Optimized Row Columnar)</div><ul style="font-size:.88rem">
+      <li>Self-describing, type-aware.</li><li>Η ανάγνωση ξεκινά από τα <strong>τελευταία bytes</strong>: <strong>Postscript</strong> (συμπίεση, μήκος footer) &amp; <strong>File Footer</strong> (σχήμα, global στατιστικά).</li>
+      <li><strong>Stripes</strong> των 64–256 MB, το καθένα με Stripe Footer και <strong>Row Group Indexes</strong> κάθε 10.000 γραμμές: min, max, sum, null counts → παράλειψη μπλοκ που δεν χρειάζονται.</li></ul></div>
+    <div><div class="card-title">Parquet (υβριδικό)</div><ul style="font-size:.88rem">
+      <li><strong>Row-groups</strong> (128 MB–1 GB) = οριζόντιες φέτες· μέσα σε κάθε row-group, <strong>column chunks</strong> συνεχόμενα στον δίσκο· chunks → <strong>pages</strong> (~1 MB, και dictionary pages).</li>
+      <li>Header: 4 bytes <code>PAR1</code>. Footer: schema, #tuples, key-values, row-group metadata (offsets, min/max, null count, μεγέθη, encoding), <strong>footer length 4B</strong>, trailing <code>PAR1</code>.</li>
+      <li><strong>Projection pushdown</strong>: παρακάμπτει στήλες που δεν ζητήθηκαν. <strong>Predicate pushdown</strong>: με min/max, π.χ. <code>id &gt; 1250</code> → πηδά ολόκληρα row-groups. Logical type mapping (TIMESTAMP, DECIMAL, VARCHAR).</li></ul></div>
+  </div>
+  <div class="dg"><div style="font-size:.8rem;color:var(--muted);margin-bottom:6px">Parquet: name/id/when σε 3 row-groups</div>
+    <div class="cells"><span class="h">RG-0</span><span class="g">Abc Bcd Cde</span><span class="y">1001 1003 1113</span><span class="p">01-01-26 03-01-26 15-02-25</span></div>
+    <div class="cells"><span class="h">RG-1</span><span class="g">Def Efg Fgh</span><span class="y">1119 1120 2001</span><span class="p">12-12-24 01-01-23 12-09-25</span></div>
+    <div class="cells"><span class="h">RG-2</span><span class="g">Ghi Hij</span><span class="y">2004 2009</span><span class="p">10-09-25 09-09-26</span></div>
+    <div style="font-size:.78rem;color:var(--muted);margin-top:6px">Ερώτημα <code>id &gt; 1250</code>: min/max του RG-0 = 1001..1113, RG-1 = 1119..2001, RG-2 = 2004..2009 → το RG-0 παραλείπεται ολόκληρο.</div></div>
+  <div class="section-quiz" data-topic="topic3" data-section="columnar"></div>
+</section>
+
+<section id="api">
+  <div class="sh"><div class="sh-icon" style="background:var(--ydim)">🧑‍💻</div><h2>9. Ένα C API για Heap File</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Οι διαφάνειες 52–57 δίνουν ένα πλήρες API (χρήσιμο για τις εργασίες). Τα βασικά:</p>
+  <div class="cb" style="padding:14px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:0.78rem;line-height:1.7"><span class="kw">typedef enum</span> { HEAP_SUCCESS=<span class="nm">0</span>, HEAP_ERR_FILE_NOT_FOUND, HEAP_ERR_OUT_OF_SPACE,
+               HEAP_ERR_INVALID_RID, HEAP_ERR_BUFFER_FULL, HEAP_ERR_IO_ERROR, HEAP_ERR_EOF } <span class="tp">heap_status_t</span>;
+<span class="kw">typedef struct</span> { <span class="tp">uint32_t</span> page_id; <span class="tp">uint16_t</span> slot_number; } <span class="tp">rid_t</span>;   <span class="cm">// RID = (page, slot)</span>
+
+<span class="cm">// lifecycle</span>
+<span class="fn">heap_create_file</span>(name); <span class="fn">heap_open_file</span>(name, &amp;h); <span class="fn">heap_close_file</span>(h);   <span class="cm">// close: flush dirty pages</span>
+<span class="fn">heap_destroy_file</span>(name); <span class="fn">heap_truncate_file</span>(h);
+<span class="cm">// records</span>
+<span class="fn">heap_insert_record</span>(h, data, len, &amp;rid);   <span class="cm">// σε slotted page με χώρο</span>
+<span class="fn">heap_read_record</span>(h, rid, buf, buf_len, &amp;out_len);
+<span class="fn">heap_update_record</span>(h, rid, new_data, new_len); <span class="cm">// μετακινεί την εγγραφή αν μεγαλώσει</span>
+<span class="fn">heap_delete_record</span>(h, rid);              <span class="cm">// slot free + ενημέρωση free-space</span>
+<span class="cm">// pages &amp; space</span>
+<span class="fn">heap_allocate_page</span>(h, &amp;pid); <span class="fn">heap_deallocate_page</span>(h, pid);
+<span class="fn">heap_find_page_with_free_space</span>(h, bytes_needed, &amp;pid);  <span class="cm">// free-space map / directory</span>
+<span class="cm">// scans &amp; maintenance</span>
+<span class="fn">heap_open_scan</span>(h, &amp;scan); <span class="fn">heap_get_next_record</span>(scan, buf, len, &amp;out_len, &amp;rid); <span class="cm">// ... HEAP_ERR_EOF</span>
+<span class="fn">heap_close_scan</span>(scan);    <span class="cm">// απελευθερώνει buffers &amp; pins</span>
+<span class="fn">heap_compact_file</span>(h); <span class="fn">heap_flush_file</span>(h) <span class="cm">/* fsync() */</span>; <span class="fn">heap_get_file_stats</span>(h, &amp;st);</div>
+  <div class="section-quiz" data-topic="topic3" data-section="api"></div>
+</section>
+
+<section id="cards3">
+  <div class="sh"><div class="sh-icon" style="background:var(--ydim)">🗂️</div><h2>10. Flashcards κεφαλαίου</h2></div>
+  <div data-fc-deck="topic3"></div>
+  <div class="section-quiz" data-topic="topic3" data-section="cards3"></div>
+</section>
+
+</div>
+<div class="footer">ΥΣΒΔ (k18) · ΕΚΠΑ · Topic 3: Οργάνωση Αρχείων, Σελίδων & Εγγραφών</div>
+</body>
+</html>

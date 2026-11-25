@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 4 · Ευρετήρια, Κατακερματισμός & Μοντέλο Κόστους</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/layout.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/chapter.css">
+<link rel="stylesheet" href="styles/sims.css">
+<style>
+.hero{background:linear-gradient(150deg,var(--bg) 0%,var(--pdim) 55%,var(--bg) 100%)}
+.hero::after{content:'k* = <k, rid>';color:rgba(188,140,255,.07)}
+</style>
+<script src="js/nav.js" defer></script>
+<script src="data/questions.js" defer></script>
+<script src="js/quiz-loader.js" defer></script>
+<script src="data/flashcards.js" defer></script>
+<script src="js/flashcards.js" defer></script>
+<script src="js/sims/exthash.js" defer></script>
+<script src="js/sims/widgets.js" defer></script>
+</head>
+<body>
+<div id="site-nav"></div>
+
+<div class="hero">
+  <div class="hero-label">ΥΣΒΔ k18 · Topic 4 · διαφάνειες 003-indexing-gen + πίνακας διάλεξης «Δευτερεύοντα Ευρετήρια»</div>
+  <h1>Ευρετήρια & <em>Μοντέλο Κόστους</em></h1>
+  <p>Τι είναι ένα ευρετήριο, οι τρεις εναλλακτικές για τα data entries (A1/A2/A3), clustered vs unclustered, primary vs secondary, κατακερματισμός vs δέντρα, το μοντέλο κόστους (D, B, R, C) για heap και ταξινομημένο αρχείο, επιλογή ευρετηρίων και σύνθετα κλειδιά. Μπόνους: επεκτατός κατακερματισμός (θέμα παλιών εξετάσεων).</p>
+  <div class="chips"><span class="chip">A1 / A2 / A3</span><span class="chip">clustered</span><span class="chip">static hashing</span><span class="chip">cost model</span><span class="chip">composite keys</span><span class="chip">extendible hashing</span></div>
+</div>
+
+<nav class="toc">
+  <a href="#essence">🎯 Η Ουσία</a>
+  <a href="#basics">Βασικά</a>
+  <a href="#alternatives">A1/A2/A3</a>
+  <a href="#clustered">Clustered</a>
+  <a href="#secondary">Δευτερεύοντα</a>
+  <a href="#hashing">Hashing</a>
+  <a href="#exthash">Επεκτατός</a>
+  <a href="#treeidx">Δέντρα</a>
+  <a href="#costmodel">Κόστος</a>
+  <a href="#choice">Επιλογή</a>
+  <a href="#composite">Σύνθετα</a>
+  <a href="#sql">SQL</a>
+</nav>
+
+<div class="wrap">
+
+<section id="essence">
+  <div class="sh"><div class="sh-icon" style="background:var(--gdim)">🎯</div><h2>Η Ουσία σε 60 δευτερόλεπτα</h2></div>
+  <div class="gbox"><div class="lbl" style="color:var(--green)">ΤΙ ΚΑΝΕΙ</div>Ένα <strong>ευρετήριο</strong> είναι μια (μικρότερη) δομή στον δίσκο που, δοσμένου ενός <strong>κλειδιού αναζήτησης</strong>, σε οδηγεί κατευθείαν στα μπλοκ με τις εγγραφές — αντί να σαρώσεις όλο το αρχείο. Τα entries του λέγονται <strong>k*</strong> και είναι είτε η ίδια η εγγραφή (A1), είτε &lt;k, rid&gt; (A2), είτε &lt;k, λίστα rids&gt; (A3).</div>
+  <p style="margin-bottom:14px"><strong>Διαίσθηση:</strong> το ευρετήριο στο τέλος ενός βιβλίου: ψάχνεις «Concurrency», βρίσκεις «σελ. 312» και πας κατευθείαν εκεί. Αν το βιβλίο είναι ταξινομημένο με το ίδιο θέμα (clustered), όλες οι σχετικές σελίδες είναι μαζί· αν όχι (unclustered), κάθε αναφορά σε στέλνει σε άλλο σημείο — και ίσως ξαναδιαβάσεις την ίδια σελίδα πολλές φορές.</p>
+  <div class="compare">
+    <div class="good-side"><div class="side-label" style="color:var(--green)">✅ Ευρετήριο αξίζει όταν…</div><ul style="font-size:0.86rem;padding-left:18px;line-height:1.7;margin:0"><li>το κατηγόρημα είναι <strong>επιλεκτικό</strong> (1–2% των εγγραφών)</li><li>το ερώτημα είναι συχνό/σημαντικό στο workload</li><li>μπορείς να απαντήσεις <strong>μόνο από το ευρετήριο</strong> (index-only)</li></ul></div>
+    <div class="bad-side"><div class="side-label" style="color:var(--red)">❌ Δεν αξίζει όταν…</div><ul style="font-size:0.86rem;padding-left:18px;line-height:1.7;margin:0"><li>επιλέγεις σχεδόν όλο τον πίνακα (age &gt; 10)</li><li>είναι unclustered και πολλές εγγραφές → ίδιο μπλοκ πολλές φορές</li><li>έχεις πολλές ενημερώσεις: κάθε ευρετήριο κοστίζει σε χώρο και χρόνο ενημέρωσης</li></ul></div>
+  </div>
+  <div class="tip"><div class="tip-icon">📝</div><div class="tip-text"><strong>Για τις εξετάσεις θυμήσου:</strong> (1) A1 ⇒ indexed file organization (πρωτεύον)· A2/A3 ⇒ έμμεση πρόσβαση· A3 ⇒ τυπικά δευτερεύον. (2) Clustered = η διάταξη των εγγραφών ακολουθεί το ευρετήριο· το πολύ <strong>ένα</strong> πρωτεύον/clustered ανά αρχείο, «αυθαίρετα» πολλά δευτερεύοντα. (3) Heap: scan B(D+RC), ισότητα 0.5·B(D+RC), εισαγωγή 2D+C · Sorted: ισότητα D·log₂B + C·log₂R, εισαγωγή/διαγραφή B(D+RC). (4) Σύνθετο κλειδί: η <strong>σειρά</strong> των πεδίων μετράει — &lt;age,sal&gt; βοηθά «age=25 AND sal BETWEEN …», το &lt;sal,age&gt; όχι.</div></div>
+</section>
+
+<section id="basics">
+  <div class="sh"><div class="sh-icon" style="background:var(--pdim)">🔎</div><h2>1. Βασικές Έννοιες Ευρετηρίασης</h2></div>
+  <ul>
+    <li><strong>Search key (κλειδί αναζήτησης)</strong>: πεδίο ή σύνολο πεδίων με τα οποία ψάχνουμε εγγραφές ενός αρχείου. <em>Δεν</em> είναι απαραίτητα το πρωτεύον κλειδί.</li>
+    <li><strong>Index entry</strong>: &lt;search-key, pointer (pid)&gt;· όλα τα entries = <strong>αρχείο ευρετηρίου</strong>, γενικά πολύ μικρότερο από το αρχείο δεδομένων.</li>
+    <li><strong>Access method</strong>: δομή στον δίσκο που επιταχύνει ανακτήσεις, χτισμένη γύρω από κλειδιά αναζήτησης. Ένας πίνακας μπορεί να έχει ευρετήριο στο TaxID, στο LastName, στο Age: το 1ο μπορεί να περιέχει τις ίδιες τις εγγραφές, τα 2ο/3ο έχουν κλειδιά + πληροφορία θέσης.</li>
+  </ul>
+  <div class="card"><div class="card-title">Μετρικές αξιολόγησης (διαφάνεια 9)</div>
+    <div class="retval-row"><div class="retval"><div class="retval-num" style="color:var(--blue)">Access time</div><div class="retval-desc">πόσο για να φτάσεις στις εγγραφές</div></div><div class="retval"><div class="retval-num" style="color:var(--green)">Insertion time</div><div class="retval-desc">εισαγωγή νέας εγγραφής</div></div><div class="retval"><div class="retval-num" style="color:var(--red)">Deletion time</div><div class="retval-desc">διαγραφή</div></div><div class="retval"><div class="retval-num" style="color:var(--yellow)">Space overhead</div><div class="retval-desc">χώρος του ευρετηρίου</div></div></div>
+    <p style="font-size:.9rem;margin:0">Πάντα trade-off: <strong>απόδοση ερωτημάτων/ενημερώσεων</strong> vs <strong>χώρος</strong>.</p></div>
+  <div class="card"><div class="card-title">Δύο οικογένειες</div><div class="compare"><div class="good-side" style="background:var(--bdim);border-color:rgba(88,166,255,.25)"><div class="side-label" style="color:var(--blue)">Ordered indexes</div><p style="font-size:.86rem;margin:0">κλειδιά ταξινομημένα — κυρίως <strong>δέντρα</strong> (ISAM, B+). Ισότητα + εύρος.</p></div><div class="good-side" style="background:var(--pdim);border-color:rgba(188,140,255,.25)"><div class="side-label" style="color:var(--purple)">Hash-based indexes</div><p style="font-size:.86rem;margin:0">κλειδιά μοιρασμένα (ιδανικά ομοιόμορφα) σε <strong>κάδους</strong> με συνάρτηση κατακερματισμού. Μόνο ισότητα («knife»).</p></div></div></div>
+  <div class="section-quiz" data-topic="topic4" data-section="basics"></div>
+</section>
+
+<section id="alternatives">
+  <div class="sh"><div class="sh-icon" style="background:var(--pdim)">🧬</div><h2>2. Data Entries k*: Εναλλακτικές A1, A2, A3</h2></div>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th>Εναλλακτική</th><th>Τι είναι το k*</th><th>Συνέπεια</th></tr></thead><tbody>
+    <tr><td><strong style="color:var(--green)">A1</strong></td><td>η <strong>ίδια η εγγραφή</strong> με κλειδί k</td><td>ειδική οργάνωση αρχείου: <strong>indexed file organization</strong>· πρωτεύον ευρετήριο</td></tr>
+    <tr><td><strong style="color:var(--blue)">A2</strong></td><td>ζεύγος <strong>&lt;k, rid&gt;</strong></td><td>έμμεση πρόσβαση· μπορεί να είναι clustered ή όχι</td></tr>
+    <tr><td><strong style="color:var(--purple)">A3</strong></td><td>ζεύγος <strong>&lt;k, rid-list&gt;</strong></td><td>έμμεση πρόσβαση· ουσιαστικά τα <strong>δευτερεύοντα</strong> σχήματα ευρετηρίασης· μεταβλητό μέγεθος entry</td></tr></tbody></table></div>
+  <div class="dg"><div class="dg-row">
+    <div class="dg-col" style="flex:1"><div class="dg-box" style="border-color:var(--green)"><div class="t">A1</div><div class="s">[ 25 | Λένα | 22K ] [ 30 | … ]</div></div><div class="s" style="text-align:center;font-size:.75rem;color:var(--muted)">η εγγραφή ζει μέσα στο ευρετήριο</div></div>
+    <div class="dg-col" style="flex:1"><div class="dg-box" style="border-color:var(--blue)"><div class="t">A2</div><div class="s">[25, (p3,s1)] [25, (p7,s4)] [30, (p1,s2)]</div></div><div class="s" style="text-align:center;font-size:.75rem;color:var(--muted)">ένα entry ανά εγγραφή</div></div>
+    <div class="dg-col" style="flex:1"><div class="dg-box" style="border-color:var(--purple)"><div class="t">A3</div><div class="s">[25, {(p3,s1),(p7,s4)}] [30, {(p1,s2)}]</div></div><div class="s" style="text-align:center;font-size:.75rem;color:var(--muted)">ένα entry ανά τιμή</div></div></div></div>
+  <div class="section-quiz" data-topic="topic4" data-section="alternatives"></div>
+</section>
+
+<section id="clustered">
+  <div class="sh"><div class="sh-icon" style="background:var(--pdim)">🧲</div><h2>3. Clustered vs Unclustered, Primary vs Secondary</h2></div>
+  <div class="grid2">
+    <div><div class="card-title" style="color:var(--green)">Clustered</div><p style="font-size:.9rem">Η διάταξη των εγγραφών είναι <strong>ίδια ή κοντά</strong> στη διάταξη των entries. Ένα A1 σε ταξινομημένο αρχείο είναι εξ ορισμού clustered· A2/A3 είναι clustered αν τα δεδομένα είναι ταξινομημένα στο ίδιο κλειδί.</p>
+      <div class="dg-row" style="justify-content:flex-start"><div class="cells"><span class="h">10</span><span class="h">15</span><span class="h">20</span></div><div class="dg-arrow">↓↓↓</div><div class="cells"><span class="g">μπλοκ 1: 10 15 20</span></div></div></div>
+    <div><div class="card-title" style="color:var(--red)">Unclustered</div><p style="font-size:.9rem">Δεν ακολουθεί τη διάταξη του αρχείου. Κυρίως A3 και καμιά φορά A2. Σε range query μπορεί να διαβάσεις το <strong>ίδιο μπλοκ πολλές φορές</strong>.</p>
+      <div class="dg-row" style="justify-content:flex-start"><div class="cells"><span class="h">10</span><span class="h">15</span><span class="h">20</span></div><div class="dg-arrow">↘↗↘</div><div class="cells"><span class="r">μπλ. 7</span><span class="r">μπλ. 2</span><span class="r">μπλ. 7</span></div></div></div>
+  </div>
+  <p style="font-size:.92rem">Γενικά τα αρχεία δεδομένων μένουν συχνά <strong>αταξινόμητα</strong> (η συνεχής ταξινόμηση κοστίζει). Κάθε ευρετήριο έχει κόστος· για range queries το κόστος διαφέρει σημαντικά ανάλογα με το αν είναι clustered.</p>
+  <table class="vtbl"><thead><tr><th>Όρος</th><th>Ορισμός</th></tr></thead><tbody>
+    <tr><td><strong>Primary index</strong></td><td>περιλαμβάνει το πρωτεύον κλειδί· <strong>χωρίς διπλότυπα</strong>· ένα A1 ευρετήριο είναι primary</td></tr>
+    <tr><td><strong>Secondary index</strong></td><td>σε άλλα πεδία· μπορεί να έχει διπλότυπες τιμές· φτιάχνεται με A2/A3</td></tr>
+    <tr><td><strong>Unique index</strong></td><td>ευρετήριο χωρίς διπλότυπες τιμές κλειδιού</td></tr></tbody></table>
+  <div class="section-quiz" data-topic="topic4" data-section="clustered"></div>
+</section>
+
+<section id="secondary">
+  <div class="sh"><div class="sh-icon" style="background:var(--pdim)">🌿</div><h2>4. Δευτερεύοντα Ευρετήρια (πίνακας διάλεξης)</h2></div>
+  <ul>
+    <li>Μπορεί να υπάρχει <strong>το πολύ ΕΝΑ πρωτεύον</strong> ευρετήριο, το οποίο <strong>καθορίζει το μπλοκ</strong> όπου εισάγεται κάθε πλειάδα με βάση την τιμή της στο πεδίο-κλειδί του.</li>
+    <li>Μπορούν να δημιουργηθούν <strong>«αυθαίρετα» πολλά δευτερεύοντα</strong>, που <em>υποδεικνύουν</em> το μπλοκ όπου (πιθανόν) υπάρχει μια πλειάδα.</li>
+    <li>Η δομή ενός δευτερεύοντος καταλήγει σε ένα <strong>ενδιάμεσο επίπεδο μπλοκ</strong> με ζευγάρια <strong>&lt;τιμή πεδίου-κλειδιού, δείκτης εγγραφής&gt;</strong>, ένα για κάθε πλειάδα του αρχείου.</li>
+    <li>Άρα: <strong>όσες πλειάδες υπάρχουν στα δεδομένα, τόσα ζευγάρια υπάρχουν σε κάθε δευτερεύον ευρετήριο</strong> (στο «πράσινο» επίπεδο) — είναι πυκνά.</li></ul>
+  <div class="dg"><div class="dg-row" style="align-items:center">
+    <div class="dg-box" style="flex:0 0 130px;border-color:var(--dim)"><div class="t">ΠΕ</div><div class="s">πρωτεύον (π.χ. B+ στον μισθό)</div></div><div class="dg-arrow">→</div>
+    <div class="dg-box" style="flex:0 0 150px;border-color:var(--red)"><div class="t" style="color:var(--red)">Δεδομένα</div><div class="s">μπλοκ με πλειάδες</div></div><div class="dg-arrow">←</div>
+    <div class="dg-box" style="flex:0 0 160px;border-color:var(--green)"><div class="t" style="color:var(--green)">ενδιάμεσο επίπεδο</div><div class="s">&lt;τιμή, δείκτης εγγραφής&gt; × #πλειάδων</div></div><div class="dg-arrow">←</div>
+    <div class="dg-col" style="flex:0 0 120px"><div class="dg-box" style="border-color:var(--purple)"><div class="t">ΔΕ1</div></div><div class="dg-box" style="border-color:var(--purple)"><div class="t">ΔΕ2</div></div></div></div></div>
+  <div class="card"><div class="card-title">Παράδειγμα πίνακα: ΥΠ(όνομα, μισθός, ηλικία)</div>
+    <p style="font-size:.9rem">Πρωτεύον: <strong>B+ δέντρο στον μισθό</strong> (ρίζα [41], παιδιά [22,33] και [55,59]) → τα μπλοκ δεδομένων είναι ταξινομημένα στον μισθό. Δευτερεύον: <strong>στατικός κατακερματισμός στην ηλικία με h(n) = n mod 3</strong>.</p>
+    <div class="tblwrap"><table class="vtbl"><thead><tr><th>μπλοκ</th><th>πλειάδες (όνομα, μισθός, ηλικία)</th></tr></thead><tbody>
+      <tr><td>1</td><td>Γιώργος 10/25 · Μιχάλης 14/30</td></tr><tr><td>2</td><td>Λένα 22/23 · Σταματία 28/28</td></tr><tr><td>3</td><td>Μπάμπης 33/36 · Ρούλα 40/23</td></tr>
+      <tr><td>4</td><td>… 41/35 · Βασίλης 42/21</td></tr><tr><td>5</td><td>Ονούφριος 55/27 · Τίνα 55/34</td></tr><tr><td>6</td><td>Καλλίνικος 59/21 · … 65/20</td></tr></tbody></table></div>
+    <div class="grid2" style="margin-top:10px">
+      <div><div class="cells"><span class="h">κάδος 0</span><span>30</span><span>36</span><span>21</span><span>27</span><span class="r">→ υπερχ.: 21</span></div>
+      <div class="cells"><span class="h">κάδος 1</span><span>25</span><span>28</span><span>34</span></div>
+      <div class="cells"><span class="h">κάδος 2</span><span>23</span><span>23</span><span>35</span><span>20</span></div></div>
+      <div><p style="font-size:.85rem;color:var(--muted);margin:0">Κάθε τιμή ηλικίας του κάδου συνοδεύεται από δείκτη προς την πλειάδα. 12 πλειάδες → 12 ζευγάρια. Ο κάδος 0 (ηλικίες 30, 36, 21, 27, 21 — όλες ≡ 0 mod 3) ξεχειλίζει σε μπλοκ υπερχείλισης (χωρητικότητα 4).</p></div></div></div>
+  <div class="card"><div class="card-title">Παρατηρήσεις (πίνακας διάλεξης)</div><ul style="font-size:.9rem;margin:0">
+    <li>Τα ευρετήρια <strong>κοστίζουν</strong> σε <strong>χώρο</strong> και <strong>χρόνο ενημέρωσης</strong>: σε κάθε ενημέρωση του αρχείου πρέπει να ενημερώνεται και κάθε ευρετήριο. Τα δυναμικά πρωτεύοντα μπορεί να κοστίζουν πολύ στις ενημερώσεις και συχνά αποφεύγονται.</li>
+    <li>Τα ευρετήρια <strong>ωφελούν</strong> σε <strong>χρόνο απάντησης</strong>.</li>
+    <li>Ως τώρα: κλειδιά ενός πεδίου. Γενικά υπάρχουν <strong>σύνθετα κλειδιά</strong>, π.χ. ΥΠ(κωδ, όνομα, μισθός, ηλικία, κωδΕ) με κλειδί (κωδ, κωδΕ).</li>
+    <li>Είτε ενός είτε σύνθετου πεδίου, αυτά είναι <strong>μονοδιάστατα</strong> ευρετήρια. Υπάρχουν και <strong>πολυδιάστατα</strong>, όπου πολλαπλά πεδία χρησιμοποιούνται <em>ανεξάρτητα</em>.</li></ul></div>
+  <div class="grid2">
+    <div class="dg" style="margin:0"><div style="font-size:.8rem;color:var(--muted);margin-bottom:6px">Δισδιάστατο: σημεία (μισθός, ηλικία) στο επίπεδο</div>
+      <div style="position:relative;height:150px;border-left:2px solid var(--dim);border-bottom:2px solid var(--dim);margin:6px 10px 18px 26px">
+        <span style="position:absolute;left:4%;bottom:88%;color:var(--red)">●</span><span style="position:absolute;left:4%;bottom:42%;color:var(--red)">●</span><span style="position:absolute;left:52%;bottom:10%;color:var(--red)">●</span><span style="position:absolute;left:72%;bottom:88%;color:var(--red)">●</span><span style="position:absolute;left:82%;bottom:42%;color:var(--red)">●</span><span style="position:absolute;left:82%;bottom:88%;color:var(--red)">●</span>
+        <span style="position:absolute;left:-24px;bottom:85%;font-size:.7rem">40</span><span style="position:absolute;left:-24px;bottom:40%;font-size:.7rem">26</span><span style="position:absolute;left:-24px;bottom:8%;font-size:.7rem">19</span>
+        <span style="position:absolute;bottom:-18px;left:2%;font-size:.7rem">10</span><span style="position:absolute;bottom:-18px;left:50%;font-size:.7rem">22</span><span style="position:absolute;bottom:-18px;left:70%;font-size:.7rem">32</span><span style="position:absolute;bottom:-18px;left:82%;font-size:.7rem">35</span></div></div>
+    <div class="dg" style="margin:0"><div style="font-size:.8rem;color:var(--muted);margin-bottom:6px">Μονοδιάστατο: λεξικογραφική διάταξη (μισθός, ηλικία)</div>
+      <div class="cells"><span>(10,26)</span><span>(10,40)</span><span>(22,19)</span><span>(32,40)</span><span>(35,26)</span><span>(35,40)</span></div>
+      <p style="font-size:.82rem;color:var(--muted);margin-top:8px">Στη γραμμή, γειτονικά σημεία του επιπέδου μπορεί να βρεθούν μακριά (π.χ. ίδια ηλικία 40 με μισθούς 10 και 32) — γι' αυτό υπάρχουν πολυδιάστατα ευρετήρια.</p></div>
+  </div>
+  <div class="section-quiz" data-topic="topic4" data-section="secondary"></div>
+</section>
+
+<section id="hashing">
+  <div class="sh"><div class="sh-icon" style="background:var(--pdim)">#️⃣</div><h2>5. Ευρετήρια Κατακερματισμού (Στατικός)</h2></div>
+  <ul>
+    <li>Η h() στέλνει κάθε κλειδί σε έναν <strong>κάδο (bucket)</strong>: ένα ή λίγα μπλοκ/σελίδες.</li>
+    <li><strong>Στατικός</strong>: σταθερός αριθμός k κάδων· η h() έχει παράμετρο το k.</li>
+    <li>Κάθε κάδος μπορεί να ακολουθείται από <strong>κάδους υπερχείλισης</strong>.</li>
+    <li><strong>Εισαγωγή</strong>: στον πρωτεύοντα κάδο, αλλιώς σε κάδο υπερχείλισης · <strong>Διαγραφή/Αναζήτηση</strong>: η h() δείχνει τον κάδο που <em>μπορεί</em> να περιέχει την εγγραφή.</li>
+    <li>Παράδειγμα διαφάνειας: <strong>h1(x) = x mod 4</strong> (μέθοδος A1, κλειδί age) και <strong>h2(x) = x mod 2</strong> (μέθοδος A2, κλειδί sal) — κανένα από τα δύο κλειδιά δεν είναι πρωτεύον.</li></ul>
+  <div class="sim" id="static-hash">
+    <div class="sim-title">#️⃣ Στατικός κατακερματισμός h(x) = x mod k</div>
+    <div class="sim-controls"><label>k κάδοι <input type="number" class="k" min="1" max="8" value="4"></label><label>χωρητικότητα κάδου <input type="number" class="c" min="1" max="6" value="2"></label><label style="flex:1;min-width:200px">κλειδιά <input type="text" class="wide v" value="22 25 33 44 40 39 33 51 27 31"></label></div>
+    <div class="o"></div></div>
+  <div class="ibox"><div class="lbl" style="color:var(--blue)">Γιατί δεν αρκεί</div>Η αναζήτηση είναι ~1 I/O <strong>μόνο αν δεν υπάρχουν αλυσίδες</strong>. Όταν το αρχείο μεγαλώνει, οι αλυσίδες υπερχείλισης μακραίνουν και η απόδοση πέφτει — ο αριθμός κάδων είναι σταθερός. Λύση: δυναμικός κατακερματισμός, π.χ. ο επεκτατός (παρακάτω). Ο κατακερματισμός είναι χρήσιμος για <strong>«knife» queries</strong> (ισότητας), όχι για εύρος.</div>
+  <div class="section-quiz" data-topic="topic4" data-section="hashing"></div>
+</section>
+
+<section id="exthash">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">🧮</div><h2>6. Επεκτατός Κατακερματισμός <span class="exam-badge">παλιό θέμα · 12 μον.</span></h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Δεν είναι στις διαφάνειες 003 της προόδου, αλλά έπεσε στο διαγώνισμα του 2024 (ίδιο μάθημα). Η ιδέα: ένας <strong>πίνακας (κατάλογος) 2<sup>D</sup> κελιών</strong> δείχνει σε κάδους· διπλασιάζεται μόνο ο πίνακας (φθηνό), όχι όλοι οι κάδοι.</p>
+  <div class="grid2">
+    <div><ul style="font-size:.92rem">
+      <li><strong>Ολικό βάθος D</strong>: πόσα bits της τιμής κατακερματισμού κοιτάει ο πίνακας → 2<sup>D</sup> κελιά.</li>
+      <li><strong>Τοπικό βάθος d′</strong> κάδου: πόσα bits μοιράζονται όλες οι τιμές του. Ο κάδος δείχνεται από <strong>2<sup>D−d′</sup></strong> κελιά.</li>
+      <li>Στο θέμα χρησιμοποιούνται τα <strong>πρώτα (υψηλότερης τάξης) bits</strong>.</li></ul></div>
+    <div><div class="card-title">Εισαγωγή σε γεμάτο κάδο</div><ol style="font-size:.92rem">
+      <li>Αν <strong>d′ &lt; D</strong>: σπάσε τον κάδο σε δύο με d′+1 (βάσει του επόμενου bit) και μοίρασε τους δείκτες. <strong>Ο πίνακας δεν αλλάζει μέγεθος.</strong></li>
+      <li>Αν <strong>d′ = D</strong>: πρώτα <strong>διπλασίασε</strong> τον πίνακας (D+1, κάθε κελί «γίνεται» 2 με τον ίδιο δείκτη), μετά split.</li>
+      <li>Ξαναδοκίμασε (μπορεί να χρειαστούν διαδοχικά splits).</li></ol></div>
+  </div>
+  <p style="font-size:.95rem"><strong>Το θέμα:</strong> κάδοι 3 εγγραφών, D = 3. A (d′=1, «0xx»): Ξενοφών 00101, Ρέα 01100, Αριστείδης 01011 · B (d′=3, «100»): Σωκράτης 10011, Αγησίλαος 10001, Περσεφόνη 10000 · Γ (d′=3, «101»): Αφροδίτη 10110, Ήρα 10101, Λυδία 10110 · Δ (d′=2, «11x»): Άρης 11001, Σοφοκλής 11101, Λεωνίδας 11010. Όλοι γεμάτοι! Εισάγεις το 3ο γράμμα του επωνύμου σου.</p>
+  <div id="eh-sim"></div>
+  <div class="tip"><div class="tip-icon">🎯</div><div><div class="tip-title">Exam Focus — συμπλήρωσε τον πίνακα</div><div class="tip-text">Ζητείται: μέγεθος πίνακα, βάθος, #μπλοκ, και για κάθε κάδο (A, B, Γ, Δ, νέο 1, νέο 2) τοπικό βάθος + περιεχόμενα (μόνο όσων άλλαξαν). Κάδος με d′ &lt; D (A, Δ) → split <strong>χωρίς</strong> διπλασιασμό· κάδος με d′ = D (B, Γ) → <strong>διπλασιασμός σε 16 κελιά</strong>. Όλες οι περιπτώσεις λυμένες: <a href="exam_prep.html#exthash">Exam Prep → Επεκτατός</a>.</div></div></div>
+  <div class="section-quiz" data-topic="topic4" data-section="exthash"></div>
+</section>
+
+<section id="treeidx">
+  <div class="sh"><div class="sh-icon" style="background:var(--pdim)">🌲</div><h2>7. Ευρετήρια Δέντρου — Αρχή Λειτουργίας</h2></div>
+  <ul>
+    <li>Κάθε κόμβος καταλαμβάνει <strong>ένα μπλοκ</strong>· εσωτερικοί κόμβοι και φύλλα· τα φύλλα έχουν τις εγγραφές (A1) ή αναφορές (A2/A3).</li>
+    <li>Η αναζήτηση (κλειδιού ή εύρους) ξεκινά από τη <strong>ρίζα</strong>· 1 μπλοκ στον buffer τη φορά. Για <code>24 &lt; age &lt; 50</code>: Root → A → B → L1 → L2 → L3.</li>
+    <li>Κάθε lookup διασχίζει το ύψος· συχνά η ρίζα είναι pinned.</li>
+    <li>Μέσο fan-out F, n μπλοκ-φύλλα → <strong>h = log<sub>F</sub>(n)</strong>. 100.000.000 μπλοκ, F=100 → <strong>4 I/O</strong>· δυαδική αναζήτηση σε ταξινομημένο αρχείο → <strong>27 I/O</strong>.</li></ul>
+  <p>Λεπτομέρειες: <a href="topic5_bplus.html">Topic 5 — ISAM & B+</a>.</p>
+  <div class="section-quiz" data-topic="topic4" data-section="treeidx"></div>
+</section>
+
+<section id="costmodel">
+  <div class="sh"><div class="sh-icon" style="background:var(--odim)">⚖️</div><h2>8. Μοντέλο Κόστους: Heap vs Ταξινομημένο Αρχείο</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Σχέση Employee(eid, age, salary) με σύνθετο κλειδί &lt;age, sal&gt;. Πράξεις: (1) scan, (2) αναζήτηση ισότητας, (3) αναζήτηση εύρους, (4) εισαγωγή (γνωστό μπλοκ), (5) διαγραφή (γνωστό μπλοκ).</p>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th>Σύμβολο</th><th>Σημασία</th><th>Τυπική τιμή</th></tr></thead><tbody>
+    <tr><td><strong>D</strong></td><td>μέσος χρόνος για να έρθει ένα μπλοκ στον buffer</td><td>5 ms</td></tr>
+    <tr><td><strong>B</strong></td><td>πλήθος μπλοκ του αρχείου</td><td>1.000.000</td></tr>
+    <tr><td><strong>R</strong></td><td>μέσος αριθμός εγγραφών ανά μπλοκ</td><td>100</td></tr>
+    <tr><td><strong>C</strong></td><td>CPU χρόνος επεξεργασίας μιας εγγραφής</td><td>50 ns</td></tr>
+    <tr><td><strong>H</strong></td><td>CPU χρόνος εφαρμογής hash function</td><td>50 ns</td></tr>
+    <tr><td><strong>F</strong></td><td>μέσο fan-out δέντρου (B+)</td><td>100</td></tr></tbody></table></div>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th>Πράξη</th><th style="color:var(--orange)">Heap file</th><th style="color:var(--blue)">Sorted file (στο &lt;age,sal&gt;)</th></tr></thead><tbody>
+    <tr><td><strong>Scan</strong></td><td>B(D + RC)</td><td>B(D + RC)</td></tr>
+    <tr><td><strong>Ισότητα</strong> (1 εγγραφή)</td><td>μέσος <strong>0.5·B(D + RC)</strong> · χειρότερη B(D + RC) · καλύτερη D + RC</td><td><strong>D·log₂B + C·log₂R</strong> (δυαδική αναζήτηση μπλοκ και μέσα στο μπλοκ)</td></tr>
+    <tr><td><strong>Εύρος</strong></td><td>B(D + RC) — όλο το αρχείο</td><td>D·log₂B για το πρώτο μπλοκ + διάσχιση των μπλοκ του αποτελέσματος</td></tr>
+    <tr><td><strong>Εισαγωγή</strong></td><td><strong>2D + C</strong> (φέρε το τελευταίο μπλοκ, πρόσθεσε, γράψε)</td><td><strong>B(D + RC)</strong> = 2·(0.5B(D+RC)): διάβασε & ξαναγράψε το μισό αρχείο</td></tr>
+    <tr><td><strong>Διαγραφή</strong></td><td><strong>C + D</strong> (μπλοκ ήδη φερμένο: επεξεργασία + γράψιμο)</td><td><strong>B(D + RC)</strong> (συμπίεση)</td></tr></tbody></table></div>
+  <div id="cost-sim"></div>
+  <p style="font-size:.9rem;color:var(--muted)">Οι διαφάνειες αφήνουν για άσκηση: clustered δέντρο στο &lt;age,sal&gt;, heap με unclustered δέντρο, heap με (unclustered) hash ευρετήριο.</p>
+  <div class="section-quiz" data-topic="topic4" data-section="costmodel"></div>
+</section>
+
+<section id="choice">
+  <div class="sh"><div class="sh-icon" style="background:var(--pdim)">🧭</div><h2>9. Επιλογή Ευρετηρίων & Απόδοση</h2></div>
+  <ul>
+    <li>Ευρετήρια για τον όγκο των ερωτημάτων (<strong>workload</strong>) ή τα πιο συχνά/σημαντικά.</li>
+    <li>Το B+ χειρίζεται αποδοτικά εισαγωγές/διαγραφές · ο κατακερματισμός για «knife» queries · τα δέντρα κερδίζουν τη δυαδική αναζήτηση ακόμα και σε σειριακά αρχεία.</li>
+    <li>Clustered μέθοδοι που ενσωματώνουν εγγραφές (B+ με A1): με <strong>φειδώ</strong>, μόνο όταν πολύ συχνά ερωτήματα κερδίζουν· αλλά επιτρέπουν ερωτήματα που απαντώνται <strong>μόνο από τα φύλλα</strong>.</li></ul>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th>Ερώτημα</th><th>Απόφαση</th></tr></thead><tbody>
+    <tr><td><code>SELECT E.dno FROM Employees E WHERE E.age &gt; 40</code></td><td>B+ στο age μόνο αν το age&gt;40 είναι <strong>επιλεκτικό</strong> (1–2% → clustered ευρετήριο καλό)· αλλιώς <strong>γραμμική σάρωση</strong>.</td></tr>
+    <tr><td><code>… WHERE E.age &gt; 10 GROUP BY E.dno</code> με COUNT(*)</td><td>B+ στο age σχεδόν άχρηστο — όλοι είναι &gt;10. Αν είναι unclustered → ίδιο μπλοκ πολλές φορές.</td></tr>
+    <tr><td><code>… WHERE E.hobby = "Stamps"</code></td><td>hobby ούτε υποψήφιο κλειδί· αν το ερώτημα είναι συχνό → έξτρα ευρετήριο, αλλιώς file scan.</td></tr>
+    <tr><td><code>SELECT E.dno, COUNT(*) … GROUP BY E.dno</code></td><td>ταξινόμηση & ομάδες, ή αν υπάρχει clustered B+ στο dno → απάντηση <strong>μόνο από το ευρετήριο</strong>.</td></tr></tbody></table></div>
+  <div class="section-quiz" data-topic="topic4" data-section="choice"></div>
+</section>
+
+<section id="composite">
+  <div class="sh"><div class="sh-icon" style="background:var(--pdim)">🔗</div><h2>10. Σύνθετα Κλειδιά Αναζήτησης</h2></div>
+  <p style="color:var(--muted);margin-bottom:14px">Ευρετήριο σε πολλά πεδία: ερωτήματα <strong>ισότητας</strong> (&lt;age=11, sal=10&gt;) ή <strong>εύρους</strong> (age &lt; 30 AND sal &gt; 40). Η <strong>σειρά</strong> των πεδίων έχει σημασία. Αρνητικά: αλλαγή σε οποιοδήποτε πεδίο → αναδιοργάνωση· μεγαλύτερα από τα απλά.</p>
+  <div class="grid2">
+    <div><div class="card-title">&lt;age, sal&gt; ταξινόμηση</div><div class="cells"><span>11,80</span><span>12,10</span><span>12,20</span><span>13,75</span></div><div class="card-title" style="margin-top:8px">&lt;sal, age&gt; ταξινόμηση</div><div class="cells"><span>10,12</span><span>20,12</span><span>75,13</span><span>80,11</span></div></div>
+    <div><p style="font-size:.88rem">Δεδομένα (διαφάνεια 23): (Bob,12,10), (Cal,11,80), (Joe,12,20), (Sue,13,75). Στο &lt;age,sal&gt; όλα τα age=12 είναι μαζί και μέσα τους ταξινομημένα κατά sal.</p></div></div>
+  <div class="tblwrap"><table class="vtbl"><thead><tr><th>Ερώτημα</th><th>Ποιο ευρετήριο βοηθά</th></tr></thead><tbody>
+    <tr><td>age BETWEEN 20 AND 30 AND sal BETWEEN 3000 AND 5000</td><td>σύνθετο &lt;age,sal&gt;· <strong>hash δεν βοηθά καθόλου</strong> (εύρος)· clustered &gt; unclustered</td></tr>
+    <tr><td>age = 25 AND sal BETWEEN 3000 AND 5000</td><td>clustered &lt;age,sal&gt;: πάει στο 25 και σαρώνει μόνο 3000–5000 · <strong>&lt;sal,age&gt; δεν βοηθά</strong></td></tr>
+    <tr><td>SELECT AVG(sal) … age=25 AND sal BETWEEN 3000 AND 5000</td><td>B+ &lt;age,sal&gt;: <strong>index-only scan</strong> · &lt;sal,age&gt; κι αυτό, αλλά ευρύτερη σάρωση (πολλά περισσότερα φύλλα)</td></tr>
+    <tr><td>SELECT dno, COUNT(*) WHERE sal = 10000 GROUP BY dno</td><td>ευρετήριο σε dno δεν βοηθά · &lt;sal,dno&gt;: όλα τα sal=10000 μαζί · &lt;dno,sal&gt;: σάρωση του ευρετηρίου</td></tr>
+    <tr><td>SELECT dno, MIN(sal) GROUP BY dno</td><td>&lt;dno,sal&gt;: οι μισθοί κάθε τμήματος μαζί ταξινομημένοι · &lt;sal,dno&gt;: και αυτό μόνο από το ευρετήριο · σκέτο dno δεν αρκεί</td></tr></tbody></table></div>
+  <div class="section-quiz" data-topic="topic4" data-section="composite"></div>
+</section>
+
+<section id="sql">
+  <div class="sh"><div class="sh-icon" style="background:var(--pdim)">🧾</div><h2>11. Ορισμός Ευρετηρίων σε SQL & Flashcards</h2></div>
+  <div class="cb" style="padding:12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.8"><span class="kw">CREATE INDEX</span> &lt;index-name&gt; <span class="kw">ON</span> &lt;relation-name&gt;(&lt;attribute-list&gt;);
+<span class="kw">CREATE INDEX</span> profssn_index <span class="kw">ON</span> professors(ssn);
+<span class="kw">CREATE UNIQUE INDEX</span> dept_index <span class="kw">ON</span> profs(dept_name);   <span class="cm">-- υποψήφιο κλειδί· PostgreSQL: απαγορεύει διπλότυπα</span>
+<span class="kw">CREATE INDEX</span> IDXwithEmail <span class="kw">ON</span> users <span class="kw">USING HASH</span> (email); <span class="cm">-- για «knife» queries</span>
+<span class="kw">ALTER INDEX</span> [<span class="kw">IF EXISTS</span>] &lt;index-name&gt; <span class="kw">RENAME TO</span> &lt;new-name&gt;;
+<span class="kw">DROP INDEX</span> &lt;index-name&gt;;</div>
+  <h3>🗂️ Flashcards κεφαλαίου</h3>
+  <div data-fc-deck="topic4"></div>
+  <div class="section-quiz" data-topic="topic4" data-section="sql"></div>
+</section>
+
+</div>
+<div class="footer">ΥΣΒΔ (k18) · ΕΚΠΑ · Topic 4: Ευρετήρια, Κατακερματισμός & Μοντέλο Κόστους</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const it = a => a.map(([label, h]) => ({label, h}));
+  SimUI.extHash(document.getElementById('eh-sim'), {
+    title: 'Θέμα: επεκτατός κατακερματισμός (πρώτα bits, κάδοι 3 εγγραφών)',
+    make: () => ExtHash.fromBuckets(3, 5, 3, [
+      {name:'A', d:1, prefix:'0', items: it([['Ξενοφών','00101'],['Ρέα','01100'],['Αριστείδης','01011']])},
+      {name:'B', d:3, prefix:'100', items: it([['Σωκράτης','10011'],['Αγησίλαος','10001'],['Περσεφόνη','10000']])},
+      {name:'Γ', d:3, prefix:'101', items: it([['Αφροδίτη','10110'],['Ήρα','10101'],['Λυδία','10110']])},
+      {name:'Δ', d:2, prefix:'11', items: it([['Άρης','11001'],['Σοφοκλής','11101'],['Λεωνίδας','11010']])}]),
+    choices: [['α β γ','10111'],['δ ε ζ','11010'],['η θ ι','10011'],['κ λ μ','01100'],['ν ξ ω','11101'],['π ρ σ','10001'],['τ υ φ','10100'],['χ ψ ο','00011']]
+  });
+  SimUI.costModel(document.getElementById('cost-sim'));
+  // static hashing mini-sim
+  const sh = document.getElementById('static-hash');
+  const run = () => {
+    const k = +sh.querySelector('.k').value, c = +sh.querySelector('.c').value;
+    const vals = sh.querySelector('.v').value.trim().split(/[\s,]+/).map(Number).filter(x => !isNaN(x));
+    const b = Array.from({length:k}, () => []); vals.forEach(v => b[((v % k) + k) % k].push(v));
+    let io = 0;
+    sh.querySelector('.o').innerHTML = b.map((arr, i) => {
+      const pages = []; for (let j = 0; j < Math.max(arr.length, 1); j += c) pages.push(arr.slice(j, j + c));
+      return `<div class="strip"><span class="lbl">κάδος ${i}</span>${pages.map((p, pi) => `<span class="blk ${pi ? 'run2' : 'run1'}">${pi ? '↪ ' : ''}${p.join(', ') || '—'}</span>`).join('')}</div>`;
+    }).join('') + `<div class="sim-note">Αναζήτηση = 1 I/O για τον πρωτεύοντα κάδο + 1 I/O ανά σελίδα υπερχείλισης (πορτοκαλί). Μεγαλύτερη αλυσίδα: ${Math.max(...b.map(a => Math.max(1, Math.ceil(a.length / c))))} σελίδες.</div>`;
+  };
+  sh.querySelectorAll('input').forEach(i => i.addEventListener('input', run)); run();
+});
+</script>
+</body>
+</html>
